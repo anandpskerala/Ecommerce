@@ -1,0 +1,45 @@
+<%- include('./header.ejs', {title}) %>
+<header>
+    <%- include('./navbar.ejs') %>
+</header>
+<div class="auth-container">
+    <h1>Login</h1>
+    <div class="box">
+        <div class="section">
+            <a class="google-button" href="/login/google">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M7.44815 12C7.44815 11.4804 7.5344 10.9821 7.68853 10.5149L4.99228 8.45599C4.46678 9.52287 4.17078 10.7251 4.17078 12C4.17078 13.2739 4.46653 14.4752 4.99115 15.5415L7.6859 13.4786C7.53328 13.0135 7.44815 12.5171 7.44815 12Z" fill="#FBBC05"/>
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12.1821 7.27275C13.311 7.27275 14.3306 7.67275 15.1317 8.32725L17.4622 6C16.0421 4.76363 14.2214 4 12.1821 4C9.01612 4 6.29512 5.8105 4.99225 8.456L7.68837 10.5149C8.30962 8.62912 10.0805 7.27275 12.1821 7.27275Z" fill="#EA4335"/>
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12.1821 16.7272C10.0806 16.7272 8.30975 15.3709 7.6885 13.4851L4.99225 15.5436C6.29512 18.1895 9.01612 20 12.1821 20C14.1361 20 16.0017 19.3061 17.4019 18.0061L14.8426 16.0276C14.1205 16.4825 13.2111 16.7272 12.1821 16.7272Z" fill="#34A853"/>
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M19.8293 12C19.8293 11.5273 19.7564 11.0181 19.6471 10.5455H12.1821V13.6364H16.4791C16.2643 14.6903 15.6795 15.5004 14.8426 16.0276L17.4019 18.0061C18.8726 16.6411 19.8293 14.6076 19.8293 12Z" fill="#4285F4"/>
+                </svg>
+                <p>Login using Google</p>
+            </a>
+
+            <div class="divider">
+                <span class="line"></span>
+                <p>OR</p>
+            </div>
+
+            <% if (error_message && error_message.length > 0) { %>
+                <p class="error-message"><%= error_message %></p>
+            <% } %>
+            <form id="auth-form" action="/login" method="post">
+                <div class="col">
+                    <label for="email">Email</label>
+                    <input type="text" name="email" id="email" value="" data-validate="required">
+                    <span id="email_error" class="form-error"></span>
+                </div>
+                <div class="col">
+                    <label for="password">Password</label>
+                    <input type="password" name="password" id="password" data-validate="required">
+                    <span id="password_error" class="form-error"></span>
+                </div>
+                <a href="/forgot-password" class="forgot-password">Forgot Password?</a>
+                <button type="submit">Login</button>
+                <a href="/signup" class="disclaimer" style="text-align: center;">Don't have an account? Sign up</a>
+            </form>
+        </div>
+    </div>
+</div>
+<%- include('./footer.ejs') %>

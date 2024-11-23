@@ -1,0 +1,33 @@
+<%- include('./header.ejs', {title}) %>
+<header>
+    <%- include('./navbar.ejs') %>
+</header>
+<div class="auth-container">
+    <h1>Verification Code</h1>
+    <div class="box">
+        <div class="section">
+            <p class="disclaimer" style="margin-bottom: 20px;">An Automated mail has been sent to your mail. Please enter your verification code.</p>
+            <% if (error_message && error_message.length > 0) { %>
+                <p class="error-message"><%= error_message %></p>
+            <% } %>
+
+            <% if (session) { %>
+                <input type="hidden" id="email" value="<%= session.email %>">
+                <input type="hidden" id="expiry" value="<%= session.expiry %>">
+            <% } %>
+            <form action="/user/verify-otp" method="post" id="auth-form">
+                <span id="timer"></span>
+                <div class="row" style="margin-bottom: 20px; justify-content: center;">
+                        <input type="text"  value="" data-validate="required" class="otp-box" maxlength="1" autocomplete="off">
+                        <input type="text"  value="" data-validate="required" class="otp-box" maxlength="1" autocomplete="off">
+                        <input type="text"  value="" data-validate="required" class="otp-box" maxlength="1" autocomplete="off">
+                        <input type="text"  value="" data-validate="required" class="otp-box" maxlength="1" autocomplete="off">
+                        
+                </div>
+                <button type="submit">Continue</button>
+                <button id="resendBtn" type="button" disabled>Resend OTP</button>
+            </form>
+        </div>
+    </div>
+</div>
+<%- include('./footer.ejs') %>
