@@ -10,6 +10,7 @@ const no_cache = require('./middlewares/nocache');
 const connectDB = require('./connect_db');
 const user_routes = require("./routes/users");
 const profile_routes = require("./routes/profile");
+const admin_routes = require("./routes/admin");
 
 dotenv.config();
 connectDB();
@@ -37,6 +38,7 @@ app.use(session({
 
 app.use('/', user_routes);
 app.use('/user', profile_routes);
+app.use('/admin', admin_routes);
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

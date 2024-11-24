@@ -1,0 +1,485 @@
+*,
+::before,
+::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+
+:root {
+  --white: rgb(255, 255, 255);
+  --faded-white: rgb(217, 217, 217);
+  --grey: rgb(92, 95, 106);
+  --light-grey: rgb(182, 183, 188);
+  --medium-grey: rgb(92, 95, 106);
+  --input-bg: rgb(235, 239, 245);
+  --black: rgb(0, 0, 0);
+  --red: rgb(255, 0, 0);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: var(--faded-white);
+}
+
+.container {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+}
+
+.section .box {
+  display: flex;
+  background-color: var(--white);
+  min-width: 50%;
+  min-height: 45%;
+  border-radius: 16px;
+  padding: 50px 10px;
+}
+
+.section .form-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.section .form-col .input-group {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--grey);
+  gap: 10px;
+  width: 50%;
+}
+
+.section .form-col input[type="text"],
+.section .form-col input[type="password"] {
+    height: 45px;
+    border: 1px solid var(--light-grey);
+    border-radius: 5px;
+    padding: 0 5px;
+    outline: none;
+    font-size: 14px;
+    width: 100%;
+}
+
+.section .form-col button {
+  width: 100%;
+  height: 44px;
+  color: var(--white);
+  background-color: var(--black);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.section form .form-error {
+  font-size: 12px;
+  color: var(--red);
+  text-align: center;
+}
+
+.section .error-message {
+  font-size: 14px;
+  color: var(--red);
+  text-align: center;
+  border: 1px solid var(--red);
+  border-radius: 9px;
+  padding: 10px 60px;
+}
+
+header {
+  display: flex;
+  width: 100%;
+}
+
+.navbar {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  padding: 20px 50px;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.navbar .head {
+  display: flex;
+  flex-direction: row;
+  gap: 200px;
+}
+
+.navbar .head .logo a {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+  text-decoration: none;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--black);
+}
+
+.navbar .head .page-name {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
+}
+
+.navbar .head .page-name .base-page {
+  font-size: 14px;
+  color: var(--medium-grey);
+}
+
+.navbar .head .page-name svg {
+  fill: var(--medium-grey);
+}
+
+.navbar .head .page-name .current {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--black);
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+}
+
+.sidebar {
+  display: flex;
+  position: relative;
+  background-color: var(--white);
+  min-height: 100vh;
+  width: 260px;
+  max-width: 260px;
+  margin-top: -66px;
+  filter: drop-shadow();
+  justify-content: center;
+  align-items: center;
+}
+
+.sidebar ul {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+  flex-direction: column;
+}
+
+.sidebar ul li {
+  height: 40px;
+  width: 210px;
+}
+
+.sidebar ul li a {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+  text-decoration: none;
+  font-size: 15px;
+  color: var(--medium-grey);
+  width: 100%;
+  height: 100%;
+  padding: 0 50px;
+}
+
+.sidebar ul .active {
+  background-color: var(--faded-white);
+  border-radius: 6px;
+  color: var(--black);
+}
+
+.search-box {
+  display: flex;
+  border: 1px solid var(--grey);
+  border-radius: 5px;
+  align-items: center;
+  min-height: 35px;
+  padding: 0 0 0 10px;
+  gap: 10px;
+  align-items: center;
+}
+
+.search-box input[type="text"] {
+  border: none;
+  min-height: 35px;
+  outline: none;
+  background-color: transparent;
+}
+
+.cover {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--white);
+  width: 75%;
+  max-width: 80%;
+  min-height: 90vh;
+  padding: 40px 40px;
+  border-radius: 6px;
+}
+
+.cover .cover-head {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cover .cover-head .row {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+}
+
+.cover .cover-head .row a {
+  text-decoration: none;
+  color: var(--white);
+  background-color: var(--black);
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.cover .line {
+  width: 100%;
+  height: 1px;
+  background-color: var(--light-grey);
+  margin-bottom: 10px;
+}
+
+
+.cover form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  padding: 30px 40px;
+}
+
+.cover form .input-row {
+  display: flex;
+  flex-direction: row;
+  gap: 80px;
+}
+
+.cover form .input-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cover form  input[type="text"],
+.cover form  input[type="password"],
+.cover form select{
+  display: flex;
+  width: 280px;
+  height: 35px;
+  background-color: var(--input-bg);
+  border-radius: 6px;
+  outline: none;
+  border: 1px solid var(--light-grey);
+  padding: 0 5px;
+  align-items: center;
+}
+
+.cover form textarea {
+  display: flex;
+  background-color: var(--input-bg);
+  border-radius: 6px;
+  outline: none;
+  border: 1px solid var(--light-grey);
+  padding: 5px 5px;
+  align-items: center;
+}
+
+.cover form label {
+  font-size: 14px;
+  color: var(--medium-grey);
+}
+
+.file-input-container {
+  display: inline-block;
+  position: relative;
+  border: 1px solid var(--light-grey);
+  border-radius: 8px;
+  background-color: #f8f9fc;
+  padding: 10px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 280px;
+}
+
+.file-input-container:hover {
+  background-color: var(--input-bg);
+}
+
+.file-input-container i {
+  font-size: 24px;
+  color: #888;
+}
+
+.file-input-container span {
+  font-size: 14px;
+  color: var(--medium-grey)
+}
+
+.file-input {
+  position: absolute;
+  opacity: 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.image-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.image-item {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-preview-container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.image-preview-container .remove-btn {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  color: var(--white);
+  background-color: var(--black);
+  border: none;
+  border-radius: 6px;
+  width: 15px;
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.image-preview-container .remove-btn:hover {
+  background-color: rgba(255, 0, 0, 0.8);
+  color: #fff;
+}
+
+#cropper-modal {
+  display: flex;
+  position: absolute;
+  flex-direction: column;
+  top: 50px;
+  right: 10px;
+  width: 100%;
+  max-width: 50vh;
+  z-index: 10;
+  gap: 10px;
+  background-color: var(--white);
+}
+
+#cropper-modal .button {
+  padding: 5px;
+  color: var(--white);
+  background-color: var(--black);
+  cursor: pointer;
+}
+
+.colors {
+  display: flex;
+  gap: 10px;
+}
+
+.color-option {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 30px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.color-option:hover {
+  border-color: #000;
+}
+
+.color-option {
+  background-color: transparent;
+}
+
+.variants {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.variants .variant-option {
+  padding: 5px;
+  border: 1px solid var(--black);
+  border-radius: 5px 2px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.button {
+  padding: 10px 15px;
+  color: var(--white);
+  background-color: var(--black);
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.button-2 {
+  padding: 10px 15px;
+  color: var(--black);
+  background-color: var(--white);
+  text-decoration: none;
+  border: 1px solid var(--black);;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}

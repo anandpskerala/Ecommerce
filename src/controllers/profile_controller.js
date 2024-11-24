@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const otps = require('../models/otp_model');
 const users = require('../models/user_model');
 
@@ -35,7 +36,6 @@ const verify_otp = async (req, res) => {
     const {email} = req.session.otp;
     const result = await otps.findOne({email, otp});
     if (result) {
-        delete req.session.otp;
         return res.redirect("/user/reset-password");
     } else {
         req.session.error = "Invalid OTP";
@@ -43,4 +43,24 @@ const verify_otp = async (req, res) => {
     }
 };
 
-module.exports= { send_otp, verify_otp }; 
+const reset_password = async (req, res) => {
+    const {password} = req.body;
+    const salt = await bcrypt.genSalt(10);
+    const hashed_password = await bcrypt.hash(password, salt);
+    if (!req.session.otp) {
+        req.session.error = "Session expired. Please try again";
+        return res.redirect("/forgot-password");
+    }
+    const { email } = req.session.otp;
+    const user = await users.findOne({email});
+    if (user) {
+        await users.updateOne({email}, {$set: {password: hashed_password}});
+        delete req.session.otp;
+        return res.redirect("/login");
+    } else {
+        req.session.error = "Failed to reset password";
+        return res.redirect("/user/reset-password");
+    }
+}
+
+module.exports= { send_otp, verify_otp, reset_password }; 

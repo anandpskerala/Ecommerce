@@ -1,0 +1,29 @@
+<%- include('../partials/admin/header.ejs') %>
+<div class="container">
+    <div class="section">
+        <h1>Admin Login</h1>
+        <div class="box">
+            <form  class="form-col" id="auth-form" method="post">
+                <% if (error_message && error_message.length > 0) { %>
+                    <p class="error-message"><%= error_message %></p>
+                <% } %>
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="text" name="email" id="email" value="" data-validate="required">
+                    <span id="email_error" class="form-error"></span>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" name="password" id="password" value="" data-validate="required">
+                    <span id="password_error" class="form-error"></span>
+                </div>
+
+                <div class="input-group" style="margin-top: 30px;">
+                    <button>Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<%- include('../partials/admin/footer.ejs') %>
