@@ -4,6 +4,44 @@
 </header>
 <div class="row">
     <%- include('../partials/admin/sidebar.ejs') %>
-    <h1>Test</h1>
+    <div class="cover">
+        <div class="cover-head">
+            <h2>Categories</h2>
+            <div class="row">
+                <a href="/admin/add-category" style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 10H18" stroke="#F5F5F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 2V18" stroke="#F5F5F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span style="font-weight: 500;">Create Category</span>                        
+                </a>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Category Name</th>
+                    <th>Added</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="user-table">
+                <% categories.forEach((category) => { %>
+                    <tr>
+                        <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                            <img src="/images/<%= category.image %>" style="width: 44px; height: 44px; border-radius: 6px;" alt="<%= category.name %> logo">
+                            <span><%= category.name %></span>
+                        </td>
+                        <td><%= category.updatedAt ? time.formatDate(category.updatedAt): time.formatDate(category.createdAt) %></td>
+                        <td>
+                            <button class="action-btn action-edit" onclick="edit_category('<%= JSON.stringify(category) %>')">Edit</button>
+                            <button class="action-btn action-delete" onclick="delete_category('<%= category._id %>')">Delete</button>                              
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
 </div>
 <%- include('../partials/admin/footer.ejs') %>

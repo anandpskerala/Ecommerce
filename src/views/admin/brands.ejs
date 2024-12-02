@@ -4,6 +4,43 @@
 </header>
 <div class="row">
     <%- include('../partials/admin/sidebar.ejs') %>
-    <h1>Test</h1>
+    <div class="cover">
+        <div class="cover-head">
+            <h2>Brands</h2>
+            <div class="row">
+                <a href="/admin/add-brand" style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 10H18" stroke="#F5F5F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 2V18" stroke="#F5F5F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span style="font-weight: 500;">Create Brand</span>                        
+                </a>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Brand Name</th>
+                    <th>Added</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="user-table">
+                <% brands.forEach((brand) => { %>
+                    <tr>
+                        <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                            <img src="/images/<%= brand.image %>" style="width: 44px; height: 44px; border-radius: 6px;" alt="<%= brand.name %> logo">
+                            <span><%= brand.name %></span>
+                        </td>
+                        <td><%= brand.updatedAt ? time.formatDate(brand.updatedAt): time.formatDate(brand.createdAt) %></td>
+                        <td>
+                            <button class="action-btn action-edit" onclick="edit_brand('<%= JSON.stringify(brand) %>')">Edit</button>
+                            <button class="action-btn action-delete" onclick="delete_brand('<%= brand._id %>')">Delete</button>                               
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
 </div>
 <%- include('../partials/admin/footer.ejs') %>

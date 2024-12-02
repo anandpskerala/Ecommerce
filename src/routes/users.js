@@ -6,25 +6,49 @@ const routes = express.Router();
 
 
 routes.get("/signup", (req, res) => {
-    const error_message = req.session.error || null;
-    req.session.error = null;
-    return res.render('user/signup', {title: "Signup", error_message});
+    try {
+        const error_message = req.session.error || null;
+        req.session.error = null;
+        return res.render('user/signup', {title: "Signup", error_message});
+    } catch (err) {
+        console.log(err);
+        return res.redirect('/error');
+    }
 })
 
 routes.get("/login", (req, res) => {
-    const error_message = req.session.error || null;
-    req.session.error = null;
-    return res.render('user/login', {title: "Login", error_message});
+    try {
+        const error_message = req.session.error || null;
+        req.session.error = null;
+        return res.render('user/login', {title: "Login", error_message});
+    } catch (err) {
+        console.log(err);
+        return res.redirect('/error');
+    }
 });
 
 routes.get("/", auth.authenticateUser, (req, res) => {
-    return res.render('user/home', {title: "Home"});
+    try {
+        return res.render('user/home', {title: "Home"});
+    }  catch (err) {
+        console.log(err);
+        return res.redirect('/error');
+    }
 })
 
 routes.get("/forgot-password", (req, res) => {
     const error_message = req.session.error || null;
     req.session.error = null;
     return res.render('user/forgot_password', {title: "Forgot Password", error_message});
+})
+
+routes.get("/error", (req, res) => {
+    try {
+        return res.render('partials/user/error', {title: "Error"});
+    }  catch (err) {
+        console.log(err);
+        return res.redirect('/error');
+    }
 })
 
 routes.post("/signup", controllers.user_signup);

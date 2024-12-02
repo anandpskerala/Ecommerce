@@ -13,7 +13,6 @@ const profile_routes = require("./routes/profile");
 const admin_routes = require("./routes/admin");
 
 dotenv.config();
-connectDB();
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -25,6 +24,7 @@ app.use(no_cache);
 app.use(cors());
 app.use(logger('[:method]   -  :url  -  :response-time ms'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, 'uploads')));
 app.use(body_parser.urlencoded({ extended: true }));
 app.use(session({
     secret: process.env.SESSION_SECRET,
@@ -39,7 +39,9 @@ app.use(session({
 app.use('/', user_routes);
 app.use('/user', profile_routes);
 app.use('/admin', admin_routes);
+app.use((req, res) => res.render('partials/user/error', {title: "Error"}));
 
 app.listen(port, () => {
+    connectDB();
     console.log(`Server running on port ${port}`);
 })

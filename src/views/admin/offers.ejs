@@ -4,6 +4,19 @@
 </header>
 <div class="row">
     <%- include('../partials/admin/sidebar.ejs') %>
-    <h1>Test</h1>
+    <div class="cover">
+        <div class="cover-head">
+            <h2>Offers</h2>
+            <div class="row">
+                <a href="/admin/create-offer" style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 10H18" stroke="#F5F5F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 2V18" stroke="#F5F5F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span style="font-weight: 500;">Create Offer</span>                        
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 <%- include('../partials/admin/footer.ejs') %>

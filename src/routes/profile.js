@@ -5,15 +5,25 @@ const routes = express.Router();
 
 
 routes.get("/verify-otp", (req, res) => {
-    const error_message = req.session.error || null;
-    req.session.error = null;
-    return res.render('user/verify_otp', {title: "Verify OTP", error_message, session: req.session.otp});
+    try {
+        const error_message = req.session.error || null;
+        req.session.error = null;
+        return res.render('user/verify_otp', {title: "Verify OTP", error_message, session: req.session.otp});
+    } catch (err) {
+        console.log(err);
+        return res.redirect('/error');
+    }
 });
 
 routes.get("/reset-password", (req, res) => {
-    const error_message = req.session.error || null;
-    req.session.error = null;
-    return res.render('user/reset_password', {title: "Reset Password", error_message});
+    try {
+        const error_message = req.session.error || null;
+        req.session.error = null;
+        return res.render('user/reset_password', {title: "Reset Password", error_message});
+    } catch (err) {
+        console.log(err);
+        return res.redirect('/error');
+    }
 });
 
 routes.post("/send-otp", controllers.send_otp);

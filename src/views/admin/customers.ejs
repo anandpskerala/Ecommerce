@@ -12,19 +12,61 @@
                     <svg width="25" height="25" viewBox="0 0 25 25" fill="none" class="search-icon" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12.1383 19.219C14.1931 19.219 16.1638 18.4027 17.6168 16.9498C19.0697 15.4968 19.886 13.5261 19.886 11.4713C19.886 9.41651 19.0697 7.44585 17.6168 5.99288C16.1638 4.53991 14.1931 3.72363 12.1383 3.72363C10.0835 3.72363 8.11284 4.53991 6.65987 5.99288C5.2069 7.44585 4.39063 9.41651 4.39062 11.4713C4.39063 13.5261 5.2069 15.4968 6.65987 16.9498C8.11284 18.4027 10.0835 19.219 12.1383 19.219Z" stroke="#878A92" stroke-width="1.44" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M21.4356 21.7546L17.4913 17.8104" stroke="#878A92" stroke-width="1.44" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>                    
-                    <input type="text" placeholder="Search customers" />
+                    </svg>
+                    <input type="text" id="user-search" placeholder="Search customers" value="<%= email %>" />
                 </div>
             </div>
         </div>
-        <span class="line"></span>
-        <div style="display: flex; flex-direction: row; justify-content: space-between; padding: 0px 50px; margin-bottom: 10px;">
-            <p>Name</p>
-            <p>Email</p>
-            <p>Status</p>
-            <p>Action</p>
-        </div>
-        <span class="line"></span>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="user-table">
+                <% data.forEach((user) => { %>
+                    <% let status = user.is_blocked == false ? 'active' : 'blocked' %>
+                    <tr>
+                        <td><%- user.first_name + " " + user.last_name %></td>
+                        <td><%= user.email %></td>
+                        <td><span class="status-<%= status %>"><%= status %></span></td>
+                        <td>
+                            <button class="action-btn action-edit" onclick="edit_user('<%= JSON.stringify(user) %>')">Edit</button>
+                            <button class="action-btn action-delete" onclick="delete_user('<%= user._id %>')">Delete</button>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+
+        <ul class="pagination">
+            <% let mail = email.length > 0? `&email=${email}`: ''; %>
+            <!-- Previous Page -->
+            <% if (currentPage > 1) { %>
+                <li><a href="/admin/customers?page=<%= currentPage - 1 %><%= mail %>">&lt;</a></li>
+            <% } else { %>
+                <li><a style="color: black;"><span>&lt;</span></a></li>
+            <% } %>
+    
+            <!-- Page Numbers -->
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li>
+                    <a href="/admin/customers?page=<%= i %><%= mail %>" class="<%= i === currentPage ? 'active' : '' %>">
+                        <%= i %>
+                    </a>
+                </li>
+            <% } %>
+    
+            <!-- Next Page -->
+            <% if (currentPage < totalPages) { %>
+                <li><a href="/admin/customers?page=<%= currentPage + 1 %> <%= mail %>">&gt;</a></li>
+            <% } else { %>
+                <li><a style="color: black;"><span>&gt;</span></a></li>
+            <% } %>
+        </ul>
     </div>
 </div>
 <%- include('../partials/admin/footer.ejs') %>

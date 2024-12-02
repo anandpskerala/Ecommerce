@@ -7,7 +7,7 @@
     <div class="cover">
         <h3 style="margin-bottom: 20px;">Add Product</h3>
         <span class="line"></span>
-        <form action="" method="post">
+        <form id="product-form" enctype="multipart/form-data">
             <div class="input-row">
                 <div class="input-col">
                     <label for="title">Title</label>
@@ -57,7 +57,7 @@
                             <path d="M4.80776 16.2858H2.41216C2.09448 16.2858 1.78982 16.1595 1.56518 15.935C1.34055 15.7104 1.21436 15.4056 1.21436 15.088V5.50557M1.21436 5.50557H16.7858M1.21436 5.50557L3.8615 1.31326C3.96393 1.13567 4.11023 0.987344 4.28641 0.882483C4.46258 0.777621 4.66271 0.719731 4.86765 0.714355H13.1325C13.3374 0.719731 13.5376 0.777621 13.7138 0.882483C13.8899 0.987344 14.0362 1.13567 14.1386 1.31326L16.7858 5.50557M16.7858 5.50557V15.088C16.7858 15.4056 16.6595 15.7104 16.4349 15.935C16.2104 16.1595 15.9056 16.2858 15.588 16.2858H13.1924M6.00552 12.0935L9.00003 9.09897M9.00003 9.09897L11.9945 12.0935M9.00003 9.09897L9.00011 16.2858M9.00011 0.714355V5.50556" stroke="#5C5F6A" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>                            
                         <span>Choose product images</span>
-                        <input type="file" id="file-input" class="file-input" multiple accept="image/*">
+                        <input name="images" type="file" id="file-input" class="file-input" accept="image/*" multiple>
                     </div>
                 </div>
             </div>
@@ -66,7 +66,7 @@
                 <div class="input-col">
                     <label for="brand">Brand</label>
                     <select name="brand" id="brand">
-                        <% categories.forEach((category) => { %>
+                        <% brands.forEach((category) => { %>
                             <option value="<%= category.name %>"><%= category.name %></option>
                         <% }) %>
                     </select>
@@ -95,10 +95,10 @@
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <label>Colors</label>
                     <div class="colors">
-                        <div class="color-option" style="background-color: black;" title="Black"></div>
-                        <div class="color-option" style="background-color: gold;" title="Gold"></div>
-                        <div class="color-option" style="background-color: lightgreen;" title="Green"></div>
-                        <div class="color-option" style="background-color: blue;" title="Blue"></div>
+                        <div class="color-option" style="background-color: black;" title="Black" data-color="black"></div>
+                        <div class="color-option" style="background-color: gold;" title="Gold" data-color="gold"></div>
+                        <div class="color-option" style="background-color: lightgreen;" title="Green" data-color="green"></div>
+                        <div class="color-option" style="background-color: blue;" title="Blue" data-color="blue"></div>
                     </div>
                 </div>
             </div>
@@ -123,7 +123,7 @@
             </div>
 
             <div class="input-row">
-                <button class="button">Add Product</button>
+                <button class="button" id="submit-btn" type="submit">Add Product</button>
                 <a href="/admin/products" class="button-2">Cancel</a>
             </div>
         </form>

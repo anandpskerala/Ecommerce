@@ -8,7 +8,8 @@ const Schema = mongoose.Schema({
     },
     last_name: { 
         type: String, 
-        required: true
+        required: false,
+        default: ''
     },
     email: {
         type: String,
@@ -18,11 +19,17 @@ const Schema = mongoose.Schema({
     google_id: {
         type: String,
         required: false,
-        unique: true
     },
     password: {
         type: String,
         required: false
+    },
+    phone_number: { 
+        type: String 
+    },
+    is_blocked: {
+        type: Boolean,
+        default: false
     },
     createdAt: {
         type: Date,

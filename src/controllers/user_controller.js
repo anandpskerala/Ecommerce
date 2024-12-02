@@ -55,6 +55,11 @@ const user_login = async (req, res) => {
             return res.redirect("/login");
         }
 
+        if (exists.is_blocked) {
+            req.session.error = "You can access this account";
+            return res.redirect("/login");
+        }
+
         if (!exists.password) {
             req.session.error = "Email or Password doesn't match";
             return res.redirect("/login");
@@ -120,9 +125,14 @@ const user_logout = (req, res) => {
 
 
 const google_login = (req, res) => {
-    const REDIRECT_URI = 'http://localhost:3000/login/google/auth';
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile email`;
-    return res.redirect(url);
+    try {
+        const REDIRECT_URI = 'http://localhost:3000/login/google/auth';
+        const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile email`;
+        return res.redirect(url);
+    } catch (err) {
+        console.log(err);
+        return res.redirect('/error');
+    }
 }
 
 const auth_google = async (req, res) => {
@@ -191,7 +201,12 @@ const auth_google = async (req, res) => {
             if (!exists.google_id) {
                 req.session.error = "Already an account exists";
                 return res.redirect("/login");
-            } 
+            }
+
+            if (exists.is_blocked) {
+                req.session.error = "You can access this account";
+                return res.redirect("/login");
+            }
 
             if (req.session.admin) {
                 req.session.user = {

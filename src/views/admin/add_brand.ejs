@@ -1,0 +1,29 @@
+<%- include('../partials/admin/header.ejs') %>
+<header>
+    <%- include('../partials/admin/navbar.ejs') %>
+</header>
+<div class="row">
+    <%- include('../partials/admin/sidebar.ejs') %>
+    <div class="cover">
+        <form id="brand-form" enctype="multipart/form-data">
+            <div class="col" style="display: flex; flex-direction: column;  gap: 15px;">
+                <label for="name">Brand Name</label>
+                <input type="text" id="name" name="name" style="width: 830px;" placeholder="Type here">
+            </div>
+            <div class="col" style="display: flex; flex-direction: column;  gap: 15px;">
+                <label for="description">Description</label>
+                <textarea name="description" id="description" style="width: 830px; height: 95px;" placeholder="Type here"></textarea>
+            </div>
+            <div class="col" style="display: flex; flex-direction: column;  gap: 15px;">
+                <label for="image">Brand Icon</label>
+                <input type="file" id="image" name="image" style="width: 830px; background-color: var(--input-bg); padding: 10px 10px; border-radius: 6px;" accept="image/*">
+            </div>
+
+            <div style="display: flex; flex-direction: row; gap: 10px; justify-content: center; margin-top: 60px;">
+                <a href="/admin/brands" class="button-2">Cancel</a>
+                <button class="button" id="submit-btn" type="submit">Create Brand</button>
+        </form>
+    </div>
+</div>
+</div>
+<%- include('../partials/admin/footer.ejs') %>

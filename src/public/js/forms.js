@@ -1,5 +1,7 @@
 const form = document.getElementById('auth-form');
-const otp_form = document.getElementById('otp-form');
+const timerElement = document.getElementById("timer");
+const resendBtn = document.getElementById("resendBtn");
+const submitBtn = document.getElementById("submitBtn");
 
 const validationRules = {
     required: value => value.trim() !== '' || 'This field is required.',
@@ -7,6 +9,7 @@ const validationRules = {
     email: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || 'Invalid email address.',
     uppercase: value => /[A-Z]/.test(value) || 'Must contain at least one uppercase letter.',
     number: value => /\d/.test(value) || 'Must contain at least one number.',
+    phonenumber: value => value === '' || /^\+?\d+$/.test(value) || 'Must contain only phone numbers.',
     match: (value, fieldId) => {
         const targetField = document.getElementById(fieldId);
         return value === targetField.value || 'Password does not match.';
@@ -15,7 +18,7 @@ const validationRules = {
 
 const handleValidation = (input) => {
     if (!input.dataset.validate) {
-        return true; // Skip validation if no rules are defined
+        return true;
     }
     const rules = input.dataset.validate.split('|');
     const errorSpan = input.nextElementSibling;
@@ -82,31 +85,29 @@ if (form) {
                 otp_input.className = "otp-box"
                 form.appendChild(otp_input);
             }
+
             form.submit();
             form.reset();
         }
     });
 }
 
-
-const timerElement = document.getElementById("timer");
-const resendBtn = document.getElementById("resendBtn");
-
 function startTimer(remainingTime) {
 
     const interval = setInterval(() => {
-    const minutes = Math.floor(remainingTime / 60);
-    const seconds = remainingTime % 60;
-    timerElement.textContent = `OTP valid for: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        const minutes = Math.floor(remainingTime / 60);
+        const seconds = remainingTime % 60;
+        timerElement.textContent = `OTP valid for: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-    remainingTime--;
+        remainingTime--;
 
-    if (remainingTime < 0) {
-        clearInterval(interval);
-        timerElement.textContent = "OTP expired.";
-        resendBtn.disabled = false;
-        resendBtn.classList.add("active");
-    }
+        if (remainingTime < 0) {
+            clearInterval(interval);
+            timerElement.textContent = "OTP expired.";
+            submitBtn.disabled = true;
+            resendBtn.disabled = false;
+            resendBtn.classList.add("active");
+        }
     }, 1000);
 }
 
@@ -128,9 +129,10 @@ if (resendBtn) {
         } else {
             window.location.href = "/forgot-password";
         }
+        submitBtn.disabled = false;
         resendBtn.disabled = true;
         resendBtn.classList.remove("active");
-        startTimer(); 
+        startTimer(120); 
     });
 }
 
