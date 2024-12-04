@@ -27,14 +27,14 @@
 
             <div class="input-row">
                 <div class="input-col">
-                    <label for="price">Price</label>
-                    <input type="text" name="price" id="price">
+                    <label for="price">Base Price</label>
+                    <input type="number" name="price" id="price">
                     <span class="form-error" id="price-error"></span>
                 </div>
 
                 <div class="input-col">
                     <label for="quantity">Available Quantity</label>
-                    <input type="text" name="quantity" id="quantity">
+                    <input type="number" name="quantity" id="quantity">
                     <span class="form-error" id="quantity-error"></span>
                 </div>
             </div>
@@ -66,8 +66,8 @@
                 <div class="input-col">
                     <label for="brand">Brand</label>
                     <select name="brand" id="brand">
-                        <% brands.forEach((category) => { %>
-                            <option value="<%= category.name %>"><%= category.name %></option>
+                        <% brands.forEach((brand) => { %>
+                            <option value="<%= brand.name %>"><%= brand.name %></option>
                         <% }) %>
                     </select>
                     <span class="form-error" id="brand-error"></span>
@@ -86,8 +86,8 @@
                 <div class="input-col">
                     <label for="offer">Offer</label>
                     <select name="offer" id="offer">
-                        <% categories.forEach((category) => { %>
-                            <option value="<%= category.name %>"><%= category.name %></option>
+                        <% offers.forEach((offer) => { %>
+                            <option value="<%= offer.name %>"><%= offer.name %></option>
                         <% }) %>
                     </select>
                     <span class="form-error" id="offer-error"></span>
@@ -99,6 +99,7 @@
                         <div class="color-option" style="background-color: gold;" title="Gold" data-color="gold"></div>
                         <div class="color-option" style="background-color: lightgreen;" title="Green" data-color="green"></div>
                         <div class="color-option" style="background-color: blue;" title="Blue" data-color="blue"></div>
+                        <input type="hidden" name="colors" id="colors">
                     </div>
                 </div>
             </div>
@@ -113,6 +114,7 @@
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <label>Variants</label>
                     <div class="variants">
+                        <input type="hidden" id="variants" name="variants" value="">
                         <div class="variant-option" title="128 GB">128 GB</div>
                         <div class="variant-option" title="256 GB">256 GB</div>
                         <div class="variant-option" title="500 GB">500 GB</div>

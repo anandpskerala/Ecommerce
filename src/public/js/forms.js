@@ -104,6 +104,7 @@ function startTimer(remainingTime) {
         if (remainingTime < 0) {
             clearInterval(interval);
             timerElement.textContent = "OTP expired.";
+            timerElement.style.color = "var(--red)"
             submitBtn.disabled = true;
             resendBtn.disabled = false;
             resendBtn.classList.add("active");
@@ -132,11 +133,25 @@ if (resendBtn) {
         submitBtn.disabled = false;
         resendBtn.disabled = true;
         resendBtn.classList.remove("active");
-        startTimer(120); 
+        timerElement.style.color = "var(--grey)";
+        startTimer(120)
     });
 }
 
 
 if (timerElement) {
-    startTimer(120);
+    const expiryElement = document.getElementById('expiry');
+    if (expiryElement) {
+        const expiry = new Date(expiryElement.value);
+        const now = new Date();
+        const remainingTime = Math.floor((expiry - now) / 1000);
+
+        if (remainingTime > 0) {
+            startTimer(remainingTime); 
+        } else {
+            console.warn("The expiry date has already passed.");
+        }
+    } else {
+        startTimer(120);
+    }
 }

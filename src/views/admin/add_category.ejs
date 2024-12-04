@@ -6,15 +6,15 @@
     <%- include('../partials/admin/sidebar.ejs') %>
     <div class="cover">
         <form id="category-form" enctype="multipart/form-data">
-            <div class="col" style="display: flex; flex-direction: column;  gap: 15px;">
+            <div class="col">
                 <label for="name">Category Name</label>
                 <input type="text" id="name" name="name" style="width: 830px;" placeholder="Type here">
             </div>
-            <div class="col" style="display: flex; flex-direction: column;  gap: 15px;">
+            <div class="col">
                 <label for="description">Description</label>
                 <textarea name="description" id="description" style="width: 830px; height: 95px;" placeholder="Type here"></textarea>
             </div>
-            <div class="col" style="display: flex; flex-direction: column;  gap: 15px;">
+            <div class="col">
                 <label for="image">Category Icon</label>
                 <input type="file" id="image" name="image" style="width: 830px; background-color: var(--input-bg); padding: 10px 10px; border-radius: 6px;" accept="image/*">
             </div>

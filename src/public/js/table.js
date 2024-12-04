@@ -12,6 +12,20 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    const productSearchElement = document.getElementById("product-search");
+    if (productSearchElement) {
+        productSearchElement.addEventListener("keyup", async (event) => {
+            if (event.keyCode === 13) {
+                const searchTerm = event.target.value.trim();
+                if (searchTerm.length > 0) {
+                    window.location.href = `/admin/products?product=${searchTerm}`;
+                } else {
+                    window.location.href = `/admin/products`;
+                }
+            }
+        });
+    }
 });
 
 const edit_user = async (data) => {
@@ -327,3 +341,55 @@ const delete_category = (id) => {
         }
     });
 }
+
+const delete_offer = (id) => {
+    Swal.fire({
+        title: "Delete Offer",
+        text: "Are you sure you want to delete this offer?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Delete",
+        preConfirm: () => {
+            return fetch(`/admin/delete-offer/${id}`, {
+                method: 'DELETE',
+            })
+           .then(response => response.json())
+           .then(data => {
+                if (data.success) {
+                    alert_success(data.message);
+                } else {
+                    alert_error(data.message);
+                }
+            });
+        }
+    }
+);
+}
+
+const delete_product = async (id) => {
+    Swal.fire({
+        title: "Delete Product",
+        text: "Are you sure you want to delete this product?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Delete",
+        preConfirm: () => {
+            return fetch(`/admin/delete-product/${id}`, {
+                method: 'DELETE',
+            })
+           .then(response => response.json())
+           .then(data => {
+                if (data.success) {
+                    alert_success(data.message);
+                } else {
+                    alert_error(data.message);
+                }
+            });
+        }
+    });
+}
+

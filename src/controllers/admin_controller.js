@@ -5,6 +5,8 @@ const admins = require('../models/admin_model');
 const users = require('../models/user_model');
 const brands = require('../models/brand_model');
 const category = require('../models/category_model');
+const offer = require('../models/offer_model');
+const product_model = require('../models/product_model');
 const timer = require('../utils/time');
 
 const admin_login = async (req, res) => {
@@ -118,10 +120,65 @@ const delete_user = async (req, res) => {
     }
 }
 
-const add_product_form = async (req, res) => {
-    console.log(req.body);
-    console.log(req.files)
+const load_products = async (req, res) => {
+    const { page = 1, limit = 10, product = "" } = req.query;
+    const search_product = product != "" ? {title: {$regex: product}}: {};
+    const products = await product_model.find(search_product).skip((page - 1) * limit).limit(Number(limit));
+    const total = await product_model.countDocuments();
+    return res.render(
+        "admin/products", 
+        {
+            title: "Products",
+            page: "Products", 
+            products,
+            totalPages: Math.ceil(total / limit),
+            currentPage: Number(page),
+            productQuery: product
+        }
+    );
 }
+
+const add_product_form = async (req, res) => {
+    try {
+        let body = req.body;
+        let { variants } = req.body;
+        let parse_variants = JSON.parse(variants);
+        let files = req.files.map((file) => file.filename);
+        let variant_list = [];
+        for (variant in parse_variants) {
+            variant_list.push({name: variant, ...parse_variants[variant]})
+        }
+        let data = {...body, images: files, variants: variant_list};
+        const product = new product_model(data);
+        await product.save();
+        return res.status(200).json({success: true, message: "Product added successfully"});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({success: false, message: "An error occurred"});
+    }
+
+}
+
+const delete_product = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const exists = await product_model.findOne({_id: id});
+        if (!exists) {
+            return res.status(404).json({success: false, message: "Product not found"});
+        }
+        await product_model.deleteOne({_id: id});
+        for (image in exists.images) {
+            fs.unlink(path.join(__dirname, '../uploads', exists.images[image]), (err) => {
+                if (err) console.error("Error deleting file:", err);
+                console.log("File deleted successfully");
+            });
+        }
+        return res.status(200).json({success: true, message: "Product deleted successfully"});
+    } catch (err) {
+        console.error("Error in delete product:", err);
+        return res.status(500).json({success: false, message: "An error occurred"});
+    }
+};
 
 const add_brand_form = async (req, res) => {
     try {
@@ -148,13 +205,16 @@ const add_brand_form = async (req, res) => {
 const load_brands = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const all_brands = await brands.find().skip((page - 1) * limit).limit(Number(limit));
+    const total = await brands.countDocuments();
     return res.render(
         "admin/brands", 
         {
             title: "Brands",
             page: "Brands",
             brands: all_brands,
-            time: timer
+            time: timer,
+            totalPages: Math.ceil(total / limit),
+            currentPage: Number(page),
         }
     );
 }
@@ -215,14 +275,18 @@ const add_category_form = async (req, res) => {
 }
 
 const load_category = async (req, res) => {
-    const categories = await category.find({});
+    const { page = 1, limit = 10 } = req.query;
+    const categories = await category.find().skip((page - 1) * limit).limit(Number(limit));
+    const total = await category.countDocuments();
     return res.render(
         "admin/categories", 
         {
             title: "Categories", 
             page: "Categories", 
             categories,
-            time: timer
+            time: timer,
+            totalPages: Math.ceil(total / limit),
+            currentPage: Number(page),
         }
     );
 }
@@ -262,13 +326,59 @@ const delete_category = async (req, res) => {
     return res.status(200).json({success: true, message: "Category deleted successfully"});
 };
 
+const create_offer = async (req, res) => {
+    try {
+        const { name } = req.body;
+        const exists = await offer.findOne({name});
+        if (exists) {
+            return res.status(400).json({success: false, message: "Offer already exists"});
+        }
+        
+        const offers = new offer(req.body);
+        await offers.save();
+        return res.status(201).json({success: true, message: "Offer added successfully"});
+    } catch (err) {
+        console.error("Error in create offer:", err);
+        return res.status(500).json({success: false, message: "An error occurred"});
+    }
+};
+
+const load_offers = async (req, res) => {
+    const { page = 1, limit = 10 } = req.query;
+    const offers = await offer.find().skip((page - 1) * limit).limit(Number(limit));
+    const total = await offer.countDocuments();
+    return res.render(
+        "admin/offers", 
+        {
+            title: "Offers", 
+            page: "Offers", 
+            offers,
+            time: timer,
+            totalPages: Math.ceil(total / limit),
+            currentPage: Number(page),
+        }
+    );
+};
+
+const delete_offer = async (req, res) => {
+    const { id } = req.params;
+    const exists = await offer.findOne({_id: id})
+    if (!exists) {
+        return res.status(400).json({success: false, message: "Invalid request"});
+    }
+    await offer.deleteOne({_id: id});
+    return res.status(200).json({success: true, message: "Offer deleted successfully"});
+};
+
 module.exports = { 
     admin_login, 
     load_user, 
     admin_logout, 
     edit_user, 
-    delete_user, 
-    add_product_form, 
+    delete_user,
+    load_products,
+    add_product_form,
+    delete_product,
     add_brand_form, 
     load_brands,
     edit_brands,
@@ -276,5 +386,8 @@ module.exports = {
     add_category_form,
     load_category,
     edit_category,
-    delete_category
+    delete_category,
+    create_offer,
+    load_offers,
+    delete_offer
 };

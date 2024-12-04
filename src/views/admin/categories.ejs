@@ -42,6 +42,30 @@
                 <% }) %>
             </tbody>
         </table>
+        <ul class="pagination">
+            <!-- Previous Page -->
+            <% if (currentPage > 1) { %>
+                <li><a href="/admin/categories=<%= currentPage - 1 %>">&lt;</a></li>
+            <% } else { %>
+                <li><a style="color: black;"><span>&lt;</span></a></li>
+            <% } %>
+    
+            <!-- Page Numbers -->
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li>
+                    <a href="/admin/categories?page=<%= i %>" class="<%= i === currentPage ? 'active' : '' %>">
+                        <%= i %>
+                    </a>
+                </li>
+            <% } %>
+    
+            <!-- Next Page -->
+            <% if (currentPage < totalPages) { %>
+                <li><a href="/admin/categories?page=<%= currentPage + 1 %>">&gt;</a></li>
+            <% } else { %>
+                <li><a style="color: black;"><span>&gt;</span></a></li>
+            <% } %>
+        </ul>
     </div>
 </div>
 <%- include('../partials/admin/footer.ejs') %>

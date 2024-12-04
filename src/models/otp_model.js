@@ -13,14 +13,10 @@ const Schema = new mongoose.Schema({
     expiry: {
       type: Date,
       required: true,
-      default: () => new Date(Date.now() + 2 * 60 * 1000)
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-      expires: 60 * 2,
-    },
-});
+      default: () => new Date(Date.now() + 2 * 60 * 1000),
+      expires: 60 * 2
+    }
+}, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}});
 
 async function sendVerificationEmail(email, otp) {
     try {
@@ -39,7 +35,7 @@ async function sendVerificationEmail(email, otp) {
 
 Schema.pre("save", async function (next) {
     if (this.isNew) {
-      //await sendVerificationEmail(this.email, this.otp);
+      await sendVerificationEmail(this.email, this.otp);
     }
     next();
 });

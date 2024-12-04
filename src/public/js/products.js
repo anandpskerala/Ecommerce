@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const colors = document.querySelectorAll('.color-option');
     const selectedColors = new Set();
     let cropper;
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB per image
+    const MAX_FILE_SIZE = 2 * 1024 * 1024;
     const imageArray = [];
     let currentFileIndex = 0;
     let currentFiles = [];
@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const file = currentFiles[currentFileIndex];
 
-            // Validate file size
             if (file.size > MAX_FILE_SIZE) {
                 alert_error(`File "${file.name}" exceeds the 2MB size limit.`);
                 currentFileIndex++;
@@ -142,10 +141,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            const formData = removeFromFormData(new FormData(form), 'images');
+            let validForm = true;
+            for (const input of form.elements) {
+                console.log(input)
+                if (input.value.trim() === "" && input.type !== "file" && input.name !== "variants" && input.name !== "colors" && input.className !== "button" && input.className != "remove-btn") {
+                    validForm = false;
+                    alert_error("Please fill out all required fields");
+                    break;
+                }
+                if (input.type === "file" && input.value.trim() === "") {
+                    validForm = false;
+                    alert_error("Please select at least one image");
+                    break;
+                }
 
+                if (imageArray.length < 3) {
+                    validForm = false;
+                    alert_error("Please select at least 3 images");
+                    break;
+                }
+            }
+
+            if (!validForm) return;
+            const formData = removeFromFormData(new FormData(form), 'images');
             imageArray.forEach((imageData, index) => {
-                formData.append(`images`, blobToFile(imageData.file, imageData.file.name || `cropped-${index}.jpg`)); // Add the Blob object
+                formData.append(`images`, blobToFile(imageData.file, imageData.file.name || `cropped-${index}.jpg`));
             });
 
 
@@ -155,14 +175,19 @@ document.addEventListener('DOMContentLoaded', () => {
             })
                 .then((response) => {
                     if (response.ok) {
-                        alert_success('Product added successfully!');
-                        window.location.reload();
+                        return response.json();
+                    }
+                    throw new Error('Failed to fetch');
+                })
+                .then((data) => {
+                    if (data.success) {
+                        alert_success(data.message);
                     } else {
-                        alert_success('Failed to add product.');
+                        alert_error(data.message);
                     }
                 })
                 .catch((error) => {
-                    console.error('Error:', error);
+                    console.error('Fetch error:', error);
                 });
         });
     }
@@ -173,14 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const color = colorElement.getAttribute('data-color');
 
                 if (selectedColors.has(color)) {
-                    selectedColors.delete(color); // Remove from selected colors
+                    selectedColors.delete(color);
                     colorElement.classList.remove('selected');
                 } else {
-                    selectedColors.add(color); // Add to selected colors
+                    selectedColors.add(color);
                     colorElement.classList.add('selected');
                 }
 
-                console.log([...selectedColors]); // Log selected colors for debugging
+                console.log([...selectedColors]); 
             });
         });
     }
@@ -247,5 +272,159 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             alert_error(res.message)
         }
+    });
+
+
+
+    $("#brand-form").on("submit", async (e) => {
+        e.preventDefault();
+        let form = document.getElementById("brand-form");
+        Array.from(form.elements).forEach((input) => {
+            if (input.type == "file" && input.value.trim() == "") {
+                alert_error("Please select a file")
+                return false;
+            }
+            console.log(input.file)
+            
+            if (input.value.trim() == "" && input.type != "submit") {
+                alert_error("Please fill out all required fields")
+                return false;
+            }
+        });
+        let formdata = new FormData(form);
+        let req = await fetch("/admin/add-brand", {
+            method: "POST",
+            body: formdata,
+        });
+        let res = await req.json();
+        if (res.success) {
+            alert_success(res.message)
+            window.location.href = "/admin/brands"
+        } else {
+            alert_error(res.message)
+        }
+    });
+
+
+    $("#category-form").on("submit", async (e) => {
+        e.preventDefault();
+        let form = document.getElementById("category-form");
+        Array.from(form.elements).forEach((input) => {
+            if (input.type == "file" && input.value.trim() == "") {
+                alert_error("Please select a file")
+                return false;
+            }
+            
+            if (input.value.trim() == "" && input.type != "submit") {
+                alert_error("Please fill out all required fields")
+                return false;
+            }
+        });
+        let formdata = new FormData(form);
+        let req = await fetch("/admin/add-category", {
+            method: "POST",
+            body: formdata,
+        });
+        let res = await req.json();
+        if (res.success) {
+            alert_success(res.message)
+            setTimeout(() => {
+                window.location.href = "/admin/categories"
+            }, 1000);
+            
+        } else {
+            alert_error(res.message)
+        }
+    });
+
+    $("#offer-form").on("submit", async (e) => {
+        e.preventDefault();
+        let form = document.getElementById("offer-form");
+        let formdata = new URLSearchParams();
+        Array.from(form.elements).forEach((input) => {
+            if (input.value.trim() == "" && input.type != "submit") {
+                alert_error("Please fill out all required fields")
+                return false;
+            } else {
+                console.log(input.type)
+                if (input.id == "activation" || input.id == "expiry") {
+                    let date = new Date(input.value).toISOString();
+                    formdata.append(input.name, date);
+                } else { 
+                    formdata.append(input.name, input.value);
+                }
+            }
+        });
+
+        let req = await fetch("/admin/create-offer", {
+            method: "POST",
+            body: formdata,
+        });
+        let res = await req.json();
+        if (res.success) {
+            alert_success(res.message)
+            setTimeout(() => {
+                window.location.href = "/admin/offers"
+            }, 1000);
+            
+        } else {
+            alert_error(res.message)
+        }
+    });
+
+    const variant_elements = document.querySelectorAll(".variant-option");
+    variant_elements.forEach((element) => {
+        element.addEventListener("click", async (e) => {
+            e.preventDefault();
+            let tbody = document.getElementById("variants");
+            let data = tbody.value != "" ? JSON.parse(tbody.value): {};
+            const { value: formValues } = await Swal.fire({
+                title: "Add Variant",
+                html: `
+                <form id="variant-form" style="display: flex; flex-direction: column; width: 100%; align-items: center; gap: 20px;">
+                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+                        <label for="name" class="form-label">Variant Name</label>
+                        <input id="name" name="name" class="swal2-input" value="${e.target.title}" data-validate="required|min:2" disabled>
+                    </div>
+                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+                        <label for="price" class="form-label">Price</label>
+                        <input id="price" type="number" name="price" class="swal2-input" data-validate="required">
+                    </div>
+                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center; gap:10px">
+                        <label for="action" class="form-label">Increment or decrement</label>
+                        <select id="status" name="status" class="swal2-input" style="width: 65%;">
+                            <option value=true>Increment</option>
+                            <option value=false>Decrement</option>
+                        </select>
+                    </div>
+                </form>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: "Save",
+                cancelButtonColor: 'Crimson',
+                preConfirm: () => {
+                    let form = document.getElementById('variant-form');
+                    let res = {...data};
+                    let isValid = true;
+
+                    if (form) {
+                        Array.from(form.elements).forEach((input) => {
+                            if (!handleValidation(input)) {
+                                isValid = false;
+                            } else {
+                                res[input.id] = input.value;
+                            }
+                        })
+                    }
+                    return isValid? res : false;
+                }
+            });
+
+            if (formValues) {
+                data[formValues.name] = {price: formValues.price, status: formValues.status};
+                tbody.value = JSON.stringify(data)
+            }
+        })
     });
 });

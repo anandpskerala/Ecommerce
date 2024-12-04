@@ -167,6 +167,12 @@ header {
   gap: 30px;
 }
 
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .sidebar {
   display: flex;
   position: relative;
@@ -293,10 +299,16 @@ header {
 
 .cover form  input[type="text"],
 .cover form  input[type="password"],
+ .cover form  input[type="date"],
+ .cover form  input[type="email"],
+ .cover form  input[type="number"],
+ .cover form  input[type="tel"],
+ .cover form  input[type="url"],
 .cover form select{
   display: flex;
   width: 280px;
   height: 35px;
+  color: var(--grey);
   background-color: var(--input-bg);
   border-radius: 6px;
   outline: none;
@@ -307,6 +319,7 @@ header {
 
 .cover form textarea {
   display: flex;
+  color: var(--grey);
   background-color: var(--input-bg);
   border-radius: 6px;
   outline: none;
@@ -522,7 +535,7 @@ table thead {
   font-size: 14px;
   text-transform: capitalize;
   justify-content: center;
-  max-width: 80px;
+  width: 80%;
 }
 
 .status-active {
@@ -533,7 +546,7 @@ table thead {
   padding: 5px 15px;
   border-radius: 5px;
   font-size: 14px;
-  max-width: 80px;
+  width: 80%;
   text-transform: capitalize;
   justify-content: center;
 }
@@ -592,4 +605,73 @@ table thead {
 
 .pagination a:hover {
   background-color: #e0e0e0;
+}
+
+.currency-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: var(--input-bg);
+  padding: 0 10px;
+  height: 38px;
+  width: 300px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.currency-symbol {
+  font-size: 18px;
+  color: #555;
+  margin-right: 8px;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--white);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+  align-items: center;
+  gap: 10px;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+}
+
+.product-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.product-name {
+  font-size: 14px;
+  text-align: left;
+  color: var(--grey);
+  font-weight: 500;
+}
+
+.product-price {
+  font-size: 14px;
+  color: var(--black);
+  text-align: left;
+  font-weight: 600;
+}
+
+.product-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }

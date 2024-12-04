@@ -17,6 +17,58 @@
                 </a>
             </div>
         </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Discount</th>
+                    <th>Activation Date</th>
+                    <th>Expiry Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="user-table">
+                <% offers.forEach((offer) => { %>
+                    <tr>
+                        <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                            <span><%= offer.name %></span>
+                        </td>
+                        <td><%= offer.discount %></td>
+                        <td><%= time.formatDate(offer.activation) %></td>
+                        <td><%= time.formatDate(offer.expiry) %></td>
+                        <td>
+                            <button class="action-btn action-delete" onclick="delete_offer('<%= offer._id %>')">Delete</button>                               
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+
+        <ul class="pagination">
+            <!-- Previous Page -->
+            <% if (currentPage > 1) { %>
+                <li><a href="/admin/offers=<%= currentPage - 1 %>">&lt;</a></li>
+            <% } else { %>
+                <li><a style="color: black;"><span>&lt;</span></a></li>
+            <% } %>
+    
+            <!-- Page Numbers -->
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li>
+                    <a href="/admin/offers?page=<%= i %>" class="<%= i === currentPage ? 'active' : '' %>">
+                        <%= i %>
+                    </a>
+                </li>
+            <% } %>
+    
+            <!-- Next Page -->
+            <% if (currentPage < totalPages) { %>
+                <li><a href="/admin/offers?page=<%= currentPage + 1 %>">&gt;</a></li>
+            <% } else { %>
+                <li><a style="color: black;"><span>&gt;</span></a></li>
+            <% } %>
+        </ul>
+    </div>
     </div>
 </div>
 <%- include('../partials/admin/footer.ejs') %>

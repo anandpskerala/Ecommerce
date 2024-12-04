@@ -1,0 +1,68 @@
+<%- include('../partials/admin/header.ejs') %>
+<header>
+    <%- include('../partials/admin/navbar.ejs') %>
+</header>
+<div class="row">
+    <%- include('../partials/admin/sidebar.ejs') %>
+    <div class="cover">
+        <form id="offer-form" enctype="multipart/form-data">
+            <div class="col">
+                <label for="name">Offer Name</label>
+                <input type="text" id="name" name="name" style="width: 830px;" placeholder="Enter offer name (e.g., Dhamaka2024)">
+            </div>
+            <div class="col">
+                <label for="description">Description</label>
+                <textarea name="description" id="description" style="width: 830px; height: 95px;" placeholder="Type here"></textarea>
+            </div>
+            <div class="row" style="gap: 80px;">
+                <div class="col">
+                    <label for="activation">Activation Date</label>
+                    <input type="date" id="activation" name="activation" placeholder="dd-mm-yyyy" style="width: 300px; padding: 0 10px;">
+                </div>
+
+                <div class="col">
+                    <label for="expiry">Expiry Date</label>
+                    <input type="date" id="expiry" name="expiry" placeholder="dd-mm-yyyy" style="width: 300px; padding: 0 10px;">
+                </div>
+            </div>
+
+            <div class="row" style="gap: 80px;">
+                <div class="col">
+                    <label for="discount">Discount Rate</label>
+                    <input type="number" name="discount" id="discount" style="width: 300px;">
+                </div>
+
+                <div class="col">
+                    <label for="min_amount">Criteria Amount</label>
+                    <div class="currency-input">
+                        <span class="currency-symbol">$</span>
+                        <input
+                          type="number"
+                          name="min_amount" 
+                          id="min_amount"
+                          class="purchase-input"
+                          placeholder="Minimum purchase amount"
+                          style="border: 0;"
+                        />
+                      </div>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: row; gap: 10px; margin-top: 60px;">
+                <a href="/admin/offers" class="button-2">Cancel</a>
+                <button class="button" id="submit-btn" type="submit">Create Offer</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    flatpickr("#activation", {
+      dateFormat: "d-M-Y", 
+      minDate: "today",   
+    });
+
+    flatpickr("#expiry", {
+      dateFormat: "d-M-Y", 
+      minDate: "today",   
+    });
+  </script>
+<%- include('../partials/admin/footer.ejs') %>

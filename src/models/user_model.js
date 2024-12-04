@@ -34,11 +34,8 @@ const Schema = mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    },
-    updatedAt: {
-        type: Date
     }
-});
+}, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}});
 
 Schema.pre("save", async function(next) {
     if (!this.isModified('password')) return next();

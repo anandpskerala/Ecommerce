@@ -15,12 +15,8 @@ const Schema = mongoose.Schema({
         type: String,
         enum: ['admin', 'superadmin', 'staff'],
         default: 'admin'
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
     }
-});
+}, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}});
 
 Schema.methods.comparePassword = async function (password) {
     const result = await bcrypt.compare(password, this.password)

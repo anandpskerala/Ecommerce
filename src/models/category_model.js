@@ -16,14 +16,7 @@ const Schema = mongoose.Schema({
     status: {
         type: Boolean,
         default: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date
     }
-})
+}, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}})
 
 module.exports = mongoose.model('Categories', Schema);

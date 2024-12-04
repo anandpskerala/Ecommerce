@@ -9,17 +9,17 @@ const generate_otp = () => {
 
 const send_otp = async (req, res) => {
     const {email} = req.body;
-    const result = await otps.findOne({email});
+    const result = await otps.findOne({email: email.toLowerCase()});
     if (!result) {
-        const user = await users.findOne({email});
+        const user = await users.findOne({email: email.toLowerCase()});
         if (!user.password) {
             req.session.error = "Email doesn't exists";
             return res.redirect("/forgot-password");
         }
-        const otp = new otps({email, otp: generate_otp()});
+        const otp = new otps({email: email.toLowerCase(), otp: generate_otp()});
         console.log(otp);
         let result = await otp.save();
-        req.session.otp = {email, expiry: result.expiry};
+        req.session.otp = {email: email.toLowerCase(), expiry: result.expiry};
         return res.redirect("/user/verify-otp");
     } else {
         req.session.error = "Please wait for sometime to try again";
@@ -43,6 +43,50 @@ const verify_otp = async (req, res) => {
     }
 };
 
+const verify_signup = async (req, res) => {
+    const {otp} = req.body;
+    if (!req.session.otp) {
+        req.session.error = "Session expired. Please try again";
+        return res.redirect("/signup");
+    }
+    const {user} = req.session.otp;
+    const result = await otps.findOne({email: user.email, otp});
+    if (result) {
+        const user_model = new users({...user})
+        let result = await user_model.save();
+
+        if (req.session.admin) {
+            req.session.user = {
+                id: result._id,
+                first_name: result.first_name,
+                last_name: result.last_name,
+                email: result.email,
+            };
+            return res.redirect("/");
+        } else {
+            req.session.regenerate((err) => {
+                if (err) {
+                    console.error("Error regenerating session: " + err);
+                    req.session.error = "Session Error. Please try again.";
+                    return res.redirect("/signup");
+                }
+                
+                req.session.user = {
+                    id: result._id,
+                    first_name: result.first_name,
+                    last_name: result.last_name,
+                    email: result.email,
+                };
+                
+            return res.redirect("/");
+            });
+        }
+    } else {
+        req.session.error = "Invalid OTP";
+        return res.redirect("/user/verify-signup");
+    }
+};
+
 const reset_password = async (req, res) => {
     const {password} = req.body;
     const salt = await bcrypt.genSalt(10);
@@ -63,4 +107,4 @@ const reset_password = async (req, res) => {
     }
 }
 
-module.exports= { send_otp, verify_otp, reset_password }; 
+module.exports= { send_otp, verify_otp, reset_password, verify_signup }; 

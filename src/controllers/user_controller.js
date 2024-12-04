@@ -1,44 +1,58 @@
+const crypto = require('crypto');
 const Users = require("../models/user_model");
+const otps = require("../models/otp_model");
+
+const generate_otp = () => {
+    return crypto.randomInt(1000, 9999);
+}
 
 const user_signup = async (req, res) => {
     const {first_name, last_name, email, password} = req.body;
     try {
-        const exists = await Users.findOne({email});
+        const exists = await Users.findOne({email: email.toLowerCase()});
         if (exists) {
             req.session.error = "User already exists";
             return res.redirect("/signup");
         }
+
+        const otp = new otps({email: email.toLowerCase(), otp: generate_otp()});
+        let res_otp = await otp.save();
         
-        const user = new Users({first_name, last_name, email, password});
-        let result = await user.save();
-        if (req.session.admin) {
-            req.session.user = {
-                id: result._id,
-                first_name: result.first_name,
-                last_name: result.last_name,
-                email: result.email,
-            };
-            return res.redirect("/");
-        } else {
-            req.session.regenerate((err) => {
-                if (err) {
-                    console.error("Error regenerating session: " + err);
-                    req.session.error = "Session Error. Please try again.";
-                    return res.redirect("/signup");
-                }
+        // const user = new Users({first_name, last_name, email, password});
+        // let result = await user.save();
+
+        // if (req.session.admin) {
+        //     req.session.user = {
+        //         id: result._id,
+        //         first_name: result.first_name,
+        //         last_name: result.last_name,
+        //         email: result.email,
+        //     };
+        //     req.session.otp = {user: {first_name, last_name, email, password}, expiry: res_otp.expiry};
+        //     return res.redirect("/user/verify-signup");
+        // } else {
+        //     req.session.regenerate((err) => {
+        //         if (err) {
+        //             console.error("Error regenerating session: " + err);
+        //             req.session.error = "Session Error. Please try again.";
+        //             return res.redirect("/signup");
+        //         }
                 
-                req.session.user = {
-                    id: result._id,
-                    first_name: result.first_name,
-                    last_name: result.last_name,
-                    email: result.email,
-                };
+        //         req.session.user = {
+        //             id: result._id,
+        //             first_name: result.first_name,
+        //             last_name: result.last_name,
+        //             email: result.email,
+        //         };
+        //         req.session.otp = {email, expiry: res_otp.expiry};
         
-                delete req.session.error;
+        //         delete req.session.error;
         
-                return res.redirect("/");
-            });
-        }
+        //         return res.redirect("/user/verify-signup");
+        //     });
+        delete req.session.error;
+        req.session.otp = {user: {first_name, last_name, email: email.toLowerCase(), password}, expiry: res_otp.expiry};
+        return res.redirect("/user/verify-signup");
     } catch (err) {
         console.log(err);
         req.session.error = "Server Error";
@@ -49,7 +63,7 @@ const user_signup = async (req, res) => {
 const user_login = async (req, res) => {
     const {email, password} = req.body;
     try {
-        const exists = await Users.findOne({email});
+        const exists = await Users.findOne({email: email.toLowerCase()});
         if (!exists) {
             req.session.error = "Email or Password doesn't match";
             return res.redirect("/login");
