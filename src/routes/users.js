@@ -1,6 +1,7 @@
 const express = require('express');	
 const controllers = require('../controllers/user_controller');
 const auth = require('../middlewares/user_authentication');
+const product_model = require('../models/product_model');
 
 const routes = express.Router();
 
@@ -45,6 +46,20 @@ routes.get("/forgot-password", (req, res) => {
 routes.get("/error", (req, res) => {
     try {
         return res.render('partials/user/error', {title: "Error"});
+    }  catch (err) {
+        console.log(err);
+        return res.redirect('/error');
+    }
+})
+
+routes.get("/products/:id", async (req, res) => {
+    try {
+        const {id} = req.params;
+        const product = await product_model.findOne({_id: id});
+        if (!product.listed) {
+            return res.redirect('/error');
+        }
+        return res.render('user/product_page', {title: "Product", product});
     }  catch (err) {
         console.log(err);
         return res.redirect('/error');

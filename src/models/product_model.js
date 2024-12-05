@@ -10,9 +10,10 @@ const variantSchema = new mongoose.Schema({
         required: true,
         min: 0,
     },
-    status: {
-        type: Boolean,
-        default: true,
+    quantity: {
+        type: Number,
+        required: true,
+        min: 0,
     },
 });
 
@@ -25,16 +26,6 @@ const Schema = new mongoose.Schema(
         stock: {
             type: Boolean,
             default: true,
-        },
-        price: {
-            type: Number,
-            required: true,
-            min: 0,
-        },
-        quantity: {
-            type: Number,
-            required: true,
-            min: 0,
         },
         category: {
             type: String,

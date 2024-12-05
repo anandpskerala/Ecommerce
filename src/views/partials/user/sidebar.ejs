@@ -1,0 +1,18 @@
+<aside class="sidebar">
+    <h2>My Account</h2>
+    <ul class="menu">
+      <li class="menu-item <%= title == 'Account'? 'active': '' %>">
+        <a href="/user/account" class="links">Account</a>
+      </li>
+      <li class="menu-item <%= title == 'Orders'? 'active': '' %>">
+        <a href="/user/orders" class="links">Orders</a>
+      </li>
+      <li class="menu-item">Wishlist</li>
+      <li class="menu-item">Address</li>
+      <li class="menu-item">Password</li>
+      <li class="menu-item">Wallet</li>
+      <li class="menu-item">
+        <a class="logout" href="/logout">Logout</a>
+      </li>
+    </ul>
+</aside>

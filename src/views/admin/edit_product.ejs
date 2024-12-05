@@ -1,0 +1,460 @@
+<%- include('../partials/admin/header.ejs') %>
+<header>
+    <%- include('../partials/admin/navbar.ejs') %>
+</header>
+<div class="row">
+    <%- include('../partials/admin/sidebar.ejs') %>
+    <div class="cover">
+        <div style="display: flex; flex-direction: row; width: 100%; justify-content: space-between; align-items: center;">
+            <h3 style="margin-bottom: 20px;">Edit Product</h3>
+            <button class="button" style="margin-bottom: 20px;" onclick="unlist_product('<%= product._id%>', '<%= product.listed? `unlist`: `list` %>')"><%= product.listed? `Unlist Product`: `List Product` %></button>
+        </div>
+        <span class="line"></span>
+        <form id="edit-product-form">
+            <input type="hidden" name="id" id="id" value="<%= product._id %>">
+            <div class="input-row">
+                <div class="input-col">
+                    <label for="title">Title</label>
+                    <input type="text" name="title" id="title" value="<%= product.title %>">
+                    <span class="form-error" id="title-error"></span>
+                </div>
+
+                <div class="input-col">
+                    <label for="stock">Stock Status</label>
+                    <select name="stock" id="stock">
+                        <option value="true" <%- product.stock ? 'selected' : '' %>>In Stock</option>
+                        <option value="false" <%- !product.stock ? 'selected' : '' %>>Out of Stock</option>
+                    </select>
+                    <span class="form-error" id="stock-error"></span>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-col">
+                    <label for="category">Category</label>
+                    <select name="category" id="category">
+                        <% categories.forEach((category) => { %>
+                            <option value="<%= category.name %>" <%- product.category == category.name ? 'selected' : '' %>><%= category.name %></option>
+                        <% }) %>
+                    </select>
+                    <span class="form-error" id="category-error"></span>
+                </div>
+
+                <div class="input-col">
+                    <label for="images">Images</label>
+                    <div class="file-input-container">
+                        <svg width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4.80776 16.2858H2.41216C2.09448 16.2858 1.78982 16.1595 1.56518 15.935C1.34055 15.7104 1.21436 15.4056 1.21436 15.088V5.50557M1.21436 5.50557H16.7858M1.21436 5.50557L3.8615 1.31326C3.96393 1.13567 4.11023 0.987344 4.28641 0.882483C4.46258 0.777621 4.66271 0.719731 4.86765 0.714355H13.1325C13.3374 0.719731 13.5376 0.777621 13.7138 0.882483C13.8899 0.987344 14.0362 1.13567 14.1386 1.31326L16.7858 5.50557M16.7858 5.50557V15.088C16.7858 15.4056 16.6595 15.7104 16.4349 15.935C16.2104 16.1595 15.9056 16.2858 15.588 16.2858H13.1924M6.00552 12.0935L9.00003 9.09897M9.00003 9.09897L11.9945 12.0935M9.00003 9.09897L9.00011 16.2858M9.00011 0.714355V5.50556" stroke="#5C5F6A" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>                            
+                        <span>Add an Image</span>
+                        <input name="images" type="button" id="file-input" class="file-input" onclick="add_product_image('<%= product._id %>')">
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-col">
+                    <label for="brand">Brand</label>
+                    <select name="brand" id="brand">
+                        <% brands.forEach((brand) => { %>
+                            <option value="<%= brand.name %>" <%- product.brand == brand.name ? 'selected' : '' %>><%= brand.name %></option>
+                        <% }) %>
+                    </select>
+                    <span class="form-error" id="brand-error"></span>
+                </div>
+                <div class="image-preview-container" id="image-preview-container">
+                    <% product.images.forEach((image, index) => { %>
+                        <div class="image-item" id="product-<%= index %>">
+                            <img src="/images/<%= image %>" alt="Image <%= index %>">
+                            <button class="remove-btn" onclick="remove_product_image('<%= index %>', '<%= product._id %>', '<%= image %>')">X</button>
+                        </div>
+                    <% }); %>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-col">
+                    <label for="offer">Offer</label>
+                    <select name="offer" id="offer">
+                        <% offers.forEach((offer) => { %>
+                            <option value="<%= offer.name %>" <%- product.offer == offer.name ? 'selected' : '' %>><%= offer.name %></option>
+                        <% }) %>
+                    </select>
+                    <span class="form-error" id="offer-error"></span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <label>Colors</label>
+                    <div class="colors">
+                        <div class="color-option <%- product.colors.includes('black') == true ? 'selected': '' %>" style="background-color: black;" title="Black" data-color="black"></div>
+                        <div class="color-option <%- product.colors.includes('gold') ? 'selected': '' %>" style="background-color: gold;" title="Gold" data-color="gold"></div>
+                        <div class="color-option <%- product.colors.includes('green') ? 'selected': '' %>" style="background-color: lightgreen;" title="Green" data-color="green"></div>
+                        <div class="color-option <%- product.colors.includes('blue') ? 'selected': '' %>" style="background-color: blue;" title="Blue" data-color="blue"></div>
+                        <input type="hidden" name="colors" id="colors" value="<%= product.colors %>">
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-col">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" cols="40" placeholder="Enter product description..."><%= product.description %></textarea>
+                    <span class="form-error" id="description-error"></span>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <label>Variants</label>
+                    <div class="variants">
+                        <% let variants = {} %>
+                        <% product.variants.forEach((variant) => { %>
+                            <% variants[variant.name] = {price: variant.price, quantity: variant.quantity} %>
+                        <% }); %>
+                        <input type="hidden" id="variants" name="variants" value="<%= JSON.stringify(variants) %>">
+                        <div class="variant-option" title="128 GB">128 GB</div>
+                        <div class="variant-option" title="256 GB">256 GB</div>
+                        <div class="variant-option" title="500 GB">500 GB</div>
+                        <div class="variant-option" title="1 TB">1 TB</div>
+                        <div class="variant-option" title="2 TB">2 TB</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <button class="button" id="submit-btn" type="submit">Save </button>
+                <a href="/admin/products" class="button-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    
+    const remove_product_image = async (index, id, image) => {
+        const image_element = document.getElementById(`product-${index}`);
+        image_element.parentNode.removeChild(image_element);
+        let req = await fetch(`/admin/remove-product-image`, {
+            method: 'POST',
+            body: new URLSearchParams({
+                id,
+                image
+            })
+        });
+
+        let res = await req.json();
+        if (res.success) {
+            alert_success(res.message);
+        } else {
+            alert_error(res.message);
+        }
+    };
+
+    const add_product_image = async (id) => {
+        const imageArray = [];
+
+        function blobToFile(blob, fileName) {
+            return new File([blob], fileName, { type: blob.type });
+        }
+
+        const { value: formValues } = await Swal.fire({
+                title: "Add Image",
+                html: `
+                <form id="image-form" style="display: flex; flex-direction: column; width: 100%; align-items: center; gap: 20px;">
+                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+                        <label for="images">Images</label>
+                        <div class="file-input-container">
+                            <svg width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4.80776 16.2858H2.41216C2.09448 16.2858 1.78982 16.1595 1.56518 15.935C1.34055 15.7104 1.21436 15.4056 1.21436 15.088V5.50557M1.21436 5.50557H16.7858M1.21436 5.50557L3.8615 1.31326C3.96393 1.13567 4.11023 0.987344 4.28641 0.882483C4.46258 0.777621 4.66271 0.719731 4.86765 0.714355H13.1325C13.3374 0.719731 13.5376 0.777621 13.7138 0.882483C13.8899 0.987344 14.0362 1.13567 14.1386 1.31326L16.7858 5.50557M16.7858 5.50557V15.088C16.7858 15.4056 16.6595 15.7104 16.4349 15.935C16.2104 16.1595 15.9056 16.2858 15.588 16.2858H13.1924M6.00552 12.0935L9.00003 9.09897M9.00003 9.09897L11.9945 12.0935M9.00003 9.09897L9.00011 16.2858M9.00011 0.714355V5.50556" stroke="#5C5F6A" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>                            
+                            <span>Choose product images</span>
+                            <input name="images" type="file" id="image-input" class="file-input" accept="image/*" multiple">
+                        </div>
+                        <div id="cropper-modal" style="display: none;">
+                            <div class="cropper-container">
+                                <img id="cropper-image" src="" alt="Cropper">
+                            </div>
+                            <button class="button" id="crop-btn">Done</button>
+                            <button class="button" id="cancel-btn">Cancel</button>
+                        </div>
+                        <div class="image-pre-container" id="image-pre-container"></div>
+                    </div>
+                </form>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: "Save",
+                cancelButtonColor: 'Crimson',
+                didOpen: () => {
+                    let image_input = document.getElementById("image-input");
+                    let cropper;
+                    const MAX_FILE_SIZE = 2 * 1024 * 1024;
+                    let currentFileIndex = 0;
+                    let currentFiles = [];
+                    const imageList = document.getElementById('image-pre-container');
+                    const cropperModal = document.getElementById('cropper-modal');
+                    const cropperImage = document.getElementById('cropper-image');
+                    const cropButton = document.getElementById('crop-btn');
+                    const cancelButton = document.getElementById('cancel-btn');
+                    image_input.addEventListener('change', (e) => {
+                        currentFiles = Array.from(e.target.files);
+                        processNextFile();
+                    });
+
+                    function processNextFile() {
+                        if (currentFileIndex >= currentFiles.length) {
+                            currentFileIndex = 0;
+                            return;
+                        }
+
+                        const file = currentFiles[currentFileIndex];
+
+                        if (file.size > MAX_FILE_SIZE) {
+                            alert_error(`File "${file.name}" exceeds the 2MB size limit.`);
+                            currentFileIndex++;
+                            processNextFile();
+                            return;
+                        }
+
+                        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                        if (!validTypes.includes(file.type)) {
+                            alert_error(`File "${file.name}" is not a valid image type.`);
+                            currentFileIndex++;
+                            processNextFile(); 
+                            return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            cropperImage.src = e.target.result;
+                            cropperModal.style.display = 'flex';
+
+                            cropper = new Cropper(cropperImage, {
+                                aspectRatio: 1,
+                                viewMode: 1,
+                            });
+                        };
+
+                        reader.readAsDataURL(file);
+                    }
+
+                    cropButton.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const canvas = cropper.getCroppedCanvas();
+
+                        if (!canvas) {
+                            alert_error('Please crop the image properly.');
+                            return;
+                        }
+
+
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                const url = URL.createObjectURL(blob);
+                                addImage(url, blob);
+                            }
+
+                            currentFileIndex++;
+                            processNextFile(); 
+                        });
+
+                        cropper.destroy();
+                        cropperModal.style.display = 'none';
+                    });
+
+                    cancelButton.addEventListener('click', (e) => {
+                        e.preventDefault();
+
+                        cropper.destroy();
+                        cropperModal.style.display = 'none';
+
+                        currentFileIndex++;
+                        processNextFile(); 
+                    });
+
+                    function addImage(imageUrl, file) {
+                        imageArray.push({ imageUrl, file });
+                        renderImages();
+                    }
+
+                    function renderImages() {
+                        imageList.innerHTML = '';
+                        imageArray.forEach((imageData, index) => {
+                            const imageItem = document.createElement('div');
+                            imageItem.classList.add('image-item');
+
+                            const imgElement = document.createElement('img');
+                            imgElement.src = imageData.imageUrl;
+                            imgElement.alt = 'Uploaded image';
+                            imageItem.appendChild(imgElement);
+
+                            const removeButton = document.createElement('button');
+                            removeButton.classList.add('remove-btn');
+                            removeButton.innerHTML = 'X';
+                            removeButton.addEventListener('click', () => removeImage(index));
+                            imageItem.appendChild(removeButton);
+
+                            imageList.appendChild(imageItem);
+                        });
+                    }
+
+                    function removeImage(index) {
+                        imageArray.splice(index, 1);
+                        renderImages();
+                    }
+                },
+                preConfirm: async () => {
+                    if (imageArray.length > 0) {
+                        let formData = new FormData();
+                        formData.append('id', id)
+                        imageArray.forEach((image, index) => {
+                            formData.append('images', blobToFile(image.file, image.file.name || `cropped-${index}.jpg`));
+                        });
+
+                        let req = await fetch('/admin/edit-product-image', {
+                            method: 'POST',
+                            body: formData
+                        })
+
+                        let res = await req.json();
+                        if (res.success) {
+                            alert_success(res.message);
+                        } else {
+                            alert_error(res.message);
+                        }
+                    } else {
+                        alert_error("Please upload at least one image.");
+                    }
+                }
+        });
+    }
+
+    const product_form = document.getElementById("edit-product-form");
+    product_form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        let formData = {};
+
+        let id = document.getElementById("id").value;
+        let title = document.getElementById("title").value;
+        let stock = document.getElementById("stock").value;
+        let category = document.getElementById("category").value;
+        let brand = document.getElementById("brand").value;
+        let offer = document.getElementById("offer").value;
+        let description = document.getElementById("description").value;
+        let colors = `${document.getElementById("colors").value}`;
+        let variant = document.getElementById("variants").value;
+        formData["id"] = id;
+        formData["title"] = title;
+        formData["stock"] = stock;
+        formData["category"] = category;
+        formData["brand"] = brand;
+        formData["offer"] = offer;
+        formData["description"] = description;
+        formData["colors"] = colors;
+        formData["variants"] = variant;
+
+        let req = await fetch("/admin/edit-product", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams(formData)
+        })
+
+        let res = await req.json();
+        if (res.success) {
+            alert_success(res.message);
+        } else {
+            alert_error(res.message);
+        }
+    })
+
+    const colors = document.querySelectorAll('.color-option');
+    const availableColors = document.getElementById("colors").value;
+    const selectedColors = new Set(availableColors.split(","));
+
+    if (colors) {
+        colors.forEach((colorElement) => {
+            colorElement.addEventListener('click', () => {
+                const color = colorElement.getAttribute('data-color');
+
+                if (selectedColors.has(color)) {
+                    selectedColors.delete(color);
+                    colorElement.classList.remove('selected');
+                } else {
+                    selectedColors.add(color);
+                    colorElement.classList.add('selected');
+                }
+
+                document.getElementById('colors').value = JSON.stringify([...selectedColors]); 
+            });
+        });
+    }
+
+    const unlist_product = async (id, action) => {
+        let req = await fetch(`/admin/product-options`, {
+            method: 'POST',
+            body: new URLSearchParams({
+                id: id,
+                action: action == 'unlist'? false: true,
+            })
+        })
+        let res = await req.json();
+        if (res.success) {
+            alert_success(res.message);
+        } else {
+            alert_error(res.message);
+        }
+    }
+
+    const variant_elements = document.querySelectorAll(".variant-option");
+    variant_elements.forEach((element) => {
+        element.addEventListener("click", async (e) => {
+            e.preventDefault();
+            let tbody = document.getElementById("variants");
+            let data = tbody.value != "" ? JSON.parse(tbody.value): {};
+            const { value: formValues } = await Swal.fire({
+                title: "Add Variant",
+                html: `
+                <form id="variant-form" style="display: flex; flex-direction: column; width: 100%; align-items: center; gap: 20px;">
+                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+                        <label for="name" class="form-label">Variant Name</label>
+                        <input id="name" name="name" class="swal2-input" value="${e.target.title}" data-validate="required|min:2" disabled>
+                    </div>
+                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+                        <label for="price" class="form-label">Price</label>
+                        <input id="price" type="number" name="price" class="swal2-input" data-validate="required">
+                    </div>
+                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input id="quantity" type="number" name="quantity" class="swal2-input" data-validate="required">
+                    </div>
+                </form>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: "Save",
+                cancelButtonColor: 'Crimson',
+                preConfirm: () => {
+                    let form = document.getElementById('variant-form');
+                    let res = {...data};
+                    let isValid = true;
+
+                    if (form) {
+                        Array.from(form.elements).forEach((input) => {
+                            if (!handleValidation(input)) {
+                                isValid = false;
+                            } else {
+                                res[input.id] = input.value;
+                            }
+                        })
+                    }
+                    return isValid? res : false;
+                }
+            });
+
+            if (formValues) {
+                data[formValues.name] = {price: formValues.price, quantity: formValues.quantity};
+                tbody.value = JSON.stringify(data)
+            }
+        })
+    });
+
+</script>
+<%- include('../partials/admin/footer.ejs') %>

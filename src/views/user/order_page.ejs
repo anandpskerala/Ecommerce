@@ -1,0 +1,64 @@
+<%- include('../partials/user/header.ejs') %>
+<header>
+    <%- include('../partials/user/navbar.ejs') %>
+</header>
+<div class="account-page">
+    <%- include('../partials/user/sidebar.ejs') %>
+    <main class="main-content">
+        <h3>Orders</h3>
+        <div class="order-list">
+          <!-- Order 1 -->
+          <div class="order-item">
+            <img src="https://via.placeholder.com/100" alt="Product Image" class="product-image">
+            <div class="order-details">
+              <p><strong>Razor Blade 15</strong></p>
+              <p>Ordered On: 27 July 2023</p>
+              <p>$1327.00</p>
+            </div>
+            <div class="order-status">
+              <span class="status processing">Processing</span>
+            </div>
+            <div class="order-actions">
+              <button class="btn view-item">View Item</button>
+              <button class="btn cancel">Cancel</button>
+              <button class="btn return">Return</button>
+            </div>
+          </div>
+          <!-- Order 2 -->
+          <div class="order-item">
+            <img src="https://via.placeholder.com/100" alt="Product Image" class="product-image">
+            <div class="order-details">
+              <p><strong>ASUS TUF Gaming F15</strong></p>
+              <p>Ordered On: 9 March 2023</p>
+              <p>$793.00</p>
+            </div>
+            <div class="order-status">
+              <span class="status completed">Completed</span>
+            </div>
+            <div class="order-actions">
+              <button class="btn view-item">View Item</button>
+              <button class="btn cancel disabled">Cancel</button>
+              <button class="btn return">Return</button>
+            </div>
+          </div>
+          <!-- Order 3 -->
+          <div class="order-item">
+            <img src="https://via.placeholder.com/100" alt="Product Image" class="product-image">
+            <div class="order-details">
+              <p><strong>Razor Blade 15</strong></p>
+              <p>Ordered On: 27 July 2023</p>
+              <p>$1327.00</p>
+            </div>
+            <div class="order-status">
+              <span class="status cancelled">Cancelled</span>
+            </div>
+            <div class="order-actions">
+              <button class="btn view-item">View Item</button>
+              <button class="btn cancel disabled">Cancel</button>
+              <button class="btn return">Return</button>
+            </div>
+          </div>
+        </div>
+    </main>
+</div>
+<%- include('../partials/user/footer.ejs') %>

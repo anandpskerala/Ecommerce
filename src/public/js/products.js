@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelButton = document.getElementById('cancel-btn');
     const form = document.getElementById('product-form');
     const colors = document.querySelectorAll('.color-option');
+    const colorElement = document.getElementById('colors');
     const selectedColors = new Set();
     let cropper;
     const MAX_FILE_SIZE = 2 * 1024 * 1024;
@@ -144,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let validForm = true;
             for (const input of form.elements) {
                 console.log(input)
-                if (input.value.trim() === "" && input.type !== "file" && input.name !== "variants" && input.name !== "colors" && input.className !== "button" && input.className != "remove-btn") {
+                if (input.value.trim() === "" && input.type !== "file" && input.name !== "colors" && input.className !== "button" && input.className != "remove-btn") {
                     validForm = false;
                     alert_error("Please fill out all required fields");
                     break;
@@ -205,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     colorElement.classList.add('selected');
                 }
 
-                console.log([...selectedColors]); 
+                document.getElementById('colors').value = JSON.stringify([...selectedColors]); 
             });
         });
     }
@@ -390,12 +391,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <label for="price" class="form-label">Price</label>
                         <input id="price" type="number" name="price" class="swal2-input" data-validate="required">
                     </div>
-                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center; gap:10px">
-                        <label for="action" class="form-label">Increment or decrement</label>
-                        <select id="status" name="status" class="swal2-input" style="width: 65%;">
-                            <option value=true>Increment</option>
-                            <option value=false>Decrement</option>
-                        </select>
+                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input id="quantity" type="number" name="quantity" class="swal2-input" data-validate="required">
                     </div>
                 </form>
                 `,
@@ -422,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (formValues) {
-                data[formValues.name] = {price: formValues.price, status: formValues.status};
+                data[formValues.name] = {price: formValues.price, quantity: formValues.quantity};
                 tbody.value = JSON.stringify(data)
             }
         })

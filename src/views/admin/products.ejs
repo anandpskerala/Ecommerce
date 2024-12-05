@@ -28,12 +28,12 @@
                 <div class="product-card">
                     <img src="/images/<%= product.images[0] %>" alt="<%= product.title %> Image" class="product-image" />
                     <h3 class="product-name"><%= product.title %></h3>
-                    <p class="product-price">$<%= product.price %></p>
+                    <p class="product-price">Base Price : $<%= product.variants[0].price %></p>
                     <span class="status-<%= status %>"><%= status %></span>
                     <span class="status-<%= stock_status %>"><%= stock %></span>
                     <br>
                     <div class="product-actions">
-                        <button class="action-btn action-edit">Edit</button>
+                        <a href="/admin/edit-product/<%= product._id %>" class="action-btn action-edit">Edit</a>
                         <button class="action-btn action-delete" onclick="delete_product('<%= product._id %>')">Delete</button>
                     </div>
                 </div>

@@ -40,6 +40,25 @@ routes.get("/add-product", auth.authenticateAdmin, async (req, res) => {
     );
 });
 
+routes.get("/edit-product/:id", auth.authenticateAdmin, async (req, res) => {
+    const {id} = req.params; 
+    const categories = await category.find({});
+    const brands = await brand.find({});
+    const offers = await offer.find({});
+    const product = await product_model.findOne({_id: id});
+    return res.render(
+        "admin/edit_product", 
+        {
+            title: "Products", 
+            page: "Edit Product", 
+            categories, 
+            brands,
+            offers,
+            product
+        }
+    );
+});
+
 routes.get("/categories", auth.authenticateAdmin, controller.load_category);
 
 routes.get("/add-category", auth.authenticateAdmin, (req, res) => {
@@ -76,18 +95,22 @@ routes.get("/settings", auth.authenticateAdmin, (req, res) => {
 
 routes.post("/login", controller.admin_login);
 routes.get("/logout", controller.admin_logout);
-routes.get("/offers", auth.authenticateAdmin, controller.load_offers);
-routes.post("/edit-user", auth.authenticateAdmin, controller.edit_user);
-routes.post("/delete-user", auth.authenticateAdmin, controller.delete_user);
-routes.post("/add-product", multer.array("images"), controller.add_product_form);
-routes.post("/add-brand", multer.single("image"), auth.authenticateAdmin, controller.add_brand_form);
-routes.post("/edit-brand", multer.single("image"), auth.authenticateAdmin, controller.edit_brands);
-routes.delete("/delete-brand/:id", auth.authenticateAdmin, controller.delete_brand);	
-routes.post("/add-category", multer.single("image"), auth.authenticateAdmin, controller.add_category_form);
-routes.post("/edit-category", multer.single("image"), auth.authenticateAdmin, controller.edit_category);
-routes.delete("/delete-category/:id", auth.authenticateAdmin, controller.delete_category);
-routes.post("/create-offer", auth.authenticateAdmin, controller.create_offer);
-routes.delete("/delete-offer/:id", auth.authenticateAdmin, controller.delete_offer);
-routes.delete("/delete-product/:id", auth.authenticateAdmin, controller.delete_product);
+routes.get("/offers", auth.authenticateAdminApI, controller.load_offers);
+routes.post("/edit-user", auth.authenticateAdminApI, controller.edit_user);
+routes.post("/delete-user", auth.authenticateAdminApI, controller.delete_user);
+routes.post("/add-product", multer.array("images"), auth.authenticateAdminApI, controller.add_product_form);
+routes.post("/edit-product", multer.none(), auth.authenticateAdminApI, controller.edit_product_form);
+routes.post("/add-brand", multer.single("image"), auth.authenticateAdminApI, controller.add_brand_form);
+routes.post("/edit-brand", multer.single("image"), auth.authenticateAdminApI, controller.edit_brands);
+routes.delete("/delete-brand/:id", auth.authenticateAdminApI, controller.delete_brand);	
+routes.post("/add-category", multer.single("image"), auth.authenticateAdminApI, controller.add_category_form);
+routes.post("/edit-category", multer.single("image"), auth.authenticateAdminApI, controller.edit_category);
+routes.delete("/delete-category/:id", auth.authenticateAdminApI, controller.delete_category);
+routes.post("/create-offer", auth.authenticateAdminApI, controller.create_offer);
+routes.delete("/delete-offer/:id", auth.authenticateAdminApI, controller.delete_offer);
+routes.delete("/delete-product/:id", auth.authenticateAdminApI, controller.delete_product);
+routes.post("/remove-product-image", auth.authenticateAdminApI, controller.remove_product_image);
+routes.post("/edit-product-image", multer.array("images"), auth.authenticateAdminApI, controller.add_product_image);
+routes.post("/product-options", auth.authenticateAdminApI, controller.product_options);
 
 module.exports = routes;

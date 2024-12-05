@@ -8,6 +8,7 @@ const category = require('../models/category_model');
 const offer = require('../models/offer_model');
 const product_model = require('../models/product_model');
 const timer = require('../utils/time');
+const { console } = require('inspector');
 
 const admin_login = async (req, res) => {
     const {email, password} = req.body;
@@ -149,6 +150,7 @@ const add_product_form = async (req, res) => {
             variant_list.push({name: variant, ...parse_variants[variant]})
         }
         let data = {...body, images: files, variants: variant_list};
+        console.log(data)
         const product = new product_model(data);
         await product.save();
         return res.status(200).json({success: true, message: "Product added successfully"});
@@ -370,6 +372,71 @@ const delete_offer = async (req, res) => {
     return res.status(200).json({success: true, message: "Offer deleted successfully"});
 };
 
+const remove_product_image = async (req, res) => {
+    try {
+        const {id, image} = req.body;
+        const product = await product_model.findOne({_id: id});
+        if (!product) {
+            return res.status(400).json({success: false, message: "Invalid request"});
+        }
+        await product_model.updateOne({_id: id}, {$pull: {images: image}});
+        fs.unlink(path.join(__dirname, "../uploads", image), (err) => {
+            if (err) console.error("Error deleting file:", err);
+            console.log("File deleted successfully");
+        });
+        return res.status(200).json({success: true, message: "Image removed successfully"});
+    } catch (err) {
+        console.error("Error in remove product image:", err);
+        return res.status(500).json({success: false, message: "An error occurred"});
+    }
+}
+
+const add_product_image = async (req, res) => {
+    try {
+        const { id } = req.body;
+        let files = req.files.map((file) => file.filename);
+        const product = await product_model.findOne({_id: id});
+        if (!product) {
+            return res.status(400).json({success: false, message: "Invalid request"});
+        }
+        await product_model.updateOne({_id: id}, {$push: {images: {$each: files}}});
+        return res.status(200).json({success: true, message: "Image added successfully"});
+    } catch (err) {
+        console.error("Error in add product image:", err);
+        return res.status(500).json({success: false, message: "An error occurred"});
+    }
+}
+
+const product_options = async (req, res) => {
+    try {
+        const {id, action} = req.body;
+        await product_model.updateOne({_id: id}, {$set: {listed: action}});
+        return res.status(200).json({success: true, message: `Product ${action == true ? 'listed': 'unlisted'} successfully`});
+    } catch (error) {
+        console.log("Error in Product otions" + error)
+        return res.status(500).json({success: false, message: "An error occurred"});
+    }
+};
+
+const edit_product_form = async (req, res) => {
+    try {
+        let { id, variants, colors} = req.body;
+        colors = JSON.parse(colors);
+        let parse_variants = JSON.parse(variants);
+        let variant_list = [];
+        for (variant in parse_variants) {
+            variant_list.push({name: variant, ...parse_variants[variant]})
+        }
+
+        let data = {...req.body, variants: variant_list, colors};
+        await product_model.updateOne({_id: id}, {$set: data})
+        return res.status(200).json({success: true, message: `Product Updated`})
+    } catch (err) {
+        console.log("Error in edit product form" + err)
+        return res.status(500).json({success: false, message: `An error occurred ${err}`});
+    }
+};
+
 module.exports = { 
     admin_login, 
     load_user, 
@@ -389,5 +456,9 @@ module.exports = {
     delete_category,
     create_offer,
     load_offers,
-    delete_offer
+    delete_offer,
+    remove_product_image,
+    add_product_image,
+    product_options,
+    edit_product_form
 };
