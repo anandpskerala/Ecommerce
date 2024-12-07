@@ -1,6 +1,7 @@
 const express = require('express');	
 const auth = require('../middlewares/user_authentication');
 const controllers = require('../controllers/profile_controller');
+const user_model = require('../models/user_model');
 
 const routes = express.Router();
 
@@ -45,11 +46,12 @@ routes.get("/reset-password", (req, res) => {
     }
 });
 
-routes.get("/account", auth.authenticateUser, (req, res) => {
+routes.get("/account", auth.authenticateUser, async (req, res) => {
     try {
         const error_message = req.session.error || null;
         req.session.error = null;
-        return res.render('user/account_page', {title: "Account", error_message});
+        const user = await user_model.findOne({_id: req.session.user.id});
+        return res.render('user/account_page', {title: "Account", error_message, user});
     } catch (err) {
         console.log(err);
         return res.redirect('/error');

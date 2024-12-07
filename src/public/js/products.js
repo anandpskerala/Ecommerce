@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!validForm) return;
             const formData = removeFromFormData(new FormData(form), 'images');
             imageArray.forEach((imageData, index) => {
-                formData.append(`images`, blobToFile(imageData.file, imageData.file.name || `cropped-${index}.jpg`));
+                formData.append('images', blobToFile(imageData.file, imageData.file.name || `cropped-${index}.jpg`));
             });
 
 
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     colorElement.classList.add('selected');
                 }
 
-                document.getElementById('colors').value = JSON.stringify([...selectedColors]); 
+                document.getElementById('colors').value = `${[...selectedColors]}`; 
             });
         });
     }
@@ -275,68 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
-
-    $("#brand-form").on("submit", async (e) => {
-        e.preventDefault();
-        let form = document.getElementById("brand-form");
-        Array.from(form.elements).forEach((input) => {
-            if (input.type == "file" && input.value.trim() == "") {
-                alert_error("Please select a file")
-                return false;
-            }
-            console.log(input.file)
-            
-            if (input.value.trim() == "" && input.type != "submit") {
-                alert_error("Please fill out all required fields")
-                return false;
-            }
-        });
-        let formdata = new FormData(form);
-        let req = await fetch("/admin/add-brand", {
-            method: "POST",
-            body: formdata,
-        });
-        let res = await req.json();
-        if (res.success) {
-            alert_success(res.message)
-            window.location.href = "/admin/brands"
-        } else {
-            alert_error(res.message)
-        }
-    });
-
-
-    $("#category-form").on("submit", async (e) => {
-        e.preventDefault();
-        let form = document.getElementById("category-form");
-        Array.from(form.elements).forEach((input) => {
-            if (input.type == "file" && input.value.trim() == "") {
-                alert_error("Please select a file")
-                return false;
-            }
-            
-            if (input.value.trim() == "" && input.type != "submit") {
-                alert_error("Please fill out all required fields")
-                return false;
-            }
-        });
-        let formdata = new FormData(form);
-        let req = await fetch("/admin/add-category", {
-            method: "POST",
-            body: formdata,
-        });
-        let res = await req.json();
-        if (res.success) {
-            alert_success(res.message)
-            setTimeout(() => {
-                window.location.href = "/admin/categories"
-            }, 1000);
-            
-        } else {
-            alert_error(res.message)
-        }
-    });
 
     $("#offer-form").on("submit", async (e) => {
         e.preventDefault();

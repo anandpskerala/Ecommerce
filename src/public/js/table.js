@@ -56,8 +56,8 @@ const edit_user = async (data) => {
             <div style="display: flex; flex-direction: column; width: 100%; align-items: center; gap:10px">
                 <label for="is_blocked" class="form-label">Status &nbsp;</label>
                 <select id="is_blocked" class="swal2-input" style="width: 65%;">
-                    <option value=${user.is_blocked}>${current(user.is_blocked)}</option>
-                    <option value=${!user.is_blocked}>${current(!user.is_blocked)}</option>
+                    <option value="true" ${user.status ? "selected" : ""}>Active</option>
+                    <option value="false" ${!user.status ? "selected" : ""}>Block</option>
                 </select>
             </div>
           </form>
@@ -183,8 +183,8 @@ const edit_brand = async (data) => {
             <div style="display: flex; flex-direction: column; width: 100%; align-items: center; gap:10px">
                 <label for="status" class="form-label">Status &nbsp;</label>
                 <select id="status" name="status" class="swal2-input" style="width: 65%;">
-                    <option value=${!brand.status}>${current(!brand.status)}</option>
-                    <option value=${brand.status}>${current(brand.status)}</option>
+                    <option value="true" ${brand.status ? "selected" : ""}>Active</option>
+                    <option value="false" ${!brand.status ? "selected" : ""}>Block</option>
                 </select>
             </div>
           </form>
@@ -251,8 +251,8 @@ const edit_category = async (data) => {
             <div style="display: flex; flex-direction: column; width: 100%; align-items: center; gap:10px">
                 <label for="status" class="form-label">Status &nbsp;</label>
                 <select id="status" name="status" class="swal2-input" style="width: 65%;">
-                    <option value=${!category.status}>${current(!category.status)}</option>
-                    <option value=${category.status}>${current(category.status)}</option>
+                    <option value="true" ${category.status ? "selected" : ""}>Active</option>
+                    <option value="false" ${!category.status ? "selected" : ""}>Block</option>
                 </select>
             </div>
           </form>
@@ -278,6 +278,7 @@ const edit_category = async (data) => {
         }
       });
       if (formValues) {
+        console.log(formValues);
         const req = await fetch("/admin/edit-category", {
             method: 'POST',
             body: formValues,

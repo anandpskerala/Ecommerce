@@ -76,6 +76,7 @@
                 <div class="input-col">
                     <label for="offer">Offer</label>
                     <select name="offer" id="offer">
+                        <option value="none" <%- product.offer == "none" ? 'selected' : '' %>>None</option>
                         <% offers.forEach((offer) => { %>
                             <option value="<%= offer.name %>" <%- product.offer == offer.name ? 'selected' : '' %>><%= offer.name %></option>
                         <% }) %>
@@ -382,7 +383,7 @@
                     colorElement.classList.add('selected');
                 }
 
-                document.getElementById('colors').value = JSON.stringify([...selectedColors]); 
+                document.getElementById('colors').value = `${[...selectedColors]}`; 
             });
         });
     }

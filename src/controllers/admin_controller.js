@@ -27,7 +27,7 @@ const admin_login = async (req, res) => {
         
         if (req.session.user) {
             req.session.admin = {id: admin._id, email: admin.email, role: admin.role};
-            return res.redirect("/admin/dashboard");
+            return res.redirect("/admin/products");
         } else {
             req.session.regenerate((err) => {
                 if (err) {
@@ -37,7 +37,7 @@ const admin_login = async (req, res) => {
                 }
                 req.session.admin = {id: admin._id, email: admin.email, role: admin.role};
                 delete req.session.error;
-                return res.redirect("/admin/dashboard");
+                return res.redirect("/admin/products");
             })
         }
     } catch (error) {
@@ -142,14 +142,14 @@ const load_products = async (req, res) => {
 const add_product_form = async (req, res) => {
     try {
         let body = req.body;
-        let { variants } = req.body;
+        let { variants, colors } = req.body;
         let parse_variants = JSON.parse(variants);
         let files = req.files.map((file) => file.filename);
         let variant_list = [];
         for (variant in parse_variants) {
             variant_list.push({name: variant, ...parse_variants[variant]})
         }
-        let data = {...body, images: files, variants: variant_list};
+        let data = {...body, images: files, variants: variant_list, colors: colors.split(",")};
         console.log(data)
         const product = new product_model(data);
         await product.save();
@@ -258,7 +258,7 @@ const add_category_form = async (req, res) => {
     try {
         const {name, description} = req.body;
         const image = req.file.filename;
-        const exists = await category.findOne({name});
+        const exists = await category.findOne({name}, { collation: { locale: "en", strength: 2 } });
         if (exists) {
             fs.unlink(req.file.path, (err) => {
                 if (err) console.error("Error deleting file:", err);
@@ -296,6 +296,7 @@ const load_category = async (req, res) => {
 const edit_category = async (req, res) => {
     try {
         const {id, name, description, status} = req.body;
+        console.log(status)
         const cate = await category.findOne({_id: id});
         if (req.file) {
             fs.unlink(path.join(__dirname, "../uploads", cate.image), (err) => {
@@ -421,14 +422,13 @@ const product_options = async (req, res) => {
 const edit_product_form = async (req, res) => {
     try {
         let { id, variants, colors} = req.body;
-        colors = JSON.parse(colors);
         let parse_variants = JSON.parse(variants);
         let variant_list = [];
         for (variant in parse_variants) {
             variant_list.push({name: variant, ...parse_variants[variant]})
         }
 
-        let data = {...req.body, variants: variant_list, colors};
+        let data = {...req.body, variants: variant_list, colors: colors.split(",")};
         await product_model.updateOne({_id: id}, {$set: data})
         return res.status(200).json({success: true, message: `Product Updated`})
     } catch (err) {

@@ -5,7 +5,17 @@
 <div class="account-page">
     <%- include('../partials/user/sidebar.ejs') %>
     <main class="main-content">
-        <h1>Test</h1>
+        <div class="account-section">
+            <h1>My Account</h1>
+            <div class="row">
+                <div class="account-avatar"><%= user.first_name.charAt(0).toUpperCase() %><%= user.first_name.charAt(1).toUpperCase() %></div>
+                <div class="col">
+                    <h2><%= user.first_name + " " + user.last_name %></h2>
+                    <p>Email: <input type="text" value="<%= user.email %>" disabled></p>
+                    <span>Password <a href="/edit-account" class="action-button">Change Password</a></span>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 <%- include('../partials/user/footer.ejs') %>

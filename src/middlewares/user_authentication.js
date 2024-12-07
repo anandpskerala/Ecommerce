@@ -18,4 +18,12 @@ const authenticateUser = async (req, res, next) => {
     }
 }
 
-module.exports = {authenticateUser};
+const isAlreadyLogged = async (req, res, next) => {
+    if (req.session.user) {
+        return res.redirect("/");
+    } else {
+        next();
+    }
+}
+
+module.exports = {authenticateUser, isAlreadyLogged};

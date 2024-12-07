@@ -1,0 +1,60 @@
+<%- include('../partials/user/header.ejs') %>
+<header>
+    <%- include('../partials/user/navbar.ejs') %>
+</header>
+
+<div class="container">
+    <!-- Sidebar Filters -->
+    <aside class="filters">
+        <h3>Categories</h3>
+        <ul class="filter-list">
+            <% categories.forEach((category) => { %>
+                <% if (category.status) { %>
+                    <li><input type="checkbox" id="<%= category.name %>"><label for="<%= category.name %>"><%= category.name %></label></li>
+                <% } %>
+            <% }) %>
+        </ul>
+
+        <h3>Color</h3>
+        <div class="color-filters">
+            <div class="color black"></div>
+            <div class="color yellow"></div>
+            <div class="color green"></div>
+            <div class="color blue"></div>
+        </div>
+
+        <h3>Variant</h3>
+        <div class="variant-filters">
+            <button>126GB</button>
+            <button>256GB</button>
+            <button>500GB</button>
+            <button>1TB</button>
+            <button>2TB</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+        <div class="applied-filters">
+            <h4>Applied Filters:</h4>
+            <div class="filters">
+                <span class="filter-tag">Performance <button>X</button></span>
+                <span class="filter-tag">Variant: 126GB <button>X</button></span>
+            </div>
+            <p>Showing 1-9 of 36 Results</p>
+        </div>
+
+        <div class="product-grid">
+            <% products.forEach((product) => { %>
+                <a class="product-card" href="/products/<%= product._id %>">
+                    <img src="/images/<%= product.images[0] %>" alt="<%= product.title %> Image" class="product-image" />
+                    <h3 class="product-name"><%= product.title %></h3>
+                    <p class="product-price">$<%= product.variants[0].price %></p>
+                    <button class="add-to-cart">Add to Cart</button>
+                </a>
+            <% }) %>
+        </div>
+    </main>
+</div>
+
+<%- include('../partials/user/footer.ejs') %>

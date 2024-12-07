@@ -6,13 +6,13 @@
     <div class="banner-content">
         <h1 class="banner-title">New Arrivals</h1>
         <p class="banner-description">Discover Our Newest Arrivals Today.</p>
-        <button class="banner-button">
+        <a href="#newarrivals" class="banner-button">
             <span>View More</span>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M18.2896 11.4958C18.5701 11.7743 18.5701 12.2257 18.2896 12.5042L12.7541 18L11.7384 16.9916L16.766 12L11.7384 7.00845L12.7541 6L18.2896 11.4958Z" fill="white"/>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M17.9972 12.7131H5.5V11.2869H17.9972V12.7131Z" fill="white"/>
             </svg>            
-        </button>
+          </a>
       </div>
       <div class="banner-image">
         <img src="/assets/banner.png" alt="New Arrivals" />
@@ -62,10 +62,18 @@
 <div class="product-card-section" id="newarrivals">
   <h2 class="section-title">New Arrivals</h2>
   <div class="product-cards">
+    <% new_arrivals.forEach((arrival) => { %>
+      <a class="product-card" href="/products/<%= arrival._id %>">
+        <img src="/images/<%= arrival.images[0] %>" alt="<%= arrival.title %> Image" class="product-image" />
+        <h3 class="product-name"><%= arrival.title %></h3>
+        <p class="product-price">$<%= arrival.variants[0].price %></p>
+        <button class="add-to-cart">Add to Cart</button>
+      </a>
+    <% }) %>
   </div>
-  <div class="load-more-products">
-    <button class="load-more-btn">Load More</button>
-  
+  <div class="load-more">
+    <button class="review-btn">Load More</button>
+  </div>
 </div>
   
 <%- include('../partials/user/footer.ejs') %>

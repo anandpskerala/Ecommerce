@@ -88,6 +88,7 @@
                 <div class="input-col">
                     <label for="offer">Offer</label>
                     <select name="offer" id="offer">
+                        <option value="none">None</option>
                         <% offers.forEach((offer) => { %>
                             <option value="<%= offer.name %>"><%= offer.name %></option>
                         <% }) %>
