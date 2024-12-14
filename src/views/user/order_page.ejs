@@ -6,59 +6,65 @@
     <%- include('../partials/user/sidebar.ejs') %>
     <main class="main-content">
         <h3>Orders</h3>
-        <div class="order-list">
-          <!-- Order 1 -->
-          <div class="order-item">
-            <img src="https://via.placeholder.com/100" alt="Product Image" class="product-image">
-            <div class="order-details">
-              <p><strong>Razor Blade 15</strong></p>
-              <p>Ordered On: 27 July 2023</p>
-              <p>$1327.00</p>
+        <% if (orders && orders.length > 0)  { %>
+          <div class="order-list">
+            <% orders.forEach((order, index) => { %>
+            <div class="order-item">
+              <img src="/images/<%= order.image %>" alt="Product Image <%= index %>" class="product-image">
+              <a href="/user/order-summary/<%= order.payment %>" class="order-details">
+                <p><strong><%= order.name %></strong></p>
+                <p>Ordered On: <%= time.formatDate(order.createdAt) %></p>
+                <p>QTY: <%= order.quantity %></p>
+                <p>$<%= order.price %>.00</p>
+              </a>
+              <div class="order-status">
+                <span class="status <%= order.status %>"><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></span>
+              </div>
+              <div class="order-actions">
+                <a href="/product/<%= order.product_id %>" class="btn view-item">View Item</a>
+                <button class="btn cancel" onclick="cancel_order('<%= order._id %>')">Cancel</button>
+                <button class="btn return">Return</button>
+              </div>
             </div>
-            <div class="order-status">
-              <span class="status processing">Processing</span>
-            </div>
-            <div class="order-actions">
-              <button class="btn view-item">View Item</button>
-              <button class="btn cancel">Cancel</button>
-              <button class="btn return">Return</button>
-            </div>
+          <% }); %>
           </div>
-          <!-- Order 2 -->
-          <div class="order-item">
-            <img src="https://via.placeholder.com/100" alt="Product Image" class="product-image">
-            <div class="order-details">
-              <p><strong>ASUS TUF Gaming F15</strong></p>
-              <p>Ordered On: 9 March 2023</p>
-              <p>$793.00</p>
-            </div>
-            <div class="order-status">
-              <span class="status completed">Completed</span>
-            </div>
-            <div class="order-actions">
-              <button class="btn view-item">View Item</button>
-              <button class="btn cancel disabled">Cancel</button>
-              <button class="btn return">Return</button>
-            </div>
-          </div>
-          <!-- Order 3 -->
-          <div class="order-item">
-            <img src="https://via.placeholder.com/100" alt="Product Image" class="product-image">
-            <div class="order-details">
-              <p><strong>Razor Blade 15</strong></p>
-              <p>Ordered On: 27 July 2023</p>
-              <p>$1327.00</p>
-            </div>
-            <div class="order-status">
-              <span class="status cancelled">Cancelled</span>
-            </div>
-            <div class="order-actions">
-              <button class="btn view-item">View Item</button>
-              <button class="btn cancel disabled">Cancel</button>
-              <button class="btn return">Return</button>
-            </div>
-          </div>
-        </div>
+        <% } else { %>
+          <p>No orders found.</p>
+        <% } %>
     </main>
 </div>
+<script>
+  const cancel_order = async (order_id) => {
+    const { value: text } = await Swal.fire({
+        input: "textarea",
+        inputLabel: "Reason for cancellation",
+        inputPlaceholder: "Type your reason here...",
+        inputAttributes: {
+          "aria-label": "Type your reason here"
+        },
+        showCancelButton: true
+    });
+
+    if (text && text.trim().length > 0) {
+      const req = await fetch(`/user/cancel-order`, {
+          method: 'PATCH',
+          body: new URLSearchParams({
+            order_id: order_id,
+            reason: text
+          })
+      });
+      if (!req.ok) {
+          alert_error("An error occured. Try again");
+          return;
+      }
+
+      const res = await req.json();
+      if (res.success) {
+          alert_success(res.message);
+      } else {
+          alert_error(res.message);
+      }
+    }
+  } 
+</script>
 <%- include('../partials/user/footer.ejs') %>

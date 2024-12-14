@@ -4,7 +4,6 @@
 </header>
 
 <div class="container">
-    <!-- Sidebar Filters -->
     <aside class="filters">
         <h3>Categories</h3>
         <ul class="filter-list">
@@ -17,44 +16,231 @@
 
         <h3>Color</h3>
         <div class="color-filters">
-            <div class="color black"></div>
-            <div class="color yellow"></div>
-            <div class="color green"></div>
-            <div class="color blue"></div>
+            <div class="color" id="black" style="background-color: black;" data-color="black" data-checked="false"></div>
+            <div class="color" id="gold" style="background-color: gold;" data-color="gold" data-checked="false"></div>
+            <div class="color" id="green" style="background-color: lightgreen;" data-color="green" data-checked="false"></div>
+            <div class="color" id="blue" style="background-color: blue;" data-color="blue" data-checked="false"></div>
         </div>
 
-        <h3>Variant</h3>
-        <div class="variant-filters">
-            <button>126GB</button>
-            <button>256GB</button>
-            <button>500GB</button>
-            <button>1TB</button>
-            <button>2TB</button>
+        <div class="col" style="display: flex; flex-direction: column; width: 100%; text-align: center; gap: 20px;">
+            <label for="sortFilter">Sort by:</label>
+            <select id="sortFilter">
+                <option value="popularity">Popularity</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="new">New Arrivals</option>
+                <option value="a-z">A-Z</option>
+                <option value="z-a">Z-A</option>
+            </select>
         </div>
     </aside>
 
     <!-- Main Content -->
     <main>
-        <div class="applied-filters">
+        <div id="applied-filters" class="applied-filters">
             <h4>Applied Filters:</h4>
-            <div class="filters">
-                <span class="filter-tag">Performance <button>X</button></span>
-                <span class="filter-tag">Variant: 126GB <button>X</button></span>
+            <div id="filter-list" class="filters">
             </div>
-            <p>Showing 1-9 of 36 Results</p>
         </div>
 
-        <div class="product-grid">
+        <div class="product-grid" id="product-grid">
             <% products.forEach((product) => { %>
-                <a class="product-card" href="/products/<%= product._id %>">
+                <a class="product-card" href="/product/<%= product._id %>">
                     <img src="/images/<%= product.images[0] %>" alt="<%= product.title %> Image" class="product-image" />
-                    <h3 class="product-name"><%= product.title %></h3>
-                    <p class="product-price">$<%= product.variants[0].price %></p>
+                    <h3 class="product-name" aria-label="<%= product.title %>" title="<%= product.title %>"><%= product.title %></h3>
+                    <p class="product-price">$<%= product.variants.price %></p>
                     <button class="add-to-cart">Add to Cart</button>
                 </a>
             <% }) %>
         </div>
     </main>
 </div>
+<script>
+    const checkbox = document.querySelectorAll('input[type=checkbox]');
+    const colors = document.querySelectorAll(".color");
+    const filter_section = document.getElementById("applied-filters");
+    const filter_list = document.getElementById("filter-list");
+    const filter_remove_buttons = document.querySelectorAll(".filter-remove-button");
+    let filters = new Set();
+    let sorts = null;
+    if (filters.size <= 0) {
+        filter_section.style.display = "none";
+    }
 
+    const render_filters = () => {
+        filter_list.innerHTML = "";
+        Array.from(filters).forEach((filter) => {
+            const parsedFilter = JSON.parse(filter);
+            const name = parsedFilter.type == "colors"? `Color:${parsedFilter.name}`: parsedFilter.name
+            const span = document.createElement("span");
+            span.classList.add("filter-tag");
+            span.innerHTML = `${name} 
+            <button class="filter-remove-button">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="red" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 5L5 15" stroke="#5C5F6A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M5 5L15 15" stroke="#5C5F6A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>`
+            filter_list.appendChild(span)
+        })
+
+        if (filters.size <= 0) {
+            filter_section.style.display = "none";
+        } else {
+            filter_section.style.display = "flex";
+        }
+    }
+
+    const add_to_set = (set, obj) => {
+        const stringifiedObj = JSON.stringify(obj);
+        if (!set.has(stringifiedObj)) {
+            set.add(stringifiedObj);
+        }
+        fetch_data_from_server();
+        render_filters();
+    }
+
+    const remove_from_set = (set, name) => {
+        if (set == "") {
+            set = filters;
+        }
+        for (let item of set) {
+            const parsedItem = JSON.parse(item);
+            if (parsedItem.name === name) {
+                set.delete(item);
+                break;
+            }
+        }
+        fetch_data_from_server()
+        render_filters()
+    }
+
+    const render_products = (products) => {
+        const grid = document.getElementById("product-grid");
+        grid.innerHTML = "";
+        products.forEach((product) => {
+            const a = document.createElement("a");
+            a.classList.add("product-card");
+            a.href = `/product/${product._id}`;
+
+            const img = document.createElement("img");
+            img.src = `/images/${product.images[0]}`;
+            img.alt = product.title;
+            img.classList.add("product-image");
+            a.appendChild(img);
+
+            const h3 = document.createElement("h3");
+            h3.classList.add("product-name");
+            h3.setAttribute("aria-label", product.title);
+            h3.setAttribute("title", product.title);
+            h3.innerText = product.title;
+            a.appendChild(h3);
+
+            const p = document.createElement("p");
+            p.classList.add("product-price");
+            p.innerText = `$${product.variants.price}`;
+            a.appendChild(p);
+
+            const button = document.createElement("button");
+            button.classList.add("add-to-cart");
+            button.innerText = "Add to Cart";
+            a.appendChild(button);
+            
+            grid.appendChild(a);
+        });
+    }
+
+    const fetch_data_from_server = async () => {
+        const filterData = Array.from(filters).map(filter => JSON.parse(filter));
+        const url = new URL(window.location.href);
+        try {
+            const response = await fetch('/products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filters: filterData, sort: sorts }),
+            });
+            if (!response.ok) {
+                throw new Error(`Server Error: ${response.statusText}`);
+            }
+            console.log('Filters successfully sent to server!');
+            const products = await response.json();
+            render_products(products);
+        } catch (error) {
+            console.error('Error:', error);
+            alert_error('Failed to set filters');
+        }
+    };
+
+    filter_list.addEventListener('click', (e) => {
+        let button = e.target.closest(".filter-remove-button");
+        if (button) {
+            const filter_tag = button.parentElement;
+            const raw_filter_name = filter_tag.innerText.trim();
+            const filter_name = raw_filter_name.startsWith('Color') ? raw_filter_name.split(":")[1] : raw_filter_name;
+            if (filter_name === raw_filter_name) {
+                const element = document.getElementById(filter_name).checked = false;
+            } else {
+                document.getElementById(filter_name).dataset.checked = "false";
+            }
+            remove_from_set(filters, filter_name);
+        }
+    });
+
+    checkbox.forEach((item) => {
+        item.addEventListener('click', (e) => {
+            const checked = e.target.checked;
+            if (checked) {
+                add_to_set(filters, { name: e.target.id, type: "category" });
+            } else {
+                remove_from_set(filters, e.target.id);
+            }
+        });
+    });
+
+    colors.forEach((color) => {
+        color.addEventListener('click', (e) => {
+            const color_name = e.target.dataset.color;
+            const checked = e.target.dataset.checked;
+            if (checked == "false") {
+                add_to_set(filters, { name: color_name, type: "colors" });
+                e.target.dataset.checked = "true";
+                e.target.classList.add("selected");
+            } else {
+                remove_from_set(filters, color_name);
+                e.target.dataset.checked = "false";
+                e.target.classList.remove("selected");
+            }
+        });
+    });
+
+    document.querySelector("select").addEventListener('change', (e) => {
+        switch (e.target.value) {
+            case 'popularity':
+                sorts = { ordered: 1 };
+                break;
+            case 'price-low':
+                sorts = { "variants.price": 1 }; 
+                break;
+            case 'price-high':
+                sorts = { "variants.price": -1 };
+                break;
+            case 'new':
+                sorts = { "createdAt": -1 };
+                break;
+            case 'a-z':
+                sorts = { title: 1 };
+                break;
+            case 'z-a':
+                sorts = { title: -1 }; 
+                break;
+            default:
+                sorts = null;
+                break;
+        }
+
+        fetch_data_from_server();
+    });
+</script>
 <%- include('../partials/user/footer.ejs') %>

@@ -1,6 +1,33 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const address_schema = mongoose.Schema({
+    house_address: {
+        type: String,
+        required: true
+    },
+    street_address: {
+        type: String,
+        required: true
+    }, 
+    city: {
+        type: String,
+        required: true
+    },
+    state: {
+        type: String,
+        required: true
+    },
+    country: {
+        type: String,
+        required: true
+    },
+    zip_code: {
+        type: String,
+        required: true
+    }
+}, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}})
+
 const Schema = mongoose.Schema({
     first_name: {
         type: String,
@@ -31,10 +58,12 @@ const Schema = mongoose.Schema({
         type: Boolean,
         default: false
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
+    image: {
+        type: String,
+    },
+    addresses: {
+        type: [address_schema],
+    },
 }, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}});
 
 Schema.pre("save", async function(next) {

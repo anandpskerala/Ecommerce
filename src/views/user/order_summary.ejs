@@ -1,0 +1,53 @@
+<%- include('../partials/user/header.ejs') %>
+<header>
+    <%- include('../partials/user/navbar.ejs') %>
+</header>
+<h2 style="text-align: center;">Order Summary</h2>
+<div class="checkout-container">
+    <div class="address-manager">
+        <h2 style="margin-bottom: 30px;">Products</h2>
+
+        <div class="order-list">
+            <% orders.forEach((order) => { %>
+                <div class="orders">
+                    <img src="/images/<%= order.image %>" alt="Product Image" class="product-image">
+                    <h3 style="display: flex; align-items: center; max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                        <a href="/product/<%= order.product_id %>" style="text-decoration: none; color: black;"><%= order.name %></a>
+                    </h3>
+                    <p>QTY : <%= order.quantity %></p>
+                    <p>Price: $<%= order.price %></p>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+
+
+    <div class="order-summary">
+        <ul>
+            <h3>Details</h3>
+            <li><span><strong>Name: </strong></span><span><%= user.first_name + " " + user.last_name %></span></li>
+            <li style="gap: 50px;">
+                <span><strong>Address:</strong></span>
+                <span style="font-size: 14px;">
+                    <%= address.house_address %>,
+                    <%= address.street_address %>,
+                    <%= address.city %>
+                    <%= address.state %>
+                    <%= address.country %>,
+                    ZIP CODE : <%= address.zip_code %>
+                </span>
+            </li>
+            <li>
+                <span><strong>Phone Number:</strong></span>
+                <span><%- user.phone_number? user.phone_number: '<a class="btn" href="/user/account">Add Phone Number</a>' %></span>
+            </li>
+            <h3>Your Order</h3>
+            <li><span>Subtotal:</span> <span>$<%= payment.amount - 3 %>.00</span></li>
+            <li><span>Shipping:</span> <span>Free</span></li>
+            <li><span>Tax:</span> <span>$3.00</span></li>
+            <hr class="divider">
+            <li id="price" value="<%= payment.amount + 3 %>"><strong>Total:</strong> <strong>$<%= payment.amount %>.00</strong></li>
+        </ul>
+    </div>
+</div>
+<%- include('../partials/user/footer.ejs') %>

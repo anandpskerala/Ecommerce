@@ -6,13 +6,19 @@ const submitBtn = document.getElementById("submitBtn");
 const validationRules = {
     required: value => value.trim() !== '' || 'This field is required.',
     min: (value, param) => value.length >= param || `Minimum ${param} characters required.`,
+    nonegative: (value) => value >= 0 || 'Minimum value should not be negative',
     email: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || 'Invalid email address.',
     uppercase: value => /[A-Z]/.test(value) || 'Must contain at least one uppercase letter.',
     number: value => /\d/.test(value) || 'Must contain at least one number.',
+    numberonly: value => /^\d+$/.test(value) || 'Must contain only numbers',
     phonenumber: value => value === '' || /^\+?\d+$/.test(value) || 'Must contain only phone numbers.',
     match: (value, fieldId) => {
         const targetField = document.getElementById(fieldId);
         return value === targetField.value || 'Password does not match.';
+    },
+    notmatch: (value, fieldId) => {
+        const targetField = document.getElementById(fieldId);
+        return value !== targetField.value || 'New password is same as current password.';
     },
 };
 
@@ -23,6 +29,7 @@ const handleValidation = (input) => {
     const rules = input.dataset.validate.split('|');
     const errorSpan = input.nextElementSibling;
     const value = input.value.trim();
+    const fieldForHidden = input.dataset.field;
 
     for (const rule of rules) {
         const [ruleName, param] = rule.split(':');
@@ -127,6 +134,8 @@ if (resendBtn) {
                     email
                 })
             })
+
+            if (!req.ok) return alert_error("Network error");
         } else {
             window.location.href = "/forgot-password";
         }

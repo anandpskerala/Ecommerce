@@ -95,7 +95,7 @@ const edit_user = async (data) => {
             },
             body: new URLSearchParams(formValues),
         })
-
+        if (!req.ok) return alert_error("An error has occurred. Please try again.");
         const res = await req.json();
         if (res.success) {
             alert_success(res.message);
@@ -123,37 +123,13 @@ const delete_user = async (id) => {
                 },
                 body: new URLSearchParams({id}),
             })
-    
+            if (!req.ok) return alert_error("An error has occurred. Please try again.");
             const res = await req.json();
             if (res.success) {
                 alert_success(res.message);
             } else {
                 alert_error(res.message);
             }
-        }
-    });
-}
-
-const alert_error = (message) => {
-    Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: message,
-    }).then(async (res) => {
-        if (res.isConfirmed) {
-            window.location.reload();
-        }
-    });
-}
-
-const alert_success = (message) => {
-    Swal.fire({
-        icon: "success",
-        title: "Success!",
-        text: message,
-    }).then(async (res) => {
-        if (res.isConfirmed) {
-            window.location.reload();
         }
     });
 }
@@ -211,12 +187,11 @@ const edit_brand = async (data) => {
         }
       });
       if (formValues) {
-        console.log(formValues);
         const req = await fetch("/admin/edit-brand", {
             method: 'POST',
             body: formValues,
         })
-
+        if (!req.ok) return alert_error("An error has occurred. Please try again.");
         const res = await req.json();
         if (res.success) {
             alert_success(res.message);
@@ -278,12 +253,12 @@ const edit_category = async (data) => {
         }
       });
       if (formValues) {
-        console.log(formValues);
         const req = await fetch("/admin/edit-category", {
             method: 'POST',
             body: formValues,
         })
-
+        if (!req.ok) return alert_error("An error has occurred. Please try again.");
+        
         const res = await req.json();
         if (res.success) {
             alert_success(res.message);

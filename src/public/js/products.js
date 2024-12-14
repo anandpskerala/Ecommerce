@@ -143,25 +143,20 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             let validForm = true;
-            for (const input of form.elements) {
-                console.log(input)
-                if (input.value.trim() === "" && input.type !== "file" && input.name !== "colors" && input.className !== "button" && input.className != "remove-btn") {
-                    validForm = false;
-                    alert_error("Please fill out all required fields");
-                    break;
+            Array.from(form.elements).forEach((input) => {
+                if (!handleValidation(input)) {
+                    isValid = false;
                 }
                 if (input.type === "file" && input.value.trim() === "") {
                     validForm = false;
                     alert_error("Please select at least one image");
-                    break;
                 }
 
                 if (imageArray.length < 3) {
                     validForm = false;
                     alert_error("Please select at least 3 images");
-                    break;
                 }
-            }
+            })
 
             if (!validForm) return;
             const formData = removeFromFormData(new FormData(form), 'images');
@@ -215,24 +210,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $("#brand-form").on("submit", async (e) => {
         e.preventDefault();
+        let isValid = true;
         let form = document.getElementById("brand-form");
         Array.from(form.elements).forEach((input) => {
-            if (input.type == "file" && input.value.trim() == "") {
-                alert_error("Please select a file")
-                return false;
-            }
-            console.log(input.file)
-            
-            if (input.value.trim() == "" && input.type != "submit") {
-                alert_error("Please fill out all required fields")
-                return false;
+            if (!handleValidation(input)) {
+                isValid = false;
             }
         });
+        if (!isValid) return;
         let formdata = new FormData(form);
         let req = await fetch("/admin/add-brand", {
             method: "POST",
             body: formdata,
         });
+        if (!req.ok) return alert_error("An error has occurred. Please try again.");
         let res = await req.json();
         if (res.success) {
             alert_success(res.message)
@@ -246,23 +237,19 @@ document.addEventListener('DOMContentLoaded', () => {
     $("#category-form").on("submit", async (e) => {
         e.preventDefault();
         let form = document.getElementById("category-form");
+        let validForm = true;
         Array.from(form.elements).forEach((input) => {
-            if (input.type == "file" && input.value.trim() == "") {
-                alert_error("Please select a file")
-                return false;
-            }
-            console.log(input.file)
-            
-            if (input.value.trim() == "" && input.type != "submit") {
-                alert_error("Please fill out all required fields")
-                return false;
+            if (!handleValidation(input)) {
+                validForm = false;
             }
         });
+        if (!validForm) return;
         let formdata = new FormData(form);
         let req = await fetch("/admin/add-category", {
             method: "POST",
             body: formdata,
         });
+        if (!req.ok) return alert_error("An error has occurred. Please try again.");
         let res = await req.json();
         if (res.success) {
             alert_success(res.message)
@@ -299,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
             method: "POST",
             body: formdata,
         });
+        if (!req.ok) return alert_error("An error has occurred. Please try again.");
         let res = await req.json();
         if (res.success) {
             alert_success(res.message)
@@ -327,11 +315,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
                         <label for="price" class="form-label">Price</label>
-                        <input id="price" type="number" name="price" class="swal2-input" data-validate="required">
+                        <input id="price" type="number" name="price" class="swal2-input" value="${data[e.target.title]? data[e.target.title].price: ''}" data-validate="required|nonegative">
+                        <span class="form-error"></span>
                     </div>
                     <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
                         <label for="quantity" class="form-label">Quantity</label>
-                        <input id="quantity" type="number" name="quantity" class="swal2-input" data-validate="required">
+                        <input id="quantity" type="number" name="quantity" class="swal2-input" value="${data[e.target.title]? data[e.target.title].quantity: ''}" data-validate="required|nonegative">
+                        <span class="form-error"></span>
                     </div>
                 </form>
                 `,

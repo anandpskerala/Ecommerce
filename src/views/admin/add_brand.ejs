@@ -8,15 +8,15 @@
         <form id="brand-form" enctype="multipart/form-data">
             <div class="col">
                 <label for="name">Brand Name</label>
-                <input type="text" id="name" name="name" style="width: 830px;" placeholder="Type here">
+                <input type="text" id="name" name="name" style="width: 830px;" placeholder="Type here" data-validate="required">
             </div>
             <div class="col">
                 <label for="description">Description</label>
-                <textarea name="description" id="description" style="width: 830px; height: 95px;" placeholder="Type here"></textarea>
+                <textarea name="description" id="description" style="width: 830px; height: 95px;" placeholder="Type here" data-validate="required"></textarea>
             </div>
             <div class="col">
                 <label for="image">Brand Icon</label>
-                <input type="file" id="image" name="image" style="width: 830px; background-color: var(--input-bg); padding: 10px 10px; border-radius: 6px;" accept="image/*">
+                <input type="file" id="image" name="image" style="width: 830px; background-color: var(--input-bg); padding: 10px 10px; border: 1px solid var(--light-grey);; border-radius: 6px;" accept="image/*" data-validate="required">
             </div>
 
             <div style="display: flex; flex-direction: row; gap: 10px; justify-content: center; margin-top: 60px;">

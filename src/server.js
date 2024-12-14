@@ -26,6 +26,7 @@ app.use(logger('[:method]   -  :url  -  :response-time ms'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/images', express.static(path.join(__dirname, 'uploads')));
 app.use(body_parser.urlencoded({ extended: true }));
+app.use(body_parser.json());
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,

@@ -7,8 +7,9 @@ const brands = require('../models/brand_model');
 const category = require('../models/category_model');
 const offer = require('../models/offer_model');
 const product_model = require('../models/product_model');
+const order_model = require('../models/order_model');
 const timer = require('../utils/time');
-const { console } = require('inspector');
+
 
 const admin_login = async (req, res) => {
     const {email, password} = req.body;
@@ -137,7 +138,7 @@ const load_products = async (req, res) => {
             productQuery: product
         }
     );
-}
+};
 
 const add_product_form = async (req, res) => {
     try {
@@ -186,7 +187,7 @@ const add_brand_form = async (req, res) => {
     try {
         const {name, description} = req.body;
         const image = req.file.filename;
-        const exists = await brands.findOne({name});
+        const exists = await brands.findOne({name: {$regex: new RegExp(`^${name}$`, 'i')}});
         if (exists) {
             fs.unlink(req.file.path, (err) => {
                 if (err) console.error("Error deleting file:", err);
@@ -258,7 +259,7 @@ const add_category_form = async (req, res) => {
     try {
         const {name, description} = req.body;
         const image = req.file.filename;
-        const exists = await category.findOne({name}, { collation: { locale: "en", strength: 2 } });
+        const exists = await category.findOne({name: {$regex: new RegExp(`^${name}$`, 'i')}});
         if (exists) {
             fs.unlink(req.file.path, (err) => {
                 if (err) console.error("Error deleting file:", err);
@@ -272,7 +273,7 @@ const add_category_form = async (req, res) => {
         return res.status(201).json({success: true, message: "Category added"});
     } catch (err) {
         console.error("Error in add brand:", err);
-        return res.status(500).json({success: false, message: "An error occurred"});
+        return res.status(500).json({success: false, message: "An error occurred" + err});
     }
 }
 
@@ -296,7 +297,6 @@ const load_category = async (req, res) => {
 const edit_category = async (req, res) => {
     try {
         const {id, name, description, status} = req.body;
-        console.log(status)
         const cate = await category.findOne({_id: id});
         if (req.file) {
             fs.unlink(path.join(__dirname, "../uploads", cate.image), (err) => {
@@ -332,7 +332,7 @@ const delete_category = async (req, res) => {
 const create_offer = async (req, res) => {
     try {
         const { name } = req.body;
-        const exists = await offer.findOne({name});
+        const exists = await offer.findOne({name: {$regex: new RegExp(`^${name}$`, 'i')}});
         if (exists) {
             return res.status(400).json({success: false, message: "Offer already exists"});
         }
@@ -411,8 +411,9 @@ const add_product_image = async (req, res) => {
 const product_options = async (req, res) => {
     try {
         const {id, action} = req.body;
+        console.log(action)
         await product_model.updateOne({_id: id}, {$set: {listed: action}});
-        return res.status(200).json({success: true, message: `Product ${action == true ? 'listed': 'unlisted'} successfully`});
+        return res.status(200).json({success: true, message: `Product ${action == 'true' ? 'listed': 'unlisted'} successfully`});
     } catch (error) {
         console.log("Error in Product otions" + error)
         return res.status(500).json({success: false, message: "An error occurred"});
@@ -434,6 +435,34 @@ const edit_product_form = async (req, res) => {
     } catch (err) {
         console.log("Error in edit product form" + err)
         return res.status(500).json({success: false, message: `An error occurred ${err}`});
+    }
+};
+
+const load_orders = async (req, res) => {
+    const { page = 1, limit = 10, status = "" } = req.query;
+    const query = status ? { status } : {};
+    const orders = await order_model.find(query).sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit)).populate('user_id', 'first_name last_name email');
+    const total = await order_model.countDocuments();
+    return res.render("admin/orders", {
+        title: "Orders", 
+        page: "Orders", 
+        orders, 
+        time: timer, 
+        totalPages: Math.ceil(total / limit),
+        currentPage: Number(page),
+        total
+    });
+}
+
+const set_order_status = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, reason = "" } = req.body;
+        await order_model.updateOne({_id: id}, {$set: {status, reason}});
+        return res.status(200).json({success: true, message: `Order status updated successfully`});
+    } catch (error) {
+        console.log("Error in set order status" + error)
+        return res.json({success: false, message: `An error occurred`});
     }
 };
 
@@ -460,5 +489,7 @@ module.exports = {
     remove_product_image,
     add_product_image,
     product_options,
-    edit_product_form
+    edit_product_form,
+    load_orders,
+    set_order_status
 };

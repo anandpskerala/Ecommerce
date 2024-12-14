@@ -11,7 +11,7 @@
             <div class="input-row">
                 <div class="input-col">
                     <label for="title">Title</label>
-                    <input type="text" name="title" id="title">
+                    <input type="text" name="title" id="title" data-validate="required">
                     <span class="form-error" id="title-error"></span>
                 </div>
 
@@ -102,28 +102,30 @@
                         <div class="color-option" style="background-color: gold;" title="Gold" data-color="gold"></div>
                         <div class="color-option" style="background-color: lightgreen;" title="Green" data-color="green"></div>
                         <div class="color-option" style="background-color: blue;" title="Blue" data-color="blue"></div>
-                        <input type="hidden" name="colors" id="colors">
                     </div>
+                    <input type="hidden" name="colors" id="colors" data-validate="required">
+                    <span class="form-error" id="colors-error"></span>
                 </div>
             </div>
 
             <div class="input-row">
                 <div class="input-col">
                     <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="4" cols="40" placeholder="Enter product description..."></textarea>
+                    <textarea id="description" name="description" rows="4" cols="40" placeholder="Enter product description..." data-validate="required"></textarea>
                     <span class="form-error" id="description-error"></span>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <label>Variants</label>
                     <div class="variants">
-                        <input type="hidden" id="variants" name="variants" value="">
                         <div class="variant-option" title="128 GB">128 GB</div>
                         <div class="variant-option" title="256 GB">256 GB</div>
                         <div class="variant-option" title="500 GB">500 GB</div>
                         <div class="variant-option" title="1 TB">1 TB</div>
                         <div class="variant-option" title="2 TB">2 TB</div>
                     </div>
+                    <input type="hidden" id="variants" name="variants" value="" data-validate="required">
+                    <span class="form-error" id="Variants-error"></span>
                 </div>
             </div>
 

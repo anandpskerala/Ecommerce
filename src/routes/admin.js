@@ -6,7 +6,9 @@ const category = require("../models/category_model");
 const brand = require("../models/brand_model");
 const offer = require("../models/offer_model");
 const product_model = require("../models/product_model");
+const order_model = require("../models/order_model");
 const multer = require('../utils/multer');
+const time = require('../utils/time');
 
 const routes = express.Router();
 
@@ -65,9 +67,14 @@ routes.get("/add-category", auth.authenticateAdmin, (req, res) => {
     return res.render("admin/add_category", {title: "Categories", page: "Create Category"});
 })
 
-routes.get("/orders", auth.authenticateAdmin, (req, res) => {
-    return res.render("admin/orders", {title: "Orders", page: "Orders"});
-});
+routes.get("/orders", auth.authenticateAdmin, controller.load_orders);
+
+routes.get("/order/:id", auth.authenticateAdmin, async (req, res) => {
+    const {id} = req.params;
+    const order = await order_model.findOne({_id: id}).populate('user_id', 'first_name last_name email addresses phone_number');
+    const address = order.user_id.addresses.find(v => v._id.toString() == order.address.toString());
+    return res.render("admin/order_details", {title: "Orders", page: "Order Details", order, time, address});
+})
 
 routes.get("/brands", auth.authenticateAdmin, controller.load_brands);
 
@@ -112,5 +119,6 @@ routes.delete("/delete-product/:id", auth.authenticateAdminApI, controller.delet
 routes.post("/remove-product-image", auth.authenticateAdminApI, controller.remove_product_image);
 routes.post("/edit-product-image", multer.array("images"), auth.authenticateAdminApI, controller.add_product_image);
 routes.post("/product-options", auth.authenticateAdminApI, controller.product_options);
+routes.patch("/order/:id", auth.authenticateAdminApI, controller.set_order_status);
 
 module.exports = routes;

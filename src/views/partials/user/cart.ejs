@@ -1,0 +1,61 @@
+<div class="cart-overlay" id="cart-menu">
+  <div class="shopping-cart">
+    <div class="head">
+      <h2>Shopping Cart</h2>
+      <button class="close-cart" type="button" onclick="close_cart_menu()">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 5L5 15" stroke="#5C5F6A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 5L15 15" stroke="#5C5F6A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <% if (carts && carts.length > 0) { %>
+      <% carts.forEach((cart, index) => { %>
+        <div class="cart-item">
+          <img class="item-image" src="/images/<%= cart.image %>" alt="Product Image <%= index %>">
+          <div class="item-details">
+            <div class="item-info">
+              <span class="item-name"><%= cart.name %></span>
+              <span class="item-variant">
+                <span class="color" style="background-color: <%= cart.color %>;"></span>
+                <span> - <%= cart.variant %></span>
+              </span>
+            </div>
+            <div class="item-info">
+              <div class="cart-quantity-controls">
+                <button class="cart-minus" aria-label="Decrease quantity" style="border-top-left-radius: 6px; border-bottom-left-radius: 6px; border-right: 1px solid #ccc;">−</button>
+                <input type="number" id="quantity" value="<%= cart.quantity %>" min="1" max="99">
+                <button class="cart-plus" aria-label="Increase quantity" style="border-top-right-radius: 6px; border-bottom-right-radius: 6px; border-left: 1px solid #ccc;">+</button>
+              </div>
+            </div>
+            <span>$<%= cart.price %>.00</span>
+          </div>
+        </div>
+      <% }); %>
+
+      <br>
+      <div class="cart-footer">
+        <hr class="divider">
+        <div class="total-container">
+          <span class="total-label">Total</span>
+          <span class="total-amount">$<%= total_price %>.00</span>
+        </div>
+        <a href="/user/carts" class="cart-button primary">View Cart</a>
+        <a href="/user/checkout" class="checkout-link">Checkout</a>
+      </div>
+    <% } else { %>
+      <span class="no-address" style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0.913086 0.739136H4.29629L5.50161 12.7161C5.55171 13.0462 5.71952 13.3472 5.97411 13.5634C6.2287 13.7797 6.55292 13.8968 6.88704 13.893H15.6152C15.9173 13.9087 16.2163 13.8252 16.4665 13.6552C16.7166 13.4852 16.9042 13.238 17.0006 12.9514L18.8432 7.41298C18.9121 7.20477 18.9304 6.9832 18.8966 6.76653C18.8629 6.54986 18.7781 6.34431 18.6493 6.16683C18.5152 5.97808 18.3358 5.82595 18.1277 5.72435C17.9195 5.62276 17.6892 5.57495 17.4578 5.58529H4.78119" stroke="#5C5F6A" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M15.3797 18.7391C15.196 18.7391 15.0198 18.6662 14.8899 18.5364C14.76 18.4065 14.687 18.2304 14.687 18.0468C14.687 17.8632 14.76 17.6871 14.8899 17.5573C15.0198 17.4275 15.196 17.3545 15.3797 17.3545C15.5634 17.3545 15.7396 17.4275 15.8695 17.5573C15.9995 17.6871 16.0724 17.8632 16.0724 18.0468C16.0724 18.2304 15.9995 18.4065 15.8695 18.5364C15.7396 18.6662 15.5634 18.7391 15.3797 18.7391Z" fill="#5C5F6A" stroke="#5C5F6A" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6.37447 18.7391C6.19076 18.7391 6.01456 18.6662 5.88465 18.5364C5.75474 18.4065 5.68176 18.2304 5.68176 18.0468C5.68176 17.8632 5.75474 17.6871 5.88465 17.5573C6.01456 17.4275 6.19076 17.3545 6.37447 17.3545C6.55819 17.3545 6.73439 17.4275 6.8643 17.5573C6.99421 17.6871 7.06719 17.8632 7.06719 18.0468C7.06719 18.2304 6.99421 18.4065 6.8643 18.5364C6.73439 18.6662 6.55819 18.7391 6.37447 18.7391Z" fill="#5C5F6A" stroke="#5C5F6A" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9.47498 8.35452V11.1238" stroke="#5C5F6A" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13.6312 8.35452V11.1238" stroke="#5C5F6A" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        &nbsp;&nbsp;&nbsp;
+        Empty
+      </span>
+    <% } %>
+  </div>
+</div>

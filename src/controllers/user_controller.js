@@ -1,6 +1,7 @@
 const crypto = require('crypto');
-const Users = require("../models/user_model");
-const otps = require("../models/otp_model");
+const user_model = require("../models/user_model");
+const otp_model = require("../models/otp_model");
+const product_model = require("../models/product_model");;
 
 const generate_otp = () => {
     return crypto.randomInt(1000, 9999);
@@ -9,13 +10,13 @@ const generate_otp = () => {
 const user_signup = async (req, res) => {
     const {first_name, last_name, email, password} = req.body;
     try {
-        const exists = await Users.findOne({email: email.toLowerCase()});
+        const exists = await user_model.findOne({email: email.toLowerCase()});
         if (exists) {
             req.session.error = "User already exists";
             return res.redirect("/signup");
         }
 
-        const otp = new otps({email: email.toLowerCase(), otp: generate_otp()});
+        const otp = new otp_model({email: email.toLowerCase(), otp: generate_otp()});
         let res_otp = await otp.save();
         
         // const user = new Users({first_name, last_name, email, password});
@@ -63,7 +64,7 @@ const user_signup = async (req, res) => {
 const user_login = async (req, res) => {
     const {email, password} = req.body;
     try {
-        const exists = await Users.findOne({email: email.toLowerCase()});
+        const exists = await user_model.findOne({email: email.toLowerCase()});
         if (!exists) {
             req.session.error = "Email or Password doesn't match";
             return res.redirect("/login");
@@ -174,9 +175,9 @@ const auth_google = async (req, res) => {
         })
 
         const new_data = await reqs.json();
-        const exists = await Users.findOne({email: new_data.email});
+        const exists = await user_model.findOne({email: new_data.email});
         if (!exists) {
-            const user = new Users({
+            const user = new user_model({
                 first_name: new_data.given_name, 
                 last_name: new_data.family_name, 
                 email: new_data.email, 
@@ -257,4 +258,40 @@ const auth_google = async (req, res) => {
       }
 }
 
-module.exports = { user_signup, user_login, user_logout, google_login, auth_google };
+const get_products = async (req, res) => {
+    try {
+        const {search = ""} = req.query;
+        const { sort = null } = req.body;
+        let filters = []
+        console.log(sort)
+        if (req.body.filters && req.body.filters.length > 0)  {
+            req.body.filters.forEach(filter => {
+                filters.push({[filter.type]: filter.name});
+            });
+        }
+        console.log(filters)
+        let products;
+        if (sort) {
+            products = await product_model.aggregate([
+                {$unwind: '$variants'},
+                {$match: {title: {$regex: new RegExp(`^${search}`, "i")}, ...(filters.length > 0 ? { $and: filters } : {})}},
+                {$project: {_id: 1, title: 1, description: 1, images: 1, variants: 1}},
+                {$sort: sort},
+                {$limit: 25}
+            ])
+        } else {
+            products = await product_model.aggregate([
+                {$unwind: '$variants'},
+                {$match: {title: {$regex: new RegExp(`^${search}`, "i")}, ...(filters.length > 0 ? { $and: filters } : {})}},
+                {$project: {_id: 1, title: 1, description: 1, images: 1, variants: 1}},
+                {$limit: 25}
+            ])
+        }
+        res.json(products);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({message: "Server Error"});
+    }
+};
+
+module.exports = { user_signup, user_login, user_logout, google_login, auth_google, get_products };

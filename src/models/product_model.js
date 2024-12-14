@@ -56,6 +56,10 @@ const Schema = new mongoose.Schema(
         listed: {
             type: Boolean,
             default: true
+        },
+        ordered: {
+            type: Number,
+            default: 0
         }
     },
     { timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"} }

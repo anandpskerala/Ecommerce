@@ -16,9 +16,13 @@
   --input-bg: rgb(235, 239, 245);
   --black: rgb(0, 0, 0);
   --red: rgb(255, 0, 0);
+  --blue: rgb(0, 135, 255);
+  --gold: rgb(255, 140, 0);
+  --gold-bg: rgba(255, 241, 115, 0.505);
   --green: rgba(0, 135, 103, 1);
   --blocked-fill: rgba(255, 0, 0, 0.3);
   --active-fill: rgba(22, 192, 152, 0.38);
+  --shipped-fill: rgba(0, 166, 255, 0.26);
 }
 
 body {
@@ -110,10 +114,12 @@ body {
 header {
   display: flex;
   width: 100%;
+  min-height: 66px;
 }
 
 .navbar {
   display: flex;
+  position: fixed;
   flex-direction: row;
   width: 100%;
   padding: 20px 50px;
@@ -124,7 +130,11 @@ header {
 .navbar .head {
   display: flex;
   flex-direction: row;
-  gap: 200px;
+  gap: 120px;
+}
+
+.navbar .head .logo {
+  padding: 0 20px;
 }
 
 .navbar .head .logo a {
@@ -173,6 +183,55 @@ header {
   gap: 10px;
 }
 
+.state-button {
+  display: flex;
+  padding: 8px 15px;
+  cursor: pointer;
+  background-color: transparent;
+  border-radius: 6px;
+  outline: none;
+}
+
+.state-button.label {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  max-width: 120px;
+  max-height: 50px;
+  padding: 5px 10px;
+  border-width: 1px;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.state-button.processing {
+  background-color: var(--gold-bg);
+  font-weight: 600;
+  border: 2px solid var(--gold);
+  color: var(--gold);
+}
+
+.state-button.shipped {
+  background-color: var(--shipped-fill);
+  font-weight: 600;
+  border: 2px solid var(--blue);
+  color: var(--blue);
+}
+
+.state-button.delivered {
+  background-color: var(--active-fill);
+  font-weight: 600;
+  border: 2px solid var(--green);
+  color: var(--green);
+}
+
+.state-button.cancelled {
+  background-color: var(--blocked-fill);
+  font-weight: 600;
+  border: 2px solid var(--red);
+  color: var(--red);
+}
+
 .sidebar {
   display: flex;
   position: relative;
@@ -183,7 +242,6 @@ header {
   margin-top: -66px;
   filter: drop-shadow();
   justify-content: center;
-  align-items: center;
 }
 
 .sidebar ul {
@@ -191,6 +249,8 @@ header {
   list-style: none;
   gap: 20px;
   flex-direction: column;
+  margin-top: 70px;
+  position: fixed;
 }
 
 .sidebar ul li {
@@ -479,9 +539,11 @@ header {
 }
 
 .variants .variant-option {
-  padding: 5px;
+  padding: 5px 10px;
   border: 1px solid var(--black);
-  border-radius: 5px 2px;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: var(--white);
   font-size: 12px;
   font-weight: 600;
 }
@@ -566,6 +628,11 @@ table thead {
   border: 1px solid #007bff;
 }
 
+.action-edit:hover {
+  color: var(--white);
+  background-color: #007bff;
+}
+
 .action-delete {
   color: #f44336;
   background-color: transparent;
@@ -587,6 +654,12 @@ table thead {
 
 .pagination li {
   margin: 0 5px;
+  padding: 4px 8px;
+  text-decoration: none;
+  color: #007bff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
 }
 .pagination a {
   padding: 4px 8px;
@@ -596,14 +669,14 @@ table thead {
   border-radius: 4px;
 }
 
-.pagination a .active {
+.pagination li.active {
   font-weight: bold;
   background-color: #e0e0e0;
   color: var(--black);
   pointer-events: none;
 }
 
-.pagination a:hover {
+.pagination li:hover {
   background-color: #e0e0e0;
 }
 
@@ -674,4 +747,20 @@ table thead {
   display: flex;
   justify-content: center;
   gap: 10px;
+}
+
+.form-error {
+  font-size: 12px;
+  color: var(--red);
+  text-align: center;
+}
+
+.status-selection {
+  width: 100%;
+  border: 1px solid #282828;
+  border-radius: 5px;
+  padding: 10px;
+  font-size: 14px;
+  color: #555;
+  resize: none;
 }

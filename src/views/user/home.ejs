@@ -63,7 +63,7 @@
   <h2 class="section-title">New Arrivals</h2>
   <div class="product-cards">
     <% new_arrivals.forEach((arrival) => { %>
-      <a class="product-card" href="/products/<%= arrival._id %>">
+      <a class="product-card" href="/product/<%= arrival._id %>">
         <img src="/images/<%= arrival.images[0] %>" alt="<%= arrival.title %> Image" class="product-image" />
         <h3 class="product-name"><%= arrival.title %></h3>
         <p class="product-price">$<%= arrival.variants[0].price %></p>

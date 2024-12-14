@@ -8,8 +8,12 @@
         <a href="/user/orders" class="links">Orders</a>
       </li>
       <li class="menu-item">Wishlist</li>
-      <li class="menu-item">Address</li>
-      <li class="menu-item">Password</li>
+      <li class="menu-item <%= title == 'Address'? 'active': '' %>">
+        <a href="/user/manage-address" class="links">Address</a>
+      </li>
+      <li class="menu-item <%= title == 'Change Password'? 'active': '' %>">
+        <a href="/user/change-password" class="links">Password</a>
+      </li>
       <li class="menu-item">Wallet</li>
       <li class="menu-item">
         <a class="logout" href="/logout">Logout</a>

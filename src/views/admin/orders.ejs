@@ -4,6 +4,91 @@
 </header>
 <div class="row">
     <%- include('../partials/admin/sidebar.ejs') %>
-    <h1>Test</h1>
+    <div class="cover">
+        <div class="cover-head">
+            <h2>Orders</h2>
+            <div class="row">
+                <button class="state-button processing" onclick="filter_orders('processing')">Processing</button>
+                <button class="state-button shipped" onclick="filter_orders('shipped')">Shipped</button>
+                <button class="state-button delivered" onclick="filter_orders('delivered')">Delivered</button>
+                <button class="state-button cancelled" onclick="filter_orders('cancelled')">Cancelled</button>
+                <button class="state-button" onclick="filter_orders('returned')">Returned</button>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="user-table">
+                <% orders.forEach((order) => { %>
+                    <tr>
+                        <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                            <img src="/images/<%= order.image %>" style="width: 44px; height: 44px; border-radius: 6px;" alt="<%= order.name %> logo">
+                            <span><%= order.name %></span>
+                        </td>
+                        <td style="max-width: 120px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <%- order.user_id.first_name + " " + order.user_id.last_name %>
+                        </td>
+                        <td><%= time.formatDate(order.createdAt) %></td>
+                        <td>$<%= order.price %></td>
+                        <td><span class="state-button <%= order.status %> label"><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></span></td>
+                        <td>
+                            <a class="action-btn action-view" href="/admin/order/<%= order._id %>">View</button>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+
+        <% if (total > 10) { %>
+            <ul class="pagination">
+                <!-- Previous Page -->
+                <% if (currentPage > 1) { %>
+                    <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
+                <% } else { %>
+                    <li><span>&lt;</span></li>
+                <% } %>
+        
+                <!-- Page Numbers -->
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
+                        <%= i %>
+                    </li>
+                <% } %>
+        
+                <!-- Next Page -->
+                <% if (currentPage < totalPages) { %>
+                    <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
+                <% } else { %>
+                    <li><span>&gt;</span></li>
+                <% } %>
+            </ul>
+        <% } %>
+    </div>
 </div>
+<script>
+    const filter_orders = (state) => {
+        let url = new URL(window.location.href);
+        if (url.searchParams.get('status') == state) {
+            url.searchParams.delete('status');
+        } else {
+            url.searchParams.set('status', state);
+        }
+        window.location.href = url.toString();
+    }
+
+    const paginate = (page) => {
+        let url = new URL(window.location.href);
+        url.searchParams.set('page', page);
+        window.location.href = url.toString();
+    }
+</script>
 <%- include('../partials/admin/footer.ejs') %>
