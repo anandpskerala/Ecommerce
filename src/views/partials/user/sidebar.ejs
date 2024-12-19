@@ -4,17 +4,24 @@
       <li class="menu-item <%= title == 'Account'? 'active': '' %>">
         <a href="/user/account" class="links">Account</a>
       </li>
+      <li class="menu-item <%= title == 'Cart'? 'active': '' %>">
+        <a href="/user/carts" class="links">Carts</a>
+      </li>
       <li class="menu-item <%= title == 'Orders'? 'active': '' %>">
         <a href="/user/orders" class="links">Orders</a>
       </li>
-      <li class="menu-item">Wishlist</li>
+      <li class="menu-item <%= title == 'Wishlists'? 'active': '' %>">
+        <a href="/user/wishlists" class="links">Wishlists</a>
+      </li>
       <li class="menu-item <%= title == 'Address'? 'active': '' %>">
         <a href="/user/manage-address" class="links">Address</a>
       </li>
       <li class="menu-item <%= title == 'Change Password'? 'active': '' %>">
         <a href="/user/change-password" class="links">Password</a>
       </li>
-      <li class="menu-item">Wallet</li>
+      <li class="menu-item <%= title == 'Wallet'? 'active': '' %>">
+        <a href="/user/wallet" class="links">Wallet</a>
+      </li>
       <li class="menu-item">
         <a class="logout" href="/logout">Logout</a>
       </li>

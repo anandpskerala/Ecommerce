@@ -28,7 +28,7 @@
                 <div class="product-card">
                     <img src="/images/<%= product.images[0] %>" alt="<%= product.title %> Image" class="product-image" />
                     <h3 class="product-name"><%= product.title %></h3>
-                    <p class="product-price">Base Price : $<%= product.variants[0].price %></p>
+                    <p class="product-price">Base Price : &#8377;<%= product.variants[0].price %></p>
                     <span class="status-<%= status %>"><%= status %></span>
                     <span class="status-<%= stock_status %>"><%= stock %></span>
                     <br>
@@ -39,31 +39,30 @@
                 </div>
             <% }) %>
         </div>
-        <ul class="pagination">
-            <% let search = productQuery.length > 0? `&product=${productQuery}`: ''; %>
-            <!-- Previous Page -->
-            <% if (currentPage > 1) { %>
-                <li><a href="/admin/products?page=<%= currentPage - 1 %><%= search %>">&lt;</a></li>
-            <% } else { %>
-                <li><a style="color: black;"><span>&lt;</span></a></li>
-            <% } %>
-    
-            <!-- Page Numbers -->
-            <% for (let i = 1; i <= totalPages; i++) { %>
-                <li>
-                    <a href="/admin/products?page=<%= i %><%= search %>" class="<%= i === currentPage ? 'active' : '' %>">
+        <% if (totalPages > 1) { %>
+            <ul class="pagination">
+                <!-- Previous Page -->
+                <% if (currentPage > 1) { %>
+                    <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
+                <% } else { %>
+                    <li><span>&lt;</span></li>
+                <% } %>
+        
+                <!-- Page Numbers -->
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
                         <%= i %>
-                    </a>
-                </li>
-            <% } %>
-    
-            <!-- Next Page -->
-            <% if (currentPage < totalPages) { %>
-                <li><a href="/admin/products?page=<%= currentPage + 1 %> <%= search %>">&gt;</a></li>
-            <% } else { %>
-                <li><a style="color: black;"><span>&gt;</span></a></li>
-            <% } %>
-        </ul>
+                    </li>
+                <% } %>
+        
+                <!-- Next Page -->
+                <% if (currentPage < totalPages) { %>
+                    <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
+                <% } else { %>
+                    <li><span>&gt;</span></li>
+                <% } %>
+            </ul>
+        <% } %>
     </div>
 </div>
 <%- include('../partials/admin/footer.ejs') %>

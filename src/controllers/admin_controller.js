@@ -6,9 +6,12 @@ const users = require('../models/user_model');
 const brands = require('../models/brand_model');
 const category = require('../models/category_model');
 const offer = require('../models/offer_model');
+const coupon_model = require('../models/coupon_model');
 const product_model = require('../models/product_model');
 const order_model = require('../models/order_model');
+const return_model = require('../models/return_model');
 const timer = require('../utils/time');
+const currency = require("../utils/currency");
 
 
 const admin_login = async (req, res) => {
@@ -135,7 +138,8 @@ const load_products = async (req, res) => {
             products,
             totalPages: Math.ceil(total / limit),
             currentPage: Number(page),
-            productQuery: product
+            productQuery: product,
+            currency
         }
     );
 };
@@ -450,7 +454,8 @@ const load_orders = async (req, res) => {
         time: timer, 
         totalPages: Math.ceil(total / limit),
         currentPage: Number(page),
-        total
+        total,
+        currency
     });
 }
 
@@ -464,6 +469,92 @@ const set_order_status = async (req, res) => {
         console.log("Error in set order status" + error)
         return res.json({success: false, message: `An error occurred`});
     }
+};
+
+const add_coupon = async (req, res) => {
+    try {
+        const { 
+            name, 
+            description, 
+            activation, 
+            expiry, 
+            discount, 
+            min_amount, 
+            type,
+            status,
+            limit
+        } = req.body;
+        const exists = await coupon_model.findOne({name});
+        if (exists) {
+            return res.status(400).json({success: false, message: "Coupon already exists"});
+        }
+        const coupon = new coupon_model({ name, description, activation, discount, expiry, type, min_amount, status, limit});
+        await coupon.save();
+        return res.status(201).json({success: true, message: "Coupon added successfully"});
+    } catch (error) {
+        console.log("Error in add coupon" + error)
+        return res.json({success: false, message: "An error occurred"});
+    }
+};
+
+
+const load_coupons = async (req, res) => {
+    const { page = 1, limit = 10 } = req.query;
+    const coupons = await coupon_model.find().skip((page - 1) * limit).limit(Number(limit));
+    const total = await coupon_model.countDocuments();
+    return res.render("admin/coupons", {
+        title: "Coupons", 
+        page: "Coupons", 
+        coupons,
+        time: timer,
+        totalPages: Math.ceil(total / limit),
+        currentPage: Number(page),
+    });
+};
+
+const edit_coupon = async (req, res) => {
+    const {id} = req.params;
+    const coupon = await coupon_model.findOne({_id: id});
+    return res.render("admin/edit_coupon", {title: "Coupons", page: "Edit Coupon", coupon});
+};
+
+const delete_coupon = async (req, res) => {
+    const {id} = req.params;
+    await coupon_model.deleteOne({_id: id});
+    return res.status(200).json({success: true, message: "Coupon deleted successfully"});
+};
+
+const load_returns = async (req, res) => {
+    const { page = 1, limit = 10 } = req.query;
+    const returns = await return_model.find().sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit)).populate('order_id', 'name price image').populate('user_id', 'first_name last_name');
+    const total = await return_model.countDocuments();
+    console.log(returns)
+    return res.render("admin/return_page", {
+        title: "Returns", 
+        page: "Returns", 
+        returns,
+        time: timer,
+        totalPages: Math.ceil(total / limit),
+        currentPage: Number(page),
+    });
+}
+
+const update_return = async (req, res) => {
+    const {return_id, status, rejection_reason = null} = req.body;
+    const return_data = await return_model.findOne({_id: return_id});
+    if (!return_data) {
+        return res.status(400).json({success: false, message: "Invalid return request"});
+    }
+
+    return_data.status = status;
+    if (status === "rejected") {
+        return_data.rejection_reason = rejection_reason;
+    }
+    await return_data.save();
+    const order = await order_model.findOne({_id: return_data.order_id});
+    order.status = "returned";
+    await order.save();
+    return res.status(200).json({success: true, message: "Return status updated successfully"});
 };
 
 module.exports = { 
@@ -491,5 +582,11 @@ module.exports = {
     product_options,
     edit_product_form,
     load_orders,
-    set_order_status
+    set_order_status,
+    add_coupon,
+    load_coupons,
+    edit_coupon,
+    delete_coupon,
+    load_returns,
+    update_return
 };

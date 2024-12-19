@@ -16,7 +16,7 @@ const Schema = mongoose.Schema({
     },
     expiry: {
         type: Date,
-        required: true
+        required: true,
     },
     status: {
         type: Boolean,

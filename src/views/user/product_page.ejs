@@ -104,18 +104,18 @@
                 <% product.variants.forEach((variant, index) => { %>
                     <% let discount_price =  variant.price - Math.ceil(variant.price * discount /100) %>
                     <% if (index == 0) { %>
-                        <span class="price" style="font-size: 16px; font-weight: 600; margin-bottom: 10px;" id="price-<%= variant._id %>">Discount Price : $<%= discount_price %></span> 
+                        <span class="price" style="font-size: 16px; font-weight: 600; margin-bottom: 10px;" id="price-<%= variant._id %>">Discount Price : &#8377;<%= currency.parse_currency(discount_price, 0) %></span> 
                     <% } else { %>
-                        <span class="price" style="font-size: 16px; font-weight: 600; margin-bottom: 10px; display: none;" id="price-<%= variant._id %>">Discount Price : $<%= discount_price %></span> 
+                        <span class="price" style="font-size: 16px; font-weight: 600; margin-bottom: 10px; display: none;" id="price-<%= variant._id %>">Discount Price : &#8377;<%= currency.parse_currency(discount_price, 0) %></span> 
                     <% } %>
                 <% }); %>
             <% } %>
 
             <% product.variants.forEach((variant, index) => { %>
                 <% if (index == 0) { %>
-                    <span class="price <%- (discount != null && discount != 'none') ? 'strike': '' %>" style="font-size: 16px; font-weight: 600; margin-bottom: 10px;" id="price-<%= variant._id %>">Price : $<%= variant.price %></span>
+                    <span class="price <%- (discount != null && discount != 'none') ? 'strike': '' %>" style="font-size: 16px; font-weight: 600; margin-bottom: 10px;" id="price-<%= variant._id %>">Price : &#8377;<%= currency.parse_currency(variant.price, 0) %></span>
                 <% } else { %>
-                    <span class="price <%- (discount != null && discount != 'none') ? 'strike': '' %>" style="font-size: 16px; font-weight: 600; margin-bottom: 10px; display: none;" id="price-<%= variant._id %>">Price : $<%= variant.price %></span> 
+                    <span class="price <%- (discount != null && discount != 'none') ? 'strike': '' %>" style="font-size: 16px; font-weight: 600; margin-bottom: 10px; display: none;" id="price-<%= variant._id %>">Price : &#8377;<%= currency.parse_currency(variant.price, 0) %></span> 
                 <% } %>
             <% }); %>
 
@@ -148,13 +148,13 @@
 
             <div class="cart-section">
                 <button onclick="add_to_cart('<%= product._id %>')" id="cart-button" class="add-to-cart <%= (product.listed && product.stock && product.variants[0].quantity > 0) ? '': 'add-to-cart-disabled' %>" <%= (product.listed && product.stock && product.variants[0].quantity > 0) ? '': 'disabled' %>>Add to cart</button>
-                <button class="wishlist">
-                <svg  class="heart-icon" width="19" height="17" viewBox="0 0 19 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.50482 15.5L2.291 9.05129C-1.62955 5.18258 4.13333 -2.24663 9.50482 3.76384C14.8763 -2.24663 20.6141 5.20729 16.72 9.05129L9.50482 15.5Z" stroke="#5C5F6A" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <button class="wishlist" onclick="wishlist_button('<%= product._id %>')">
+                    <svg  class="heart-icon" width="19" height="17" viewBox="0 0 19 17" fill="<%= wishlist ? '	#ff0400': 'none' %>" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.50482 15.5L2.291 9.05129C-1.62955 5.18258 4.13333 -2.24663 9.50482 3.76384C14.8763 -2.24663 20.6141 5.20729 16.72 9.05129L9.50482 15.5Z" stroke="<%= wishlist ? '#ff0400': '#5C5F6A' %>" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                 </button>
               </div>
-              <p class="free-shipping">— FREE SHIPPING ON ORDERS $100+</p>
+              <p class="free-shipping">— FREE SHIPPING ON ORDERS &#8377;10000+</p>
         </div>
     </section>
 
@@ -225,7 +225,7 @@
                 <div class="review-item">
                     <div class="review-header">
                         <div class="review-avatar">
-                            <% if (review.user_id.image) { %>
+                            <% if (review.user_id && review.user_id.image) { %>
                                 <img src="/images/<%= review.user_id.image %>" alt="<%= review.user_id.first_name +'Avatar' %>" />
                             <% } else { %>
                                 <%= review.user_id.first_name.charAt(0).toUpperCase() %>
@@ -262,7 +262,7 @@
                 <a class="product-card" href="/product/<%= similar._id %>">
                     <img src="/images/<%= similar.images[0] %>" alt="<%= similar.title %> Image" class="product-image" />
                     <h3 class="product-name"><%= similar.title %></h3>
-                    <p class="product-price">$<%= similar.variants[0].price %></p>
+                    <p class="product-price">&#8377;<%= similar.variants[0].price %></p>
                     <button class="add-to-cart">Add to Cart</button>
                 </a>
                 <% }) %>
@@ -488,6 +488,32 @@
             color: document.getElementById('color-option').value,
         };
         const req = await fetch("/user/add-to-cart", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(data),
+        })
+
+        if (!req.ok) {
+            console.log(req)
+            alert_error("An Error occured. Try again");
+            return false;
+        }
+        
+        const res = await req.json();
+        if (res.success) {
+            alert_success(res.message);
+        } else {
+            alert_error(res.message);
+        }
+    }
+
+    const wishlist_button = async (product_id) => {
+        const data = {
+            product_id: product_id,
+        };
+        const req = await fetch("/user/update-wishlist", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',

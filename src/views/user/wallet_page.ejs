@@ -1,0 +1,65 @@
+<%- include('../partials/user/header.ejs') %>
+<header>
+    <%- include('../partials/user/navbar.ejs') %>
+</header>
+<div class="account-page">
+    <%- include('../partials/user/sidebar.ejs') %>
+    <div class="wallet-container">
+        <div class="wallet">
+            <h2 class="wallet-header">Your Wallet</h2>
+
+            <div class="wallet-card">
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="wallet-balance">&#8377;<%= currency.parse_currency(wallet.balance, 2) %></div>
+                    <small>**** **** **** 1289</small>
+                    <small>09/25</small>
+                </div>
+                <div class="card-icon">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Mastercard_2019_logo.svg" alt="Card Icon">
+                </div>
+            </div>
+
+            <div class="wallet-buttons">
+                <button class="add-money">Add Money</button>
+                <button class="withdraw-money">Withdraw</button>
+            </div>
+        </div>
+
+        <div class="wallet">
+            <div class="transactions-header">
+                <div>Recent Transactions</div>
+                <button>View All</button>
+            </div>
+
+            <% if (wallet && wallet.transactions.length > 0) { %>
+                <table style="width: 100%;">
+                    <tbody>
+                    <% wallet.transactions.forEach((transaction) => { %>
+                        <tr class="transaction">
+                            <td>
+                                <div class="transaction-description">Money <%= transaction.type == "credit"? "Credited": "Debited" %></div>
+                                <div class="transaction-details"><%= transaction.description %></div>
+                            </td>
+                            <td class="transaction-amount amount-<%- transaction.type =='credit'? 'positive': 'negative' %>">
+                                <%= transaction.type =='credit'? '+': '-' %>&#8377;<%= currency.parse_currency(transaction.amount, 2) %>
+                            </td>
+                            <!-- <td class="transaction-date"><%= time.formatDate(transaction.createdAt) %></td> -->
+                            <td class="transaction-date"><%= time.timeAgo(transaction.createdAt) %></td>
+                        </tr>
+                        <!-- <div class="transaction">
+                            <div>
+                                <div class="transaction-description">Money <%= transaction.type == "credit"? "Credited": "Debited" %></div>
+                                <div class="transaction-details"><%= transaction.description %></div>
+                            </div>
+                            <div class="transaction-amount amount-<%- transaction.type =='credit'? 'positive': 'negative' %>"><%= transaction.type =='credit'? '+': '-' %>&#8377;<%= currency.parse_currency(transaction.amount, 2) %></div>
+                            <div class="transaction-date"><%= time.formatDate(transaction.createdAt) %></div>
+                            <div class="transaction-date"><%= time.timeAgo(transaction.createdAt) %></div>
+                        </div> -->
+                    <% }); %>
+                    </tbody>
+                </table>
+            <% } %>
+        </div>
+    </div>
+</div>
+<%- include('../partials/user/footer.ejs') %>

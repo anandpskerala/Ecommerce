@@ -38,7 +38,7 @@
                             <%- order.user_id.first_name + " " + order.user_id.last_name %>
                         </td>
                         <td><%= time.formatDate(order.createdAt) %></td>
-                        <td>$<%= order.price %></td>
+                        <td>&#8377;<%= order.price %></td>
                         <td><span class="state-button <%= order.status %> label"><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></span></td>
                         <td>
                             <a class="action-btn action-view" href="/admin/order/<%= order._id %>">View</button>
@@ -48,7 +48,7 @@
             </tbody>
         </table>
 
-        <% if (total > 10) { %>
+        <% if (totalPages > 1) { %>
             <ul class="pagination">
                 <!-- Previous Page -->
                 <% if (currentPage > 1) { %>
@@ -82,12 +82,6 @@
         } else {
             url.searchParams.set('status', state);
         }
-        window.location.href = url.toString();
-    }
-
-    const paginate = (page) => {
-        let url = new URL(window.location.href);
-        url.searchParams.set('page', page);
         window.location.href = url.toString();
     }
 </script>

@@ -620,6 +620,7 @@ table thead {
   cursor: pointer;
   font-size: 14px;
   text-decoration: none;
+  text-align: center;
 }
 
 .action-edit {
@@ -637,6 +638,11 @@ table thead {
   color: #f44336;
   background-color: transparent;
   border: 1px solid #f44336;
+}
+
+.action-delete:hover {
+  color: var(--white);
+  background-color: #f44336;
 }
 
 .action-btn:hover {

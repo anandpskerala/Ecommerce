@@ -11,6 +11,7 @@ const connectDB = require('./connect_db');
 const user_routes = require("./routes/users");
 const profile_routes = require("./routes/profile");
 const admin_routes = require("./routes/admin");
+const payment_routes = require("./routes/payment");
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ app.use(session({
 app.use('/', user_routes);
 app.use('/user', profile_routes);
 app.use('/admin', admin_routes);
+app.use('/payment', payment_routes);
 app.use((req, res) => res.render('partials/user/error', {title: "Error"}));
 
 app.listen(port, () => {

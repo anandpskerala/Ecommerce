@@ -66,7 +66,7 @@
       <a class="product-card" href="/product/<%= arrival._id %>">
         <img src="/images/<%= arrival.images[0] %>" alt="<%= arrival.title %> Image" class="product-image" />
         <h3 class="product-name"><%= arrival.title %></h3>
-        <p class="product-price">$<%= arrival.variants[0].price %></p>
+        <p class="product-price">&#8377;<%= arrival.variants[0].price %></p>
         <button class="add-to-cart">Add to Cart</button>
       </a>
     <% }) %>
@@ -75,5 +75,23 @@
     <button class="review-btn">Load More</button>
   </div>
 </div>
+
+<div class="product-card-section" id="popular">
+  <h2 class="section-title">Popular Products</h2>
+  <div class="product-cards">
+    <% popular_products.forEach((product) => { %>
+      <a class="product-card" href="/product/<%= product._id %>">
+        <img src="/images/<%= product.images[0] %>" alt="<%= product.title %> Image" class="product-image" />
+        <h3 class="product-name"><%= product.title %></h3>
+        <p class="product-price">&#8377;<%= product.variants[0].price %></p>
+        <button class="add-to-cart">Add to Cart</button>
+      </a>
+    <% }) %>
+  </div>
+  <div class="load-more">
+    <button class="review-btn">Load More</button>
+  </div>
+</div>
+  
   
 <%- include('../partials/user/footer.ejs') %>

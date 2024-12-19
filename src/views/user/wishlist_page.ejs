@@ -1,0 +1,54 @@
+<%- include('../partials/user/header.ejs') %>
+<header>
+    <%- include('../partials/user/navbar.ejs') %>
+</header>
+<div class="account-page">
+    <%- include('../partials/user/sidebar.ejs') %>
+    <main class="main-content">
+        <h3 style="margin-bottom: 20px;">Wishlists</h3>
+        <% if (wishlists && wishlists.length > 0)  { %>
+            <div class="order-list">
+                <% wishlists.forEach((wishlist, index) => { %>
+                <div class="order-item" style="justify-content: space-between;">
+                    <img src="/images/<%= wishlist.product_id.images[0] %>" alt="Product Image <%= index %>" class="product-image">
+                    <div class="product-details">
+                        <h4><%= wishlist.product_id.title %></h4>
+                    </div>
+                    <div class="order-actions">
+                        <a href="/product/<%= wishlist.product_id._id %>" class="btn view-item">View Item</a>
+                        <button class="btn cancel" onclick="remove_from_wishlist('<%= wishlist.product_id._id %>')">Remove</button>
+                    </div>
+                </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <p>No wishlists found.</p>
+        <% } %>
+    </main>
+</div>
+
+<script>
+    const remove_from_wishlist = async (product_id) => {
+        const req = await fetch("/user/update-wishlist", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({product_id}),
+        })
+
+        if (!req.ok) {
+            console.log(req)
+            alert_error("An error has occurred. Please try again.");
+        }
+        
+        const res = await req.json();
+        if (res.success) {
+            alert_success(res.message);
+        } else {
+            alert_error(res.message);
+    
+        }
+    };
+</script>
+<%- include('../partials/user/footer.ejs') %>

@@ -368,4 +368,3 @@ const delete_product = async (id) => {
         }
     });
 }
-

@@ -164,3 +164,9 @@ if (timerElement) {
         startTimer(120);
     }
 }
+
+const paginate = (page) => {
+    let url = new URL(window.location.href);
+    url.searchParams.set('page', page);
+    window.location.href = url.toString();
+}

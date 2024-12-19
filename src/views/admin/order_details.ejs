@@ -13,7 +13,7 @@
             <img src="/images/<%= order.image %>" alt="Order image" style="width: 100px; height: 100px; object-fit: cover;">
             <div class="col">
                 <span><strong><%= order.name %></strong></span>
-                <span><strong>Price : $<%= order.price %> </strong></span>
+                <span><strong>Price : &#8377;<%= currency.parse_currency(order.price, 2) %> </strong></span>
                 <span><strong>QTY : <%= order.quantity %></strong></span>
                 <span class="row" style="align-items: center; gap: 10px;">
                     <strong><span>Color : </span></strong>

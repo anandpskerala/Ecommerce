@@ -7,7 +7,9 @@ const category_model = require('../models/category_model');
 const offer_model = require('../models/offer_model');
 const review_model = require('../models/review_model');
 const cart_model = require('../models/cart_model');
+const wishlist_model = require('../models/wishlist_model');
 const time = require('../utils/time');
+const currency = require('../utils/currency');
 
 const routes = express.Router();
 
@@ -36,8 +38,9 @@ routes.get("/login", auth.isAlreadyLogged, (req, res) => {
 
 routes.get("/", auth.authenticateUser, async (req, res) => {
     try {
-        const new_products = await product_model.find({listed: true}).sort({_id: -1}).limit(5);
-        return res.render('user/home', {title: "Home", new_arrivals: new_products});
+        const new_products = await product_model.find({listed: true}).sort({createdAt: -1}).limit(7);
+        const popular_products = await product_model.find({listed: true}).sort({ordered: -1}).limit(7);
+        return res.render('user/home', {title: "Home", new_arrivals: new_products, popular_products});
     }  catch (err) {
         console.log(err);
         return res.redirect('/error');
@@ -69,7 +72,7 @@ routes.get("/products", auth.authenticateUser, async (req, res) => {
             {$project: {_id: 1, title: 1, description: 1, images: 1, variants: 1}},
             {$limit: 25}
         ]);
-        return res.render('user/products', {title: "Products", products, categories});
+        return res.render('user/products', {title: "Products", products, categories, currency});
     }  catch (err) {
         console.log(err);
         return res.redirect('/error');
@@ -80,6 +83,7 @@ routes.get("/product/:id", auth.authenticateUser, async (req, res) => {
     try {
         const {id} = req.params;
         const product = await product_model.findOne({_id: id});
+        const wishlist = await wishlist_model.findOne({product_id: product._id});
         const offers = await offer_model.find({});
         const reviews = await review_model.find({product_id: product._id}).limit(5).populate('user_id', 'first_name last_name email image');
         const rating = await review_model.aggregate([
@@ -118,7 +122,7 @@ routes.get("/product/:id", auth.authenticateUser, async (req, res) => {
             }
         ]);
         const total_price = result.length > 0 ? result[0].totalPrice : 0;
-        return res.render('user/product_page', {title: product.title, product, similar_products, offers, reviews, time, rating: rating[0], carts, total_price});
+        return res.render('user/product_page', {title: product.title, product, similar_products, offers, reviews, time, rating: rating[0], carts, total_price, currency, wishlist});
     }  catch (err) {
         console.log(err);   
         return res.redirect('/');

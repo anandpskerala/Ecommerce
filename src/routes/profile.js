@@ -6,8 +6,12 @@ const user_model = require('../models/user_model');
 const cart_model = require('../models/cart_model');
 const order_model = require('../models/order_model');
 const payment_model = require('../models/payment_model');
+const coupon_model = require('../models/coupon_model');
 const multer = require('../utils/multer');
 const time = require('../utils/time');
+const currency = require('../utils/currency');
+const wishlist_model = require('../models/wishlist_model');
+const return_model = require('../models/return_model');
 
 const routes = express.Router();
 
@@ -68,8 +72,20 @@ routes.get("/orders", auth.authenticateUser, async (req, res) => {
     try {
         const error_message = req.session.error || null;
         req.session.error = null;
-        const orders = await order_model.find({user_id: req.session.user.id});
-        return res.render('user/order_page', {title: "Orders", error_message, orders, time});
+        const { page = 1, limit = 10} = req.query;
+        const orders = await order_model.find({user_id: req.session.user.id}).sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit));
+        const returns = await return_model.find({user_id: req.session.user.id});
+        const total = await order_model.countDocuments({user_id: req.session.user.id});
+        return res.render('user/order_page', {
+            title: "Orders", 
+            error_message, 
+            orders, 
+            time,
+            totalPages: Math.ceil(total / limit),
+            currentPage: Number(page),
+            currency,
+            returns
+        });
     } catch (err) {
         console.log(err);
         return res.redirect('/error');
@@ -102,6 +118,12 @@ routes.get("/manage-address", auth.authenticateUser, async (req, res) => {
     return res.render('user/address', {title: "Address", user});
 });
 
+routes.get("/wishlists", auth.authenticateUser, async (req, res) => {
+    const user = await user_model.findOne({_id: req.session.user.id});
+    const wishlists = await wishlist_model.find({user_id: user._id}).populate("product_id", "_id title images");
+    return res.render('user/wishlist_page', {title: "Wishlists", wishlists});
+});
+
 routes.get("/checkout", auth.authenticateUser, async (req, res) => {
     const carts = await cart_model.find({user: req.session.user.id});
     const user = await user_model.findOne({_id: req.session.user.id});
@@ -116,9 +138,17 @@ routes.get("/checkout", auth.authenticateUser, async (req, res) => {
             }
         }
     ]);
+    let coupon = await coupon_model.findOne({users: {$in: [user._id]}})
+    console.log(coupon);
+    if (coupon && user.coupon) {
+        if (coupon._id.toString() != user.coupon.toString()) {
+            coupon = null;
+        }
+    }
+    console.log(coupon);
     const total_price = result.length > 0 ? result[0].totalPrice : 0;
     if (carts && carts.length > 0) {
-        return res.render('user/checkout_page', {title: "Check Out", user, carts, total_price});
+        return res.render('user/checkout_page', {title: "Check Out", user, carts, total_price, coupon});
     } else {
         return res.redirect('/user/carts');
     }
@@ -138,7 +168,7 @@ routes.get("/order-summary/:id", auth.authenticateUser, async (req, res) => {
     const user = await user_model.findOne({_id: req.session.user.id});
     const address = user.addresses.find(v => v._id.toString() == orders[0].address.toString());
     console.log(address)
-    return res.render('user/order_summary', {title: "Order Summary", payment, orders, time, user, address});
+    return res.render('user/order_summary', {title: "Order Summary", payment, orders, time, user, address, currency});
 });
 
 
@@ -146,7 +176,7 @@ routes.post("/send-otp", controllers.send_otp);
 routes.post("/verify-otp", controllers.verify_otp);
 routes.post("/verify-signup", controllers.verify_signup);
 routes.post("/reset-password", controllers.reset_password);
-
+routes.get("/wallet", auth.authenticateUser, controllers.load_wallet);
 routes.post("/change-password", auth.authenticateUserApi, controllers.change_password);
 routes.post("/change-profile-picture", auth.authenticateUserApi, multer.single("image"), controllers.change_profile_picture);
 routes.delete("/remove-profile-image", auth.authenticateUserApi, controllers.remove_profile_picture);
@@ -159,7 +189,10 @@ routes.post("/add-to-cart", auth.authenticateUserApi, controllers.add_to_cart);
 routes.delete("/cart/:id", auth.authenticateUserApi, controllers.remove_from_cart);
 routes.post("/place-order", auth.authenticateUserApi, controllers.add_order);
 routes.patch("/cancel-order", auth.authenticateUserApi, controllers.cancel_order);
+routes.post("/return-order", auth.authenticateUserApi, controllers.return_order);
 routes.delete("/delete-account", auth.authenticateUserApi, controllers.delete_account);
 routes.patch("/change-name", auth.authenticateUserApi, controllers.change_name);
+routes.post("/apply-coupon", auth.authenticateUserApi, controllers.apply_coupon);
+routes.post("/update-wishlist", auth.authenticateUserApi, controllers.update_wishlist);
 
 module.exports = routes;

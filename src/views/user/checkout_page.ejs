@@ -352,20 +352,34 @@
       </div>
     <hr class="divider">
     <div class="coupon-section">
-        <input type="text" placeholder="Coupon Code" style="width: 60%;">
-        <button class="button">Apply Coupon</button>
+        <div style="display: flex; flex-direction: column; width: 60%;">
+            <input id="coupon-code" type="text" placeholder="Coupon Code" style="width: 100%;" data-validate="required">
+            <span class="form-error"></span>
+        </div>
+        <button class="button" onclick="apply_coupon()">Apply Coupon</button>
     </div>
     <hr class="divider">
     <ul>
-        <li><span>Subtotal:</span> <span>$<%= total_price %>.00</span></li>
+        <li><span>Subtotal:</span> <span>&#8377;<%= total_price %>.00</span></li>
         <li><span>Shipping:</span> <span>Free</span></li>
-        <li><span>Tax:</span> <span>$3.00</span></li>
-        <hr class="divider">
-        <li id="price" value="<%= total_price + 3 %>"><strong>Total:</strong> <strong>$<%=total_price + 3 %>.00</strong></li>
+        <li><span>Tax:</span> <span>&#8377;3.00</span></li>
+        <% let order_amount; %>
+        <% if (coupon && user.coupon) { %>
+            <% order_amount = Math.ceil(total_price * (coupon.discount / 100)) %>
+            <li><span>Coupon discount : </span><span>-&#8377;<%= Math.ceil(total_price * (coupon.discount / 100)) %>.00</span></li>
+            <hr class="divider">
+        <li id="price" value="<%= Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) %>"><strong>Total:</strong> <strong>&#8377;<%= Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) %>.00</strong></li>
+        <% } else { %>
+            <% order_amount = Math.ceil(total_price + 3) %>
+            <hr class="divider">
+            <li id="price" value="<%= total_price + 3 %>"><strong>Total:</strong> <strong>&#8377;<%=total_price + 3 %>.00</strong></li>
+        <% } %>
+
     </ul>
-    <button class="add-to-cart" type="button" onclick='place_order(<%- JSON.stringify(product_in_cart) %>)'>Place Order</button>
+    <button class="add-to-cart" type="button" onclick='place_order(<%- JSON.stringify(product_in_cart) %>, "")'>Place Order</button>
     </div>
 </div>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
     let editId = null;
     const address_form = document.getElementById('address-form');
@@ -469,7 +483,7 @@
         editId = null;
     };
 
-    const place_order = async (carts) => {
+    const place_order = async (carts, response) => {
         if (carts.length <= 0) {
             alert_error("No products in cart");
             return;
@@ -495,9 +509,13 @@
             alert_error("Please select payment method and address");
             return;
         }
+
+        if (payment_method == "razorpay" && response == "") {
+            return razorpay_payment();
+        }
         const req = await fetch('/user/place-order', {
             method: 'POST',
-            body: new URLSearchParams({carts: JSON.stringify(carts), payment_method, address, price})
+            body: new URLSearchParams({carts: JSON.stringify(carts), payment_method, address, price, response})
         });
         if (!req.ok) {
             alert_error("An error occured. Try again");
@@ -511,5 +529,59 @@
             alert_error(res.message);
         }
     }
+
+    const apply_coupon = async () => {
+        const coupon_code = document.getElementById('coupon-code');
+        if (!handleValidation(coupon_code)) return;
+        
+        const req = await fetch(`/user/apply-coupon`, {
+            method: 'POST',
+            body: new URLSearchParams({ coupon_code: coupon_code.value,  min_amount: '<%= total_price %>'})
+        });
+        if (!req.ok) {
+            alert_error("An error occured. Try again");
+            return;
+        }
+        const res = await req.json();
+        if (res.success) {
+            alert_success(res.message);
+        } else {
+            alert_error(res.message);
+        }
+    };
+
+    const razorpay_payment = async () => {
+        try {
+            const response = await fetch('/payment/razorpay/order', { 
+                method: 'POST',
+                body: new URLSearchParams({
+                    amount: '<%= order_amount %>',
+                })
+            });
+            const orderData = await response.json();
+            console.log(orderData)
+
+            const options = {
+                key: orderData.order.key, 
+                amount: orderData.order.amount, // Amount in paise
+                currency: 'INR',
+                name: 'APPX Store',
+                description: 'Payment for your order',
+                order_id: orderData.order.id,
+                handler: async function (response) {
+                    console.log('Payment successful', response);
+                    await place_order(<%- JSON.stringify(product_in_cart) %>, response);
+                },
+                theme: {
+                    color: '#3399cc',
+                },
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } catch (error) {
+            console.error('Error initializing Razorpay:', error);
+        }
+    };
 </script>
 <%- include('../partials/user/footer.ejs') %>

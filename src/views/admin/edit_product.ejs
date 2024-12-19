@@ -120,7 +120,16 @@
                     <span class="form-error" id="variants-error"></span>
                 </div>
             </div>
-
+            <h3>Variant Details</h3>
+            <div style="display: flex; flex-direction: row; gap: 20px; flex-wrap: wrap;">
+                <% product.variants.forEach((variant) => { %>
+                    <div style="display: flex; flex-direction: column; gap: 10px; border: 1px solid black; padding: 10px;">
+                        <span><strong>Variant : </strong><%= variant.name %></span>
+                        <span><strong>Price : </strong><%= variant.price %></span>
+                        <span><strong>Stock : </strong><%= variant.quantity %></span>
+                    </div>
+                <% }); %>
+            </div>
             <div class="input-row">
                 <button class="button" id="submit-btn" type="submit">Save </button>
                 <a href="/admin/products" class="button-2">Cancel</a>

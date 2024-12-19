@@ -42,31 +42,30 @@
             </tbody>
         </table>
 
-        <ul class="pagination">
-            <% let mail = email.length > 0? `&email=${email}`: ''; %>
-            <!-- Previous Page -->
-            <% if (currentPage > 1) { %>
-                <li><a href="/admin/customers?page=<%= currentPage - 1 %><%= mail %>">&lt;</a></li>
-            <% } else { %>
-                <li><a style="color: black;"><span>&lt;</span></a></li>
-            <% } %>
-    
-            <!-- Page Numbers -->
-            <% for (let i = 1; i <= totalPages; i++) { %>
-                <li>
-                    <a href="/admin/customers?page=<%= i %><%= mail %>" class="<%= i === currentPage ? 'active' : '' %>">
+        <% if (totalPages > 1) { %>
+            <ul class="pagination">
+                <!-- Previous Page -->
+                <% if (currentPage > 1) { %>
+                    <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
+                <% } else { %>
+                    <li><span>&lt;</span></li>
+                <% } %>
+        
+                <!-- Page Numbers -->
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
                         <%= i %>
-                    </a>
-                </li>
-            <% } %>
-    
-            <!-- Next Page -->
-            <% if (currentPage < totalPages) { %>
-                <li><a href="/admin/customers?page=<%= currentPage + 1 %> <%= mail %>">&gt;</a></li>
-            <% } else { %>
-                <li><a style="color: black;"><span>&gt;</span></a></li>
-            <% } %>
-        </ul>
+                    </li>
+                <% } %>
+        
+                <!-- Next Page -->
+                <% if (currentPage < totalPages) { %>
+                    <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
+                <% } else { %>
+                    <li><span>&gt;</span></li>
+                <% } %>
+            </ul>
+        <% } %>
     </div>
 </div>
 <%- include('../partials/admin/footer.ejs') %>

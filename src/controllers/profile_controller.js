@@ -10,6 +10,13 @@ const cart_model = require('../models/cart_model');
 const product_model = require('../models/product_model');
 const payment_model = require('../models/payment_model');
 const order_model = require('../models/order_model');
+const coupon_model = require('../models/coupon_model');
+const wishlist_model = require('../models/wishlist_model');
+const wallet_model = require('../models/wallet_model');
+const return_model = require('../models/return_model');
+
+const time = require('../utils/time');
+const currency = require('../utils/currency');
 
 const generate_otp = () => {
     return crypto.randomInt(1000, 9999);
@@ -62,7 +69,10 @@ const verify_signup = async (req, res) => {
     if (result) {
         const user_model = new user_model({...user})
         let result = await user_model.save();
-
+        const wallet = new wallet_model({
+            user_id: result._id,
+        });
+        await wallet.save();
         if (req.session.admin) {
             req.session.user = {
                 id: result._id,
@@ -306,7 +316,7 @@ const remove_from_cart = async (req, res) => {
 
 const add_order = async (req, res) => {
     try {
-        const { carts, payment_method, address, price } = req.body;
+        const { carts, payment_method, address, price, response } = req.body;
         console.log("Price:", price);
 
         if (!carts || !payment_method || !address) {
@@ -318,15 +328,31 @@ const add_order = async (req, res) => {
             return res.json({ success: false, message: `User not found` });
         }
 
-        if (payment_method !== "cod") {
-            return res.json({ success: false, message: "Only COD payment method is supported" });
+        if (payment_method == "wallet") {
+            const wallet = await wallet_model.findOne({ user_id: user._id });
+            if (!wallet || wallet.balance < price) {
+                return res.json({ success: false, message: "Insufficient balance in wallet" });
+            }
+            wallet.balance -= price;
+            wallet.transactions.push({
+                amount: price,
+                type: "debit",
+                description: "Order payment",
+            })
+            await wallet.save();
         }
 
-        const payment_data = new payment_model({
+        let payment_data = new payment_model({
             user_id: user._id,
             method: payment_method,
             amount: price,
         });
+        if (payment_method == "razorpay" && response) {
+            payment_data.razorpay_order_id = response.razorpay_order_id;
+            payment_data.razorpay_payment_id = response.razorpay_payment_id;
+            payment_data.razorpay_signature = response.razorpay_signature;
+            payment_data.status = "success";
+        }
         const payment = await payment_data.save();
 
         let orders = [];
@@ -390,6 +416,9 @@ const add_order = async (req, res) => {
             { $set: { orders: orders } }
         );
 
+        user.coupon = null;
+        await user.save();
+
         return res.status(200).json({
             success: true,
             message: "Order placed successfully",
@@ -421,11 +450,21 @@ const cancel_order = async (req, res) => {
         return res.json({success: false, message: "Order can only be cancelled in processing state"});
     }
     const payment = await payment_model.findOne({_id: order.payment});
-    if (payment.amount == (order.quantity * order.price + 3)) {
+    const wallet = await wallet_model.findOne({user_id: user._id});
+    if (payment.amount <= (order.quantity * order.price + 3)) {
+        if (payment.method == "razorpay" || payment.method == "wallet") {
+            wallet.balance += payment.amount;
+            wallet.transactions.push({amount: payment.amount, type: 'credit', description: "Refund due to cancellation"})
+        }
         await payment_model.deleteOne({_id: payment._id});
     } else {
+        if (payment.method == "razorpay" || payment.method == "wallet") {
+            wallet.balance += order.quantity * order.price;
+            wallet.transactions.push({amount: order.quantity * order.price, type: 'credit', description: "Refund due to cancellation"})
+        }
         await payment_model.updateOne({_id: payment._id}, {$inc: {amount: -(order.quantity * order.price)}, $pull: {orders: order._id}});
     }
+    await wallet.save();
     const product = await product_model.findOne({_id: order.product_id});
     const variant_data = product.variants.map((v) => {
         if (v.name === order.variant) {
@@ -436,7 +475,36 @@ const cancel_order = async (req, res) => {
     await product_model.updateOne({_id: order.product_id}, {$set: {variants: variant_data}})
     await order_model.updateOne({_id: order._id}, {$set: {status: 'cancelled', reason}});
     return res.status(200).json({success: true, message: "Order cancelled successfully"});
-}
+};
+
+const return_order = async (req, res) => {
+    const { order_id, reason } = req.body;
+    const user = await user_model.findOne({_id: req.session.user.id});
+    if (!user) {
+        return res.json({success: false, message: `User not found`});
+    }
+    const order = await order_model.findOne({_id: order_id, user_id: user._id});
+    if (!order) {
+        return res.json({success: false, message: `Order not found`});
+    }
+    if (order.status !== "delivered") {
+        return res.json({success: false, message: "Order can only be returned after delivery"});
+    }
+
+    const payment = await payment_model.findOne({_id: order.payment});
+    const exists = await return_model.findOne({order_id: order._id});
+    if (exists) {
+        return res.json({ success: false, message: "Return request already sent for this order" });
+    }
+    const return_data = new return_model({
+        user_id: user._id,
+        order_id: order._id,
+        payment_id: payment._id,
+        reason: reason,
+    });
+    await return_data.save();
+    return res.status(200).json({ success: true, message: "Return request sent successfully" });
+};
 
 const delete_account = async (req, res) => {
     const { id } = req.session.user;
@@ -458,6 +526,89 @@ const change_name = async (req, res) => {
     return res.status(200).json({ success: true, message: "Name updated successfully", user });
 }
 
+const apply_coupon = async (req, res) => {
+    const { coupon_code, min_amount } = req.body;
+    const coupon = await coupon_model.findOne({_id: coupon_code});
+    if (!coupon || coupon.limit <= 0) {
+        return res.json({success: false, message: "Invalid coupon code"});
+    }
+    if (coupon.expiry < new Date()) {
+        return res.json({success: false, message: "Coupon has expired"});
+    }
+    if (coupon.status == false) {
+        return res.json({success: false, message: "Coupon is inactive"});
+    }
+    if (min_amount && coupon.min_amount > min_amount) {
+        return res.json({success: false, message: "Coupon minimum amount requirement not met"});
+    }
+    const user = await user_model.findOne({_id: req.session.user.id});
+
+    if (coupon.users.includes(user._id)) {
+        if (coupon.type == 'single') {
+            user.coupon = null;
+            await user.save();
+            return res.json({success: false, message: "Coupon already applied"});
+        }
+        coupon.limit -= 1;
+        user.coupon = coupon._id;
+        user.coupon_user = true;
+    } else {
+        user.coupon = coupon._id;
+        coupon.users.push(user._id);
+        coupon.limit -= 1;
+    }
+
+    await user.save();
+    await coupon.save();
+    return res.json({success: true, message: "Coupon applied successfully"});
+
+    // if (user.coupons.includes(coupon_code)) {
+    //     if (coupon.type == 'single') {
+    //         return res.json({success: false, message: "Coupon already applied"});
+    //     }
+    //     coupon.limit -= 1;
+    // } else {
+    //     user.coupons.push(coupon_code);
+    //     await user.save();
+    // }
+    // coupon.limit -= 1;
+    // await coupon.save();
+    // return res.json({success: true, message: "Coupon applied successfully"});
+};
+
+const update_wishlist = async (req, res) => {
+    const { product_id } = req.body;
+    const user = await user_model.findOne({ _id: req.session.user.id });
+    if (!user) {
+        return res.json({ success: false, message: "User not found" });
+    }
+
+    const wishlist = await wishlist_model.findOne({product_id});
+    if (!wishlist) {
+        const new_wishlist = new wishlist_model({
+            user_id: user._id,
+            product_id,
+        })
+
+        await new_wishlist.save();
+        return res.json({ success: true, message: "Product added to wishlist successfully" });
+    } else {
+        await wishlist_model.deleteOne({product_id});
+        return res.json({ success: true, message: "Product removed from wishlist successfully" });
+    }
+};
+
+const load_wallet = async (req, res) => {
+    const user = await user_model.findOne({ _id: req.session.user.id });
+    if (!user) {
+        return res.redirect("/login");
+    }
+
+    const wallet = await wallet_model.findOne({ user_id: user._id });
+    return res.render("user/wallet_page", {title: "Wallet", user, wallet, time, currency});
+};
+
+
 module.exports= { 
     send_otp, 
     verify_otp, 
@@ -475,6 +626,10 @@ module.exports= {
     remove_from_cart,
     add_order,
     cancel_order,
+    return_order,
     delete_account,
-    change_name
+    change_name,
+    apply_coupon,
+    update_wishlist,
+    load_wallet
 }; 

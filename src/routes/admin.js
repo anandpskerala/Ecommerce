@@ -9,6 +9,7 @@ const product_model = require("../models/product_model");
 const order_model = require("../models/order_model");
 const multer = require('../utils/multer');
 const time = require('../utils/time');
+const currency = require('../utils/currency');
 
 const routes = express.Router();
 
@@ -73,7 +74,7 @@ routes.get("/order/:id", auth.authenticateAdmin, async (req, res) => {
     const {id} = req.params;
     const order = await order_model.findOne({_id: id}).populate('user_id', 'first_name last_name email addresses phone_number');
     const address = order.user_id.addresses.find(v => v._id.toString() == order.address.toString());
-    return res.render("admin/order_details", {title: "Orders", page: "Order Details", order, time, address});
+    return res.render("admin/order_details", {title: "Orders", page: "Order Details", order, time, address, currency});
 })
 
 routes.get("/brands", auth.authenticateAdmin, controller.load_brands);
@@ -88,9 +89,13 @@ routes.get("/create-offer", auth.authenticateAdmin, (req, res) => {
     return res.render("admin/create_offer", {title: "Offers", page: "Create Offer"});
 });
 
-routes.get("/coupons", auth.authenticateAdmin, (req, res) => {
-    return res.render("admin/coupons", {title: "Coupons", page: "Coupons"});
+routes.get("/coupons", auth.authenticateAdmin, controller.load_coupons);
+routes.get("/edit-coupon/:id", auth.authenticateAdmin, controller.edit_coupon);
+
+routes.get("/create-coupon", auth.authenticateAdmin, (req, res) => {
+    return res.render("admin/create_coupon", {title: "Coupons", page: "Create Coupons"});
 });
+
 
 routes.get("/reviews", auth.authenticateAdmin, (req, res) => {
     return res.render("admin/reviews", {title: "Reviews", page: "Reviews"});
@@ -99,6 +104,9 @@ routes.get("/reviews", auth.authenticateAdmin, (req, res) => {
 routes.get("/settings", auth.authenticateAdmin, (req, res) => {
     return res.render("admin/settings", {title: "Settings", page: "Settings"});
 });
+
+routes.get("/returns", auth.authenticateAdmin, controller.load_returns);
+routes.post("/update-return", auth.authenticateAdminApI, controller.update_return);
 
 routes.post("/login", controller.admin_login);
 routes.get("/logout", controller.admin_logout);
@@ -120,5 +128,7 @@ routes.post("/remove-product-image", auth.authenticateAdminApI, controller.remov
 routes.post("/edit-product-image", multer.array("images"), auth.authenticateAdminApI, controller.add_product_image);
 routes.post("/product-options", auth.authenticateAdminApI, controller.product_options);
 routes.patch("/order/:id", auth.authenticateAdminApI, controller.set_order_status);
+routes.post("/create-coupon", auth.authenticateAdminApI, controller.add_coupon);
+routes.delete("/coupons/:id", auth.authenticateAdminApI, controller.delete_coupon);
 
 module.exports = routes;

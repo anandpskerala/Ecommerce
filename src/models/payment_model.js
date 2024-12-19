@@ -24,6 +24,23 @@ const Schema = mongoose.Schema({
     orders: {
         type: [mongoose.Schema.Types.ObjectId],
         required: false,
+    },
+    coupon_discount: {
+        type: Number,
+        required: false,
+        default: 0
+    },
+    razorpay_order_id: {
+        type: String,
+        required: false
+    },
+    razorpay_payment_id: {
+        type: String,
+        required: false
+    },
+    razorpay_signature: {
+        type: String,
+        required: false
     }
 }, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}});
 

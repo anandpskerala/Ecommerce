@@ -64,6 +64,11 @@ const Schema = mongoose.Schema({
     addresses: {
         type: [address_schema],
     },
+    coupon: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Coupon',
+        required: false
+    }
 }, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}});
 
 Schema.pre("save", async function(next) {

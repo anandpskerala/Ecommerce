@@ -1,41 +1,34 @@
 const mongoose = require('mongoose');
 
-
 const Schema = mongoose.Schema({
-    user: {
+    order_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Order',
+        required: true
+    },
+    user_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    product: {
+    payment_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product',
+        ref: 'Payment',
         required: true
     },
-    name: {
+    reason: {
         type: String,
         required: true
     },
-    price: {
-        type: Number,
-        required: true
-    },
-    variant: {
+    status: {
         type: String,
-        required: true
+        enum: ['pending', 'accepted', 'rejected'],
+        default: 'pending',
     },
-    quantity: {
-        type: Number,
-        required: true
-    },
-    color: {
+    rejection_reason: {
         type: String,
-        required: true
-    },
-    image: {
-        type: String,
-        required: true
-    },
+        required: false
+    }
 }, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}});
 
-module.exports = mongoose.model('Cart', Schema);
+module.exports = mongoose.model('Return', Schema);
