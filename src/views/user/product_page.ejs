@@ -64,6 +64,13 @@
                     <% discount = offer.discount %>
                 <% } %>
             <%}); %>
+            <% if (discount == null) { %>
+                <% offers.forEach((offer) => { %>
+                    <% if (offer.type == "category" && category.offer != "" && offer.name == category.offer) { %>
+                        <% discount = offer.discount %>
+                    <% } %>
+                <% }); %>
+            <% } %>
             <div class="p-row-half">
                 <span class="rating-element">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -99,6 +106,7 @@
                     </span>
                 <% } %>
             </div>
+            <span id="stocks-left"></span>
             <% if (discount != null && discount != "none") { %>
                 <!-- <span style="font-size: 12px; margin-bottom: 20px;">Discount : <%= discount %>%</span> -->
                 <% product.variants.forEach((variant, index) => { %>
@@ -147,8 +155,8 @@
             </div>
 
             <div class="cart-section">
-                <button onclick="add_to_cart('<%= product._id %>')" id="cart-button" class="add-to-cart <%= (product.listed && product.stock && product.variants[0].quantity > 0) ? '': 'add-to-cart-disabled' %>" <%= (product.listed && product.stock && product.variants[0].quantity > 0) ? '': 'disabled' %>>Add to cart</button>
-                <button class="wishlist" onclick="wishlist_button('<%= product._id %>')">
+                <button onclick="add_to_cart('<%= product._id %>', '<%= JSON.stringify(session) %>')" id="cart-button" class="add-to-cart <%= (product.listed && product.stock && product.variants[0].quantity > 0) ? '': 'add-to-cart-disabled' %>" <%= (product.listed && product.stock && product.variants[0].quantity > 0) ? '': 'disabled' %>>Add to cart</button>
+                <button class="wishlist" onclick="wishlist_button('<%= product._id %>', '<%= JSON.stringify(session) %>')">
                     <svg  class="heart-icon" width="19" height="17" viewBox="0 0 19 17" fill="<%= wishlist ? '	#ff0400': 'none' %>" xmlns="http://www.w3.org/2000/svg">
                         <path d="M9.50482 15.5L2.291 9.05129C-1.62955 5.18258 4.13333 -2.24663 9.50482 3.76384C14.8763 -2.24663 20.6141 5.20729 16.72 9.05129L9.50482 15.5Z" stroke="<%= wishlist ? '#ff0400': '#5C5F6A' %>" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -194,7 +202,7 @@
             <div class="rating-summary">
               <h1><%= rating ? Math.round(rating.averageRating * 10) / 10: 0 %></h1>
               <p><%= rating ? rating.reviewCount: 0 %> Reviews</p>
-              <button class="add-to-cart" onclick="openModal()">Write a Review</button>
+              <button class="add-to-cart" onclick="openModal('<%= JSON.stringify(session) %>')">Write a Review</button>
               <div class="modal-overlay" id="modalOverlay">
                 <div class="modal">
                     <div class="modal-header">
@@ -256,7 +264,7 @@
 
     <div class="product-card-section">
         <% if (similar_products.length > 0 && JSON.stringify(similar_products[0]) !== '{}') { %>
-        <h2 class="section-title">Similar Products</h2>
+        <h2 class="section-title">Related Products</h2>
         <div class="product-cards">
             <% similar_products.forEach((similar) => { %>
                 <a class="product-card" href="/product/<%= similar._id %>">
@@ -317,6 +325,8 @@
 
     function variantSelector(variant, quantity, listed) {
         availableStock.value = quantity;
+        console.log(quantity);
+        stock_alert(quantity);
         prices.forEach((price) => {
             if (price.id == `price-${variant}`) {
                 price.style.display = "flex"
@@ -402,7 +412,12 @@
       alert_success('Link copied to clipboard!');
     }
 
-    function openModal() {
+    function openModal(session) {
+        session = JSON.parse(session);
+        if (!session.user) {
+            window.location.href = "/login";
+            return;
+        }
         document.getElementById('modalOverlay').style.display = 'flex';
     }
 
@@ -480,7 +495,12 @@
         });
     };
 
-    const add_to_cart = async (product_id) => {
+    const add_to_cart = async (product_id, session) => {
+        session = JSON.parse(session);
+        if (!session.user) {
+            window.location.href = "/login";
+            return;
+        }
         const data = {
             product_id: product_id,
             variant_id: document.getElementById('variants').value,
@@ -509,7 +529,12 @@
         }
     }
 
-    const wishlist_button = async (product_id) => {
+    const wishlist_button = async (product_id, session) => {
+        session = JSON.parse(session);
+        if (!session.user) {
+            window.location.href = "/login";
+            return;
+        }
         const data = {
             product_id: product_id,
         };
@@ -533,6 +558,25 @@
         } else {
             alert_error(res.message);
         }
-    }
+    };
+
+    const stock_alert = (quantity) => {
+        const stock_element = document.getElementById("stocks-left");
+        if (quantity <= 0) {
+            stock_element.textContent = "";
+            stock_element.style.display = "none";
+        } else if (quantity > 0 && quantity < 5) {
+            stock_element.textContent = `Only ${quantity} left in stock!`;
+            stock_element.style.display = "flex";
+        } else if (quantity >= 5 && quantity < 10) {
+            stock_element.textContent = `Hurry! Only Few stocks left.`;
+            stock_element.style.display = "flex";
+        } else {
+            stock_element.textContent = "";
+            stock_element.style.display = "none";
+        }
+    };
+
+    stock_alert('<%= product.variants[0].quantity %>');
 </script>
 <%- include('../partials/user/footer.ejs') %>

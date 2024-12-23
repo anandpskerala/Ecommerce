@@ -29,21 +29,23 @@
             </thead>
             <tbody id="user-table">
                 <% orders.forEach((order) => { %>
-                    <tr>
-                        <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
-                            <img src="/images/<%= order.image %>" style="width: 44px; height: 44px; border-radius: 6px;" alt="<%= order.name %> logo">
-                            <span><%= order.name %></span>
-                        </td>
-                        <td style="max-width: 120px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            <%- order.user_id.first_name + " " + order.user_id.last_name %>
-                        </td>
-                        <td><%= time.formatDate(order.createdAt) %></td>
-                        <td>&#8377;<%= order.price %></td>
-                        <td><span class="state-button <%= order.status %> label"><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></span></td>
-                        <td>
-                            <a class="action-btn action-view" href="/admin/order/<%= order._id %>">View</button>
-                        </td>
-                    </tr>
+                    <% if (order && order.user_id) { %>	
+                        <tr>
+                            <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                                <img src="/images/<%= order.image %>" style="width: 44px; height: 44px; border-radius: 6px;" alt="<%= order.name %> logo">
+                                <span style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= order.name %></span>
+                            </td>
+                            <td style="max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <%- order.user_id.first_name + " " + order.user_id.last_name %>
+                            </td>
+                            <td><%= time.formatDate(order.createdAt) %></td>
+                            <td>&#8377;<%= order.price %></td>
+                            <td><span class="state-button <%= order.status %> label"><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></span></td>
+                            <td>
+                                <a class="action-btn action-view" href="/admin/order/<%= order._id %>">View</button>
+                            </td>
+                        </tr>
+                    <% } %>
                 <% }) %>
             </tbody>
         </table>

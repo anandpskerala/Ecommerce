@@ -23,7 +23,7 @@ routes.get("/verify-otp", (req, res) => {
     try {
         const error_message = req.session.error || null;
         req.session.error = null;
-        return res.render('user/verify_otp', {title: "Verify OTP", error_message, session: req.session.otp});
+        return res.render('user/verify_otp', {title: "Verify OTP", cart_option: "page", error_message, session: req.session.otp});
     } catch (err) {
         console.log(err);
         return res.redirect('/error');
@@ -38,7 +38,7 @@ routes.get("/verify-signup", (req, res) => {
     try {
         const error_message = req.session.error || null;
         req.session.error = null;
-        return res.render('user/verify_signup', {title: "Verify OTP", error_message, session: req.session.otp});
+        return res.render('user/verify_signup', {title: "Verify OTP", cart_option: "page", error_message, session: req.session.otp});
     } catch (err) {
         console.log(err);
         return res.redirect('/error');
@@ -49,7 +49,7 @@ routes.get("/reset-password", (req, res) => {
     try {
         const error_message = req.session.error || null;
         req.session.error = null;
-        return res.render('user/reset_password', {title: "Reset Password", error_message});
+        return res.render('user/reset_password', {title: "Reset Password", cart_option: "page", error_message});
     } catch (err) {
         console.log(err);
         return res.redirect('/error');
@@ -61,7 +61,7 @@ routes.get("/account", auth.authenticateUser, async (req, res) => {
         const error_message = req.session.error || null;
         req.session.error = null;
         const user = await user_model.findOne({_id: req.session.user.id});
-        return res.render('user/account_page', {title: "Account", error_message, user});
+        return res.render('user/account_page', {title: "Account", cart_option: "page", error_message, user});
     } catch (err) {
         console.log(err);
         return res.redirect('/error');
@@ -78,6 +78,7 @@ routes.get("/orders", auth.authenticateUser, async (req, res) => {
         const total = await order_model.countDocuments({user_id: req.session.user.id});
         return res.render('user/order_page', {
             title: "Orders", 
+            cart_option: "page", 
             error_message, 
             orders, 
             time,
@@ -93,7 +94,7 @@ routes.get("/orders", auth.authenticateUser, async (req, res) => {
 })
 
 routes.get("/change-password", auth.authenticateUser, (req, res) => {
-    return res.render('user/change_password', {title: "Change Password"});
+    return res.render('user/change_password', {title: "Change Password", cart_option: "page"});
 });
 
 routes.get("/carts", auth.authenticateUser, async (req, res) => {
@@ -110,18 +111,23 @@ routes.get("/carts", auth.authenticateUser, async (req, res) => {
         }
     ]);
     const total_price = result.length > 0 ? result[0].totalPrice : 0;
-    return res.render('user/cart_page', {title: "Cart", carts, total_price});
+    return res.render('user/cart_page', {title: "Cart", cart_option: "page", carts, total_price});
 });
 
 routes.get("/manage-address", auth.authenticateUser, async (req, res) => {
     const user = await user_model.findOne({_id: req.session.user.id});
-    return res.render('user/address', {title: "Address", user});
+    return res.render('user/address', {title: "Address", cart_option: "page", user});
 });
 
 routes.get("/wishlists", auth.authenticateUser, async (req, res) => {
     const user = await user_model.findOne({_id: req.session.user.id});
     const wishlists = await wishlist_model.find({user_id: user._id}).populate("product_id", "_id title images");
-    return res.render('user/wishlist_page', {title: "Wishlists", wishlists});
+    return res.render('user/wishlist_page', {title: "Wishlists", cart_option: "page", wishlists});
+});
+
+routes.get("/referrals", auth.authenticateUser, async (req, res) => {
+    const user = await user_model.findOne({_id: req.session.user.id});
+    return res.render('user/referral_page', {title: "Referrals", cart_option: "page", user});
 });
 
 routes.get("/checkout", auth.authenticateUser, async (req, res) => {
@@ -146,9 +152,10 @@ routes.get("/checkout", auth.authenticateUser, async (req, res) => {
         }
     }
     console.log(coupon);
+    console.log(result)
     const total_price = result.length > 0 ? result[0].totalPrice : 0;
     if (carts && carts.length > 0) {
-        return res.render('user/checkout_page', {title: "Check Out", user, carts, total_price, coupon});
+        return res.render('user/checkout_page', {title: "Check Out", cart_option: "page", user, carts, total_price, coupon});
     } else {
         return res.redirect('/user/carts');
     }
@@ -168,7 +175,7 @@ routes.get("/order-summary/:id", auth.authenticateUser, async (req, res) => {
     const user = await user_model.findOne({_id: req.session.user.id});
     const address = user.addresses.find(v => v._id.toString() == orders[0].address.toString());
     console.log(address)
-    return res.render('user/order_summary', {title: "Order Summary", payment, orders, time, user, address, currency});
+    return res.render('user/order_summary', {title: "Order Summary", cart_option: "page", payment, orders, time, user, address, currency});
 });
 
 
@@ -193,6 +200,8 @@ routes.post("/return-order", auth.authenticateUserApi, controllers.return_order)
 routes.delete("/delete-account", auth.authenticateUserApi, controllers.delete_account);
 routes.patch("/change-name", auth.authenticateUserApi, controllers.change_name);
 routes.post("/apply-coupon", auth.authenticateUserApi, controllers.apply_coupon);
+routes.post("/remove-coupon", auth.authenticateUserApi, controllers.remove_coupon);
 routes.post("/update-wishlist", auth.authenticateUserApi, controllers.update_wishlist);
+routes.post("/referrals", auth.authenticateUserApi, controllers.get_referrals);
 
 module.exports = routes;

@@ -15,6 +15,18 @@
                 <textarea name="description" id="description" style="width: 830px; height: 95px;" placeholder="Type here" data-validate="required"></textarea>
             </div>
             <div class="col">
+                <label for="offer">Offer</label>
+                <select name="offer" id="offer" style="width: 830px;">
+                    <option value="none">None</option>
+                    <% offers.forEach((offer) => { %>
+                        <% if (offer.type == "category") {  %>
+                            <option value="<%= offer.name %>"><%= offer.name %></option>
+                        <% } %>
+                    <% }) %>
+                </select>
+                <span class="form-error" id="offer-error"></span>
+            </div>
+            <div class="col">
                 <label for="image">Category Icon</label>
                 <input type="file" id="image" name="image" style="width: 830px; background-color: var(--input-bg); padding: 10px 10px; border: 1px solid var(--light-grey);; border-radius: 6px;" accept="image/*" data-validate="required">
             </div>

@@ -35,7 +35,7 @@
                         </td>
                         <td><%= category.updatedAt ? time.formatDate(category.updatedAt): time.formatDate(category.createdAt) %></td>
                         <td>
-                            <button class="action-btn action-edit" onclick="edit_category('<%= JSON.stringify(category) %>')">Edit</button>
+                            <button class="action-btn action-edit" onclick="edit_category('<%= JSON.stringify(category) %>', '<%= JSON.stringify(offers) %>')">Edit</button>
                             <button class="action-btn action-delete" onclick="delete_category('<%= category._id %>')">Delete</button>                              
                         </td>
                     </tr>

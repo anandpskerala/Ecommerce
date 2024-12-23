@@ -202,8 +202,9 @@ const edit_brand = async (data) => {
 }
 
 
-const edit_category = async (data) => {
+const edit_category = async (data, offer_data) => {
     const category = JSON.parse(data);
+    const offers = JSON.parse(offer_data);
     const current = (is_blocked) => {
         return is_blocked? "Blocked" : "Active";
     }
@@ -218,6 +219,15 @@ const edit_category = async (data) => {
             <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
                 <label for="description" class="form-label">Description</label>
                 <input id="description" name="description" class="swal2-input" value="${category.description || ""}" data-validate="required|min:2">
+            </div>
+            <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+                <label for="offer" class="form-label">Offer</label>
+                <select id="offer" name="offer" class="swal2-input" style="width: 65%;">
+                    <option value="">Select</option>
+                    ${offers.map((offer) => {
+                        return `<option value="${offer.name}">${offer.name}</option>`
+                    })}
+                </select>
             </div>
             <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
                 <label for="image" class="form-label">Image</label>

@@ -10,8 +10,10 @@ const coupon_model = require('../models/coupon_model');
 const product_model = require('../models/product_model');
 const order_model = require('../models/order_model');
 const return_model = require('../models/return_model');
+const payment_model = require('../models/payment_model');
 const timer = require('../utils/time');
 const currency = require("../utils/currency");
+const offer_model = require('../models/offer_model');
 
 
 const admin_login = async (req, res) => {
@@ -31,7 +33,7 @@ const admin_login = async (req, res) => {
         
         if (req.session.user) {
             req.session.admin = {id: admin._id, email: admin.email, role: admin.role};
-            return res.redirect("/admin/products");
+            return res.redirect("/admin/dashboard");
         } else {
             req.session.regenerate((err) => {
                 if (err) {
@@ -41,7 +43,7 @@ const admin_login = async (req, res) => {
                 }
                 req.session.admin = {id: admin._id, email: admin.email, role: admin.role};
                 delete req.session.error;
-                return res.redirect("/admin/products");
+                return res.redirect("/admin/dashboard");
             })
         }
     } catch (error) {
@@ -284,6 +286,7 @@ const add_category_form = async (req, res) => {
 const load_category = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const categories = await category.find().skip((page - 1) * limit).limit(Number(limit));
+    const offers = await offer_model.find({type: "category"});
     const total = await category.countDocuments();
     return res.render(
         "admin/categories", 
@@ -291,6 +294,7 @@ const load_category = async (req, res) => {
             title: "Categories", 
             page: "Categories", 
             categories,
+            offers,
             time: timer,
             totalPages: Math.ceil(total / limit),
             currentPage: Number(page),
@@ -300,7 +304,7 @@ const load_category = async (req, res) => {
 
 const edit_category = async (req, res) => {
     try {
-        const {id, name, description, status} = req.body;
+        const {id, name, description, status, offer} = req.body;
         const cate = await category.findOne({_id: id});
         if (req.file) {
             fs.unlink(path.join(__dirname, "../uploads", cate.image), (err) => {
@@ -310,7 +314,7 @@ const edit_category = async (req, res) => {
         }
 
         console.log(req.file)
-        const data = req.file ? {name: name, description: description, status: status, image: req.file.filename, updatedAt: Date.now()} : {name: name, description: description, status: status, updatedAt: Date.now()};
+        const data = req.file ? {name: name, description: description, status: status, image: req.file.filename, offer, updatedAt: Date.now()} : {name: name, description: description, status: status, offer, updatedAt: Date.now()};
         await category.updateOne({_id: id}, {$set: data});
         return res.status(200).json({success: true, message: "Category updated successfully"});
     } catch (err) {
@@ -463,6 +467,17 @@ const set_order_status = async (req, res) => {
     try {
         const { id } = req.params;
         const { status, reason = "" } = req.body;
+        if (status == "delivered") {
+            const payment = await payment_model.findOne({orders: {$in: [id]}});
+            if (!payment) {
+                return res.status(400).json({success: false, message: "Payment not found for this order"});
+            }
+
+            if (payment.status == "pending") {
+                payment.status = "success";
+                await payment.save();
+            }
+        }
         await order_model.updateOne({_id: id}, {$set: {status, reason}});
         return res.status(200).json({success: true, message: `Order status updated successfully`});
     } catch (error) {
@@ -473,7 +488,7 @@ const set_order_status = async (req, res) => {
 
 const add_coupon = async (req, res) => {
     try {
-        const { 
+        const {
             name, 
             description, 
             activation, 
@@ -484,9 +499,9 @@ const add_coupon = async (req, res) => {
             status,
             limit
         } = req.body;
-        const exists = await coupon_model.findOne({name});
+        const exists = await coupon_model.findOne({name: {$regex: new RegExp(`^${name}$`, 'i')}});
         if (exists) {
-            return res.status(400).json({success: false, message: "Coupon already exists"});
+            return res.json({success: false, message: "Coupon already exists"});
         }
         const coupon = new coupon_model({ name, description, activation, discount, expiry, type, min_amount, status, limit});
         await coupon.save();
@@ -516,6 +531,41 @@ const edit_coupon = async (req, res) => {
     const {id} = req.params;
     const coupon = await coupon_model.findOne({_id: id});
     return res.render("admin/edit_coupon", {title: "Coupons", page: "Edit Coupon", coupon});
+};
+
+const edit_coupon_form = async (req, res) => {
+    try {
+        const {
+            id,
+            name, 
+            description, 
+            activation, 
+            expiry, 
+            discount, 
+            min_amount, 
+            type,
+            status,
+            limit
+        } = req.body;
+        const coupon = await coupon_model.findOne({_id: id});
+        if (!coupon) {
+            return res.json({success: false, message: "Coupon doesn't exists"});
+        }
+        coupon.name = name;
+        coupon.description = description;
+        coupon.activation = activation;
+        coupon.expiry = expiry;
+        coupon.discount = discount;
+        coupon.min_amount = min_amount;
+        coupon.type = type;
+        coupon.status = status;
+        coupon.limit = limit;
+        await coupon.save();
+        return res.status(201).json({success: true, message: "Coupon updated successfully"});
+    } catch (error) {
+        console.log("Error in add coupon" + error)
+        return res.json({success: false, message: "An error occurred" + error});
+    }
 };
 
 const delete_coupon = async (req, res) => {
@@ -557,6 +607,216 @@ const update_return = async (req, res) => {
     return res.status(200).json({success: true, message: "Return status updated successfully"});
 };
 
+const get_reports = async (req, res) => {
+    const now = new Date();
+    const start_date = new Date(now.getFullYear(), now.getMonth() + 0, 1);
+    const end_date = new Date(now.getFullYear(), now.getMonth() + 0 + 1, 0)
+    const user_data = await users.aggregate([
+        {
+            $match: {
+                createdAt: {
+                    $gte: start_date, 
+                    $lte: end_date 
+                }
+            }
+        },
+        {
+            $group: {
+                _id: { 
+                    year: { $year: "$createdAt" }, 
+                    month: { $month: "$createdAt" },
+                    day: { $dayOfMonth: "$createdAt" } 
+                },
+                user_count: { $sum: 1 }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                year: "$_id.year",
+                month: "$_id.month",
+                date: {
+                    $concat: [
+                      { $toString: "$_id.year" }, "-",
+                      { $toString: "$_id.month" }, "-",
+                      { $toString: "$_id.day" }
+                    ]
+                },
+                user_count: 1
+            }
+        },
+        {
+            $sort: { year: 1, month: 1, date: 1 }
+        }
+        ]);
+    
+    const sales_data = await payment_model.aggregate([
+        {
+            $match: {
+                createdAt: {
+                    $gte: start_date, 
+                    $lte: end_date 
+                }
+            }
+        },
+        {
+            $group: {
+                _id: { 
+                    year: { $year: "$createdAt" },
+                    month: { $month: "$createdAt" },
+                    day: { $dayOfMonth: "$createdAt" }
+                },
+                total_amount: { $sum: "$amount" }
+            }
+        },
+        {
+            $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 }
+        },
+        {
+            $project: {
+                _id: 0,
+                date: {
+                    $concat: [
+                      { $toString: "$_id.year" }, "-",
+                      { $toString: "$_id.month" }, "-",
+                      { $toString: "$_id.day" }
+                    ]
+                },
+                total_amount: 1
+            }
+        }
+    ]);
+
+    const order_data = await order_model.aggregate([
+        {
+            $match: {
+                createdAt: {
+                    $gte: start_date, 
+                    $lte: end_date
+                }
+            }
+        },
+        {
+            $group: {
+                _id: "$status",
+                order_count: { $sum: 1 }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                status: "$_id",
+                order_count: 1
+            }
+        }
+    ])
+
+    const orders = await order_model.find({}).sort({createdAt: -1}).limit(5).populate('user_id');
+    return res.json({success: true, sales_data, user_data, order_data, orders});
+};
+
+const get_product_report = async (start, end) => {
+    start = new Date(new Date(start).setUTCHours(0, 0, 0, 0));
+    end = new Date(new Date(end).setUTCHours(23, 59, 59, 999));
+    return await order_model.aggregate([
+        {
+            $match: {
+                status: { $in: ["shipped", "delivered", "returned"] },
+                createdAt: { $gte: start, $lte: end },
+            },
+        },
+        {
+            $group: {
+                _id: "$product_id",
+                product_name: { $first: "$name" },
+                total_sold: { $sum: "$quantity" },
+                total_discounts: {
+                    $sum: {
+                        $cond: [
+                            { $ne: ["$status", "returned"] },
+                            { $multiply: ["$discount", "$quantity"] },
+                            0,
+                        ],
+                    },
+                },
+                total_returns: {
+                    $sum: { $cond: [{ $eq: ["$status", "returned"] }, "$quantity", 0] },
+                },
+                total_revenue: {
+                    $sum: {
+                        $cond: [
+                            { $ne: ["$status", "returned"] },
+                            { $multiply: ["$price", "$quantity"] },
+                            0,
+                        ],
+                    },
+                },
+            },
+        },
+        { $sort: { total_revenue: -1 } },
+    ]);
+};
+
+const get_category_report = async (start, end) => {
+    return await order_model.aggregate([
+        {
+            $match: {
+                status: { $in: ["shipped", "delivered", "returned"] },
+                createdAt: { $gte: start, $lte: end },
+            },
+        },
+        {
+            $lookup: {
+                from: "products",
+                localField: "product_id",
+                foreignField: "_id",
+                as: "product_details",
+            },
+        },
+        { $unwind: "$product_details" },
+        {
+            $group: {
+                _id: "$product_details.category",
+                total_sales: { $sum: "$quantity" },
+                total_discounts: {
+                    $sum: {
+                        $cond: [
+                            { $ne: ["$status", "returned"] },
+                            { $multiply: ["$discount", "$quantity"] },
+                            0,
+                        ],
+                    },
+                },
+                total_returns: {
+                    $sum: { $cond: [{ $eq: ["$status", "returned"] }, "$quantity", 0] },
+                },
+                total_revenue: {
+                    $sum: {
+                        $cond: [
+                            { $ne: ["$status", "returned"] },
+                            { $multiply: ["$price", "$quantity"] },
+                            0,
+                        ],
+                    },
+                },
+            },
+        },
+        { $sort: { total_revenue: -1 } },
+    ]);
+};
+
+const get_sales_report = async (req, res) => {
+    let { method, start = null, end = null } = req.body;
+    console.log(start, end);
+    const sales_report =
+            method === "product"
+                ? await get_product_report(start, end)
+                : await get_category_report(start, end);
+    
+    const payment_report = await payment_model.find({createdAt: {$gte: start, $lte: end}}, {coupon_discount: 1});
+    return res.json({sales: sales_report, coupons: payment_report});
+};
+
 module.exports = { 
     admin_login, 
     load_user, 
@@ -586,7 +846,10 @@ module.exports = {
     add_coupon,
     load_coupons,
     edit_coupon,
+    edit_coupon_form,
     delete_coupon,
     load_returns,
-    update_return
+    update_return,
+    get_reports,
+    get_sales_report
 };

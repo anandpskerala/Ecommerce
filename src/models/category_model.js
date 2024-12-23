@@ -8,7 +8,10 @@ const Schema = mongoose.Schema({
     description: {
         type: String,
         required: true
-    }, 
+    },
+    offer: {
+        type: String
+    },
     image: {
         type: String,
         required: true

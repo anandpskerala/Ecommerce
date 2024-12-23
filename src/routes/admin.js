@@ -1,12 +1,13 @@
 const express = require('express');	
 const controller = require('../controllers/admin_controller');
 const auth = require('../middlewares/admin_authentication');
-const user = require("../models/user_model");
-const category = require("../models/category_model");
-const brand = require("../models/brand_model");
-const offer = require("../models/offer_model");
+const user_model = require("../models/user_model");
+const category_model = require("../models/category_model");
+const brand_model = require("../models/brand_model");
+const offer_model = require("../models/offer_model");
 const product_model = require("../models/product_model");
 const order_model = require("../models/order_model");
+const payment_model = require("../models/payment_model");
 const multer = require('../utils/multer');
 const time = require('../utils/time');
 const currency = require('../utils/currency');
@@ -21,16 +22,16 @@ routes.get("/login", (req, res) => {
     return res.render("admin/login", {title: "Login", error_message})
 });
 
-routes.get("/dashboard", auth.authenticateAdmin, (req, res) => {
+routes.get("/dashboard", auth.authenticateAdmin, async (req, res) => {
     return res.render("admin/dashboard", {title: "Dashboard", page: "Dashboard"});
 });
 
 routes.get("/products", auth.authenticateAdmin, controller.load_products);
 
 routes.get("/add-product", auth.authenticateAdmin, async (req, res) => {
-    const categories = await category.find({});
-    const brands = await brand.find({});
-    const offers = await offer.find({});
+    const categories = await category_model.find({});
+    const brands = await brand_model.find({});
+    const offers = await offer_model.find({});
     return res.render(
         "admin/add_product", 
         {
@@ -45,9 +46,9 @@ routes.get("/add-product", auth.authenticateAdmin, async (req, res) => {
 
 routes.get("/edit-product/:id", auth.authenticateAdmin, async (req, res) => {
     const {id} = req.params; 
-    const categories = await category.find({});
-    const brands = await brand.find({});
-    const offers = await offer.find({});
+    const categories = await category_model.find({});
+    const brands = await brand_model.find({});
+    const offers = await offer_model.find({});
     const product = await product_model.findOne({_id: id});
     return res.render(
         "admin/edit_product", 
@@ -64,8 +65,9 @@ routes.get("/edit-product/:id", auth.authenticateAdmin, async (req, res) => {
 
 routes.get("/categories", auth.authenticateAdmin, controller.load_category);
 
-routes.get("/add-category", auth.authenticateAdmin, (req, res) => {
-    return res.render("admin/add_category", {title: "Categories", page: "Create Category"});
+routes.get("/add-category", auth.authenticateAdmin, async (req, res) => {
+    const offers = await offer_model.find({});
+    return res.render("admin/add_category", {title: "Categories", page: "Create Category", offers});
 })
 
 routes.get("/orders", auth.authenticateAdmin, controller.load_orders);
@@ -105,6 +107,10 @@ routes.get("/settings", auth.authenticateAdmin, (req, res) => {
     return res.render("admin/settings", {title: "Settings", page: "Settings"});
 });
 
+routes.get("/sales-report", auth.authenticateAdmin, (req, res) => {
+    return res.render("admin/sales_report", {title: "Sales Report", page: "Sales Report"});
+});
+
 routes.get("/returns", auth.authenticateAdmin, controller.load_returns);
 routes.post("/update-return", auth.authenticateAdminApI, controller.update_return);
 
@@ -129,6 +135,9 @@ routes.post("/edit-product-image", multer.array("images"), auth.authenticateAdmi
 routes.post("/product-options", auth.authenticateAdminApI, controller.product_options);
 routes.patch("/order/:id", auth.authenticateAdminApI, controller.set_order_status);
 routes.post("/create-coupon", auth.authenticateAdminApI, controller.add_coupon);
+routes.post("/edit-coupon", auth.authenticateAdminApI, controller.edit_coupon_form);
 routes.delete("/coupons/:id", auth.authenticateAdminApI, controller.delete_coupon);
+routes.post("/get-reports", auth.authenticateAdminApI, controller.get_reports);
+routes.post("/sales-reports", controller.get_sales_report);
 
 module.exports = routes;

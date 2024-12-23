@@ -90,7 +90,9 @@
                     <select name="offer" id="offer">
                         <option value="none">None</option>
                         <% offers.forEach((offer) => { %>
-                            <option value="<%= offer.name %>"><%= offer.name %></option>
+                            <% if (offer.type == "products") {  %>
+                                <option value="<%= offer.name %>"><%= offer.name %></option>
+                            <% } %>
                         <% }) %>
                     </select>
                     <span class="form-error" id="offer-error"></span>

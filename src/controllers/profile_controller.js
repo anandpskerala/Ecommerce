@@ -14,6 +14,7 @@ const coupon_model = require('../models/coupon_model');
 const wishlist_model = require('../models/wishlist_model');
 const wallet_model = require('../models/wallet_model');
 const return_model = require('../models/return_model');
+const referral_model = require('../models/referral_model');
 
 const time = require('../utils/time');
 const currency = require('../utils/currency');
@@ -27,7 +28,7 @@ const send_otp = async (req, res) => {
     const result = await otp_model.findOne({email: email.toLowerCase()});
     if (!result) {
         const user = await user_model.findOne({email: email.toLowerCase()});
-        if (!user.password) {
+        if (!user || !user.password) {
             req.session.error = "Email doesn't exists";
             return res.redirect("/forgot-password");
         }
@@ -67,12 +68,25 @@ const verify_signup = async (req, res) => {
     const {user} = req.session.otp;
     const result = await otp_model.findOne({email: user.email.toLowerCase(), otp});
     if (result) {
-        const user_model = new user_model({...user})
-        let result = await user_model.save();
+        const user_data = new user_model({...user})
+        let result = await user_data.save();
         const wallet = new wallet_model({
             user_id: result._id,
         });
         await wallet.save();
+        const referral = new referral_model({
+            user: result._id,
+        })
+        await referral.save();
+
+        if (req.session.refer) {
+            const referrer = await referral_model.findOne({referral_code: req.session.refer});
+            if (referrer) {
+                referrer.referred_users.push(result._id);
+                referrer.amount_earned += 100;
+                await referrer.save();
+            }
+        }
         if (req.session.admin) {
             req.session.user = {
                 id: result._id,
@@ -300,6 +314,10 @@ const add_to_cart = async (req, res) => {
         color: color,
         image: product.images[0],
     })
+
+    if (offer) {
+        cart.discount = quantity * Math.ceil(variant.price * offer.discount /100);
+    }
     await cart.save();
     return res.status(200).json({success: true, message: `Product added to cart successfully`})
 };
@@ -316,7 +334,7 @@ const remove_from_cart = async (req, res) => {
 
 const add_order = async (req, res) => {
     try {
-        const { carts, payment_method, address, price, response } = req.body;
+        const { carts, payment_method, address, price, response, coupon_discount } = req.body;
         console.log("Price:", price);
 
         if (!carts || !payment_method || !address) {
@@ -352,6 +370,14 @@ const add_order = async (req, res) => {
             payment_data.razorpay_payment_id = response.razorpay_payment_id;
             payment_data.razorpay_signature = response.razorpay_signature;
             payment_data.status = "success";
+        }
+
+        if (payment_method == "wallet") {
+            payment_data.status = "success";
+        }
+
+        if (!isNaN(coupon_discount)) {
+            payment_data.coupon_discount = coupon_discount
         }
         const payment = await payment_data.save();
 
@@ -391,6 +417,7 @@ const add_order = async (req, res) => {
                 price: variant.price,
                 payment: payment._id,
                 address: address,
+                discount: product_cart.discount,
             });
 
             const order = await order_item.save();
@@ -545,13 +572,12 @@ const apply_coupon = async (req, res) => {
 
     if (coupon.users.includes(user._id)) {
         if (coupon.type == 'single') {
-            user.coupon = null;
+            delete user.coupon;
             await user.save();
             return res.json({success: false, message: "Coupon already applied"});
         }
         coupon.limit -= 1;
         user.coupon = coupon._id;
-        user.coupon_user = true;
     } else {
         user.coupon = coupon._id;
         coupon.users.push(user._id);
@@ -575,6 +601,29 @@ const apply_coupon = async (req, res) => {
     // await coupon.save();
     // return res.json({success: true, message: "Coupon applied successfully"});
 };
+
+const remove_coupon = async (req, res) => {
+    const { coupon_code } = req.body;
+    const coupon = await coupon_model.findOne({_id: coupon_code});
+    if (!coupon) {
+        return res.json({ success: false, message: "Coupon not found" });
+    }
+    const user = await user_model.findOne({_id: req.session.user.id});
+    if (!user) {
+        return res.json({ success: false, message: "User not found" });
+    }
+    if (user.coupon == coupon_code) {
+        delete user.coupon;
+        coupon.users.pull(user._id)
+        if (coupon.type == "multiple") {
+            coupon.limit += 1;
+        }
+    }
+
+    await user.save();
+    await coupon.save();
+    return res.json({ success: true, message: "Coupon removed successfully" });
+}
 
 const update_wishlist = async (req, res) => {
     const { product_id } = req.body;
@@ -605,8 +654,19 @@ const load_wallet = async (req, res) => {
     }
 
     const wallet = await wallet_model.findOne({ user_id: user._id });
-    return res.render("user/wallet_page", {title: "Wallet", user, wallet, time, currency});
+    return res.render("user/wallet_page", {title: "Wallet", cart_option: "page", user, wallet, time, currency});
 };
+
+const get_referrals = async (req, res) => {
+    const { user_id } = req.body;
+    const user = await user_model.findOne({ _id: user_id });
+    if (!user) {
+        return res.json({ success: false, message: "User not found" });
+    }
+    const referrals = await referral_model.findOne({ user: user._id }).populate('referred_users');
+    const referral_link = `${req.protocol}://${req.get('host')}/signup?refer=${referrals.referral_code}`;
+    return res.json({ referral_code: referrals.referral_code, referral_link, referred_users: referrals.referred_users, amount: referrals.amount_earned });
+}
 
 
 module.exports= { 
@@ -630,6 +690,8 @@ module.exports= {
     delete_account,
     change_name,
     apply_coupon,
+    remove_coupon,
     update_wishlist,
-    load_wallet
+    load_wallet,
+    get_referrals
 }; 

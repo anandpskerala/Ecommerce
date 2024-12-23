@@ -6,6 +6,11 @@ const Schema = mongoose.Schema({
         type: String,
         required: true
     },
+    type: {
+        type: String,
+        required: true,
+        enum: ['products', 'category']
+    },
     description: {
         type: String,
         required: true

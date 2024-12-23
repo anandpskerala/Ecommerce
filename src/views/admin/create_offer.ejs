@@ -11,6 +11,13 @@
                 <input type="text" id="name" name="name" style="width: 830px;" placeholder="Enter offer name (e.g., Dhamaka2024)" data-validate="required">
             </div>
             <div class="col">
+                <label for="image">Offer Applicable</label>
+                <select name="type" id="type" style="width: 830px;">
+                    <option value="products">Products</option>
+                    <option value="category">Category</option>
+                </select>
+            </div>
+            <div class="col">
                 <label for="description">Description</label>
                 <textarea name="description" id="description" style="width: 830px; height: 95px;" placeholder="Type here" data-validate="required"></textarea>
             </div>
@@ -56,14 +63,21 @@
     </div>
 </div>
 <script>
-    flatpickr("#activation", {
-      dateFormat: "d-M-Y", 
-      minDate: "today",   
+    const activationPicker = flatpickr("#activation", {
+        dateFormat: "d-M-Y",
+        minDate: "today",
+        onChange: function (selectedDates) {
+            const activationDate = selectedDates[0];
+            if (activationDate) {
+                expiryPicker.set("minDate", new Date(activationDate.getTime() + 24 * 60 * 60 * 1000));
+                expiryPicker.setDate(null);
+            }
+        }
     });
 
-    flatpickr("#expiry", {
-      dateFormat: "d-M-Y", 
-      minDate: "today",   
+    const expiryPicker = flatpickr("#expiry", {
+        dateFormat: "d-M-Y",
+        minDate: "today"
     });
   </script>
 <%- include('../partials/admin/footer.ejs') %>

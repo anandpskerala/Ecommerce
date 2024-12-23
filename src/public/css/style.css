@@ -602,6 +602,18 @@
     border-radius: 8px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
+
+#stocks-left {
+    display: flex;
+    padding: 10px 20px;
+    border: 2px solid gold;
+    text-align: center;
+    justify-content: center;
+    width: 70%;
+    border-radius: 8px;
+    color: rgb(255, 0, 0);
+    background-color: rgba(255, 255, 0, 0.4);
+}
   
 .product-image {
     width: 100px;
@@ -811,9 +823,9 @@
 .zoom-wrapper {
     position: relative;
     overflow: hidden;
-    cursor: crosshair;
+    cursor: zoom-in;
     width: 100%;
-  }
+}
   
 .zoom-wrapper img {
     width: 100%;
@@ -1129,19 +1141,20 @@
     display: inline-block;
     margin: 10px auto;
     padding: 10px 20px;
-    background-color: #e6e6e6;
-    color: #000000;
+    background-color: #444;
+    color: var(--white);
     border: 1px solid #000;
     border-radius: 16px;
     cursor: pointer;
     text-align: center;
+    font-size: 14px;
     text-decoration: none;
     box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .review-btn:hover {
-    background-color: #444;
-    color: var(--white);
+    background-color: var(--white);
+    color: var(--black);
 }
 
 .review-item {
@@ -1223,6 +1236,8 @@
     flex-direction: row;
     gap: 10px;
     padding: 10px 20px;
+    width: 100%;
+    justify-content: center;
 }
 
 .product-card {
@@ -1239,6 +1254,7 @@
     color: var(--black);
     gap: 10px;
     align-items: center;
+    min-width: 215px;
     max-width: 250px;
 }
   
@@ -1486,6 +1502,7 @@ main {
 .account-section .action-button {
     width: 50%;
     padding: 10px;
+    font-size: 14px;
     border: 1px solid #0095ff;
     color: #ffffff;
     background-color: #0095ff;
@@ -2559,6 +2576,58 @@ main {
 .transaction-date {
     font-size: 0.8rem;
     color: #666;
+}
+
+.referral-container {
+    display: flex;
+    flex-direction: column;
+    width: 70%;
+    padding: 40px 80px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.referral-container label {
+    margin-bottom: 20px;
+
+}
+
+.referral-container h2 {
+    margin-bottom: 20px;
+}
+
+.referral-container input {
+    width: 50%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.referred-users {
+   margin-top: 20px;
+}
+
+.referred-users h3 {
+    margin-bottom: 10px;
+}
+
+.referred-users ul {
+    list-style: none;
+    padding: 0;
+}
+
+.referred-users li {
+    margin: 5px 0;
+}
+
+.referral-container #amount {
+    padding: 5px 10px;
+    color: #28a745;
+    border: 1px solid #28a745;
+    border-radius: 6px;
+    max-width: 150px;
+    text-align: center;
 }
 
 @keyframes fade {

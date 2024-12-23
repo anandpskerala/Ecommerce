@@ -1,0 +1,66 @@
+<%- include('../partials/user/header.ejs') %>
+<header>
+    <%- include('../partials/user/navbar.ejs') %>
+</header>
+<div class="account-page">
+    <%- include('../partials/user/sidebar.ejs') %>
+    <div class="referral-container">
+        <h2>My Referral Details</h2>
+        <label for="referral-code">Referral Code</label>
+        <div style="display: flex; flex-direction: row; width: 100%; gap: 20px;">
+            <input type="text" id="referral-code" readonly>
+            <button class="btn" onclick="copy_input('referral-code')">Copy</button>
+        </div>
+        <br>
+        <br>
+        <label for="referral-link">Referral Link</label>
+        <div style="display: flex; flex-direction: row; width: 100%; gap: 20px;">
+            <input type="text" id="referral-link" readonly>
+            <button class="btn" onclick="copy_input('referral-link')">Copy</button>
+        </div>
+        <br>
+        <br>
+        <label for="referral-amount">Amount Earned</label>
+        <span id="amount"></span>
+        
+
+        <div class="referred-users" id="referred-users">
+            <h3>Users Referred</h3>
+            <ul id="referred-users-list"></ul>
+        </div>
+    </div>
+</div>
+<script>
+    const referral_data = async () => {
+        try {
+            const response = await fetch(`/user/referrals`, {
+                method: "POST",
+                body: new URLSearchParams({user_id: "<%= user.id %>"}),
+            });
+            const data = await response.json();
+            document.getElementById('referral-code').value = data.referral_code;
+            document.getElementById('referral-link').value = data.referral_link;
+            document.getElementById('amount').innerHTML = "&#8377; " + data.amount;
+
+            if (data.referred_users && data.referred_users.length <= 0) {
+                document.getElementById('referred-users').style.display = 'none';
+            }
+            const referredUsersList = document.getElementById('referred-users-list');
+            referredUsersList.innerHTML = data.referred_users
+                .map(user => `<li>${user.first_name} ${user.last_name} (${user.email})</li>`)
+                .join('');
+        } catch (error) {
+            console.error('Error fetching referral data:', error);
+        }
+    };
+
+    const copy_input = (id) => {
+        const input = document.getElementById(id);
+        input.select();
+        document.execCommand('copy');
+        alert_success('Copied to clipboard!');
+    };
+
+    referral_data();
+</script>
+<%- include('../partials/user/footer.ejs') %>

@@ -331,6 +331,40 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             alert_error(res.message)
         }
+    });
+
+    $("#edit-coupon-form").submit(async (e) => {
+        e.preventDefault();
+        let form = document.getElementById("edit-coupon-form");
+        let formdata = new URLSearchParams();
+        Array.from(form.elements).forEach((input) => {
+            if (!handleValidation(input)) {
+                return false;
+            } else {
+                if (input.id == "expiry" || input.id == "activation") {
+                    let date = new Date(input.value).toISOString();
+                    formdata.append(input.name, date);
+                } else { 
+                    formdata.append(input.name, input.value);
+                }
+            }
+        });
+
+        let req = await fetch("/admin/edit-coupon", {
+            method: "POST",
+            body: formdata,
+        });
+        if (!req.ok) return alert_error("An error has occurred. Please try again.");
+        let res = await req.json();
+        if (res.success) {
+            alert_success(res.message)
+            setTimeout(() => {
+                window.location.href = "/admin/coupons"
+            }, 1000);
+            
+        } else {
+            alert_error(res.message)
+        }
     })
 
     const variant_elements = document.querySelectorAll(".variant-option");

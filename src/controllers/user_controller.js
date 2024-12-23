@@ -3,6 +3,7 @@ const user_model = require("../models/user_model");
 const otp_model = require("../models/otp_model");
 const product_model = require("../models/product_model");
 const wallet_model = require("../models/wallet_model");
+const referral_model = require('../models/referral_model');
 
 const generate_otp = () => {
     return crypto.randomInt(1000, 9999);
@@ -189,6 +190,18 @@ const auth_google = async (req, res) => {
                 user_id: result._id
             });
             await wallet.save();
+            const referral = new referral_model({
+                user: result._id,
+            })
+            await referral.save();
+            if (req.session.refer) {
+                const referrer = await referral_model.findOne({referral_code: req.session.refer});
+                if (referrer) {
+                    referrer.referred_users.push(result._id);
+                    referrer.amount_earned += 100;
+                    await referrer.save();
+                }
+            }
             if (req.session.admin) {
                 req.session.user = {
                     id: result._id,

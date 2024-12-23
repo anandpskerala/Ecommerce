@@ -34,7 +34,7 @@
             <% if (wallet && wallet.transactions.length > 0) { %>
                 <table style="width: 100%;">
                     <tbody>
-                    <% wallet.transactions.forEach((transaction) => { %>
+                    <% wallet.transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach((transaction) => { %>
                         <tr class="transaction">
                             <td>
                                 <div class="transaction-description">Money <%= transaction.type == "credit"? "Credited": "Debited" %></div>
@@ -46,15 +46,6 @@
                             <!-- <td class="transaction-date"><%= time.formatDate(transaction.createdAt) %></td> -->
                             <td class="transaction-date"><%= time.timeAgo(transaction.createdAt) %></td>
                         </tr>
-                        <!-- <div class="transaction">
-                            <div>
-                                <div class="transaction-description">Money <%= transaction.type == "credit"? "Credited": "Debited" %></div>
-                                <div class="transaction-details"><%= transaction.description %></div>
-                            </div>
-                            <div class="transaction-amount amount-<%- transaction.type =='credit'? 'positive': 'negative' %>"><%= transaction.type =='credit'? '+': '-' %>&#8377;<%= currency.parse_currency(transaction.amount, 2) %></div>
-                            <div class="transaction-date"><%= time.formatDate(transaction.createdAt) %></div>
-                            <div class="transaction-date"><%= time.timeAgo(transaction.createdAt) %></div>
-                        </div> -->
                     <% }); %>
                     </tbody>
                 </table>

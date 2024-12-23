@@ -5,7 +5,8 @@
 <div class="row">
     <%- include('../partials/admin/sidebar.ejs') %>
     <div class="cover">
-        <form id="coupon-form" style="width: 760px;">
+        <form id="edit-coupon-form" style="width: 760px;">
+            <input type="hidden" name="id" id="id" value="<%= coupon._id %>">
             <div class="col">
                 <label for="name">Coupon Name</label>
                 <input type="text" id="name" name="name" placeholder="Enter Coupon Name" data-validate="required" style="width: 100%;" value="<%= coupon.name %>">
@@ -75,23 +76,30 @@
             </div>
 
             <div style="display: flex; flex-direction: row; gap: 50px; margin-top: 60px;">
-                <button class="button" id="submit-btn" type="submit">Create Coupon</button>
+                <button class="button" id="submit-btn" type="submit">Save Coupon</button>
                 <a href="/admin/coupons" class="button-2">Cancel</a>
             </div>
         </form>
     </div>
 </div>
 <script>
-    flatpickr("#activation", {
-      dateFormat: "d-M-Y", 
-      minDate: "today",
-      defaultDate: "<%= coupon.activation.toISOString().split('T')[0] %>",  
+    const activationPicker = flatpickr("#activation", {
+        dateFormat: "d-M-Y",
+        minDate: "today",
+        defaultDate: new Date("<%= coupon.activation.toISOString().split('T')[0] %>"), 
+        onChange: function (selectedDates) {
+            const activationDate = selectedDates[0];
+            if (activationDate) {
+                expiryPicker.set("minDate", new Date(activationDate.getTime() + 24 * 60 * 60 * 1000));
+                expiryPicker.setDate(null);
+            }
+        }
     });
 
-    flatpickr("#expiry", {
-      dateFormat: "d-M-Y", 
-      minDate: "today", 
-      defaultDate: "<%= coupon.expiry.toISOString().split('T')[0] %>",  
+    const expiryPicker = flatpickr("#expiry", {
+        dateFormat: "d-M-Y",
+        minDate: "today",
+        defaultDate: new Date("<%= coupon.expiry.toISOString().split('T')[0] %>"),
     });
   </script>
 <%- include('../partials/admin/footer.ejs') %>

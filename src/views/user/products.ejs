@@ -154,7 +154,7 @@
         const filterData = Array.from(filters).map(filter => JSON.parse(filter));
         const url = new URL(window.location.href);
         try {
-            const response = await fetch('/products', {
+            const response = await fetch(url.toString(), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -242,5 +242,14 @@
 
         fetch_data_from_server();
     });
+
+    const search_box = () => {
+        const search_input = document.getElementById('product-search');
+        const url = new URL(window.location.href);
+        const search_term = url.searchParams.get('search');
+        if (search_term) return search_input.value = search_term;
+    };
+
+    search_box();
 </script>
 <%- include('../partials/user/footer.ejs') %>

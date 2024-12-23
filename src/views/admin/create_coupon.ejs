@@ -81,14 +81,21 @@
     </div>
 </div>
 <script>
-    flatpickr("#activation", {
-      dateFormat: "d-M-Y", 
-      minDate: "today",   
+    const activationPicker = flatpickr("#activation", {
+        dateFormat: "d-M-Y",
+        minDate: "today",
+        onChange: function (selectedDates) {
+            const activationDate = selectedDates[0];
+            if (activationDate) {
+                expiryPicker.set("minDate", new Date(activationDate.getTime() + 24 * 60 * 60 * 1000));
+                expiryPicker.setDate(null);
+            }
+        }
     });
 
-    flatpickr("#expiry", {
-      dateFormat: "d-M-Y", 
-      minDate: "today",   
+    const expiryPicker = flatpickr("#expiry", {
+        dateFormat: "d-M-Y",
+        minDate: "today"
     });
   </script>
 <%- include('../partials/admin/footer.ejs') %>

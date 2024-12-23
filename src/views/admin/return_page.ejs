@@ -19,24 +19,26 @@
             </thead>
             <tbody id="user-table">
                 <% returns.forEach((return_item) => { %>
-                    <tr>
-                        <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
-                            <img src="/images/<%= return_item.order_id.image %>" style="width: 44px; height: 44px; border-radius: 6px;" alt="<%= return_item.order_id.name %> logo">
-                            <span><%= return_item.order_id.name %></span>
-                        </td>
-                        <td><%= return_item.user_id.first_name + ' ' + return_item.user_id.last_name %></td>
-                        <td><%= return_item.reason %></td>
-                        <% if (return_item.status == 'pending') { %>
-                            <td>
-                                <button class="action-btn action-edit" onclick="accept_return('<%= return_item._id %>')">Accept</button>
-                                <button class="action-btn action-delete" onclick="reject_return('<%= return_item._id %>')">Reject</button> 
+                    <% if (return_item.order_id) { %>
+                        <tr>
+                            <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                                <img src="/images/<%= return_item.order_id.image %>" style="width: 44px; height: 44px; border-radius: 6px;" alt="<%= return_item.order_id.name %> logo">
+                                <span><%= return_item.order_id.name %></span>
                             </td>
-                        <% } else if (return_item.status == 'accepted') { %>
-                            <td>Returned</td>
-                        <% } else { %>
-                            <td>Rejected</td>
-                        <% } %>
-                    </tr>
+                            <td><%= return_item.user_id.first_name + ' ' + return_item.user_id.last_name %></td>
+                            <td><%= return_item.reason %></td>
+                            <% if (return_item.status == 'pending') { %>
+                                <td>
+                                    <button class="action-btn action-edit" onclick="accept_return('<%= return_item._id %>')">Accept</button>
+                                    <button class="action-btn action-delete" onclick="reject_return('<%= return_item._id %>')">Reject</button> 
+                                </td>
+                            <% } else if (return_item.status == 'accepted') { %>
+                                <td>Returned</td>
+                            <% } else { %>
+                                <td>Rejected</td>
+                            <% } %>
+                        </tr>
+                    <% } %>
                 <% }); %>
             </tbody>
         </table>

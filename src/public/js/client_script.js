@@ -14,7 +14,12 @@ if (search_element) {
  
 }
 
-const open_cart_menu = () => {
+const open_cart_menu = (session) => {
+    session = JSON.parse(session);
+    if (!session.user) {
+        window.location.href = "/login";
+        return;
+    }
     const cart_menu = document.getElementById("cart-menu");
     cart_menu.style.display = "flex";
 };
@@ -39,4 +44,14 @@ const remove_from_cart = async (product_id) => {
     } else {
         alert_error(res.message);
     }
+}
+
+function formatDate(date) {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const day = new Date(date).getDate();
+    const month = months[new Date(date).getMonth()];
+    const year = new Date(date).getFullYear();
+
+    return `${day} ${month} ${year}`;
 }

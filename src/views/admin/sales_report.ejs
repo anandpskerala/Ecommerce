@@ -1,0 +1,333 @@
+<%- include('../partials/admin/header.ejs') %>
+<header>
+    <%- include('../partials/admin/navbar.ejs') %>
+</header>
+<div class="row">
+    <%- include('../partials/admin/sidebar.ejs') %>
+    <div class="cover" id="sales-report">
+        <div class="cover-head">
+            <h2>Sales Report</h2>
+            <div>
+                <button class="download-btn" id="download-pdf">Download PDF</button>
+                <button class="download-btn" id="download-excel">Download Excel</button>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 20px;">
+            <div class="col" style="width: 100%;">
+                <label for="date">Select Range</label>
+                <select name="date" id="date" class="date-range" style="width: 100%;">
+                    <option value="day">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+            <div class="col" style="width: 100%;">
+                <label for="method-name">Sort by</label>
+                <select name="filter" id="filter" class="date-range" style="width: 100%;">
+                    <option value="product_name">Product Name</option>
+                    <option value="sold">Sold</option>
+                    <option value="returns">Returns</option>
+                    <option value="revenue">Revenue</option>
+                </select>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 20px; display: none;" id="extras">
+            <div class="col" style="width: 100%;">
+                <label for="start">Start Date</label>
+                <input type="date" id="start" name="start" class="date-range" placeholder="DD-MM-YYYY" style="width: 100%;" data-validate="required">
+            </div>
+
+            <div class="col" style="width: 100%;">
+                <label for="end">End Date</label>
+                <input type="date" id="end" class="date-range" name="end" placeholder="DD-MM-YYYY" style="width: 100%;" data-validate="required">
+            </div>
+        </div>
+        <table border="1" class="sales-table">
+            <thead>
+              <tr>
+                <th data-column="product_name" class="sortable">Product Name</th>
+                <th data-column="product_id" class="sortable">Product ID</th>
+                <th data-column="sold" class="sortable">Sold</th>
+                <th data-column="returns" class="sortable">Returns</th>
+                <th data-column="revenue" class="sortable">Revenue (&#8377;)</th> 
+              </tr>
+            </thead>
+            <tbody id="tbody">
+            </tbody>
+        </table>
+
+        <h5 id="discounts">Discounts</h5>
+        <h5 id="coupon-discounts">Coupon Discount</h5>
+        <hr class="divider">
+        <h5 id="net-revenue">Net Revenue</h5>
+    </div>
+</div>
+<script>
+    const fetch_data = async (start, end, method) => {
+        const response = await fetch('/admin/sales-reports', {
+            method: 'POST',
+            body: new URLSearchParams({
+                method: method,
+                start: new Date(start),
+                end: new Date(end)
+            })
+        });
+        console.log(response)
+        const data = await response.json();
+        console.log(data)
+        return data;
+    };
+
+    const update_table = async (start_date, end_date, method) => {
+        const data = await fetch_data(start_date, end_date, method);
+        const tbody = document.getElementById('tbody');
+        tbody.innerHTML = '';
+        let total = 0;
+        let total_sold = 0;
+        let total_returns = 0;
+        let discounts = 0;
+        let coupon_discounts = 0;
+        data.coupons.forEach((coupon) => {
+            coupon_discounts += coupon.coupon_discount;
+        })
+        if (data.sales.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5">No data available for the selected range.</td></tr>';
+        }
+        data.sales.forEach((report) => {
+            const row = document.createElement('tr');
+            total += report.total_revenue;
+            total_sold += report.total_sold;
+            total_returns += report.total_returns;
+            discounts += report.total_discounts;
+            row.innerHTML = `
+                <td>${report.product_name}</td>
+                <td>${report._id}</td>
+                <td>${report.total_sold}</td>
+                <td>${report.total_returns}</td>
+                <td>&#8377;${report.total_revenue}</td>
+            `;
+            tbody.appendChild(row);
+        });
+        const total_row = document.createElement('tr');
+        total_row.id = 'total-row';
+        total_row.innerHTML = `
+            <td colspan="2" class="total-td">Total</td>
+            <td colspan="1" class="total-td">${total_sold}</td>
+            <td colspan="1" class="total-td">${total_returns}</td>
+            <td colspan="1" class="total-td">&#8377; ${total}</td>
+        `;
+        tbody.appendChild(total_row);
+        document.getElementById("discounts").innerHTML = `Discounts : &#8377; ${discounts}`;
+        document.getElementById("coupon-discounts").innerHTML = `Coupon Discount : &#8377; ${coupon_discounts}`;
+        document.getElementById("net-revenue").innerHTML = `Net Revenue : &#8377; ${total - (discounts + coupon_discounts)}`;
+        console.log(data)
+    };
+
+    document.getElementById('download-pdf').addEventListener('click', () => {
+        const body = [['Product Name', 'Product ID', 'Total Sold', 'Returns', 'Revenue ( ₹ )']];
+
+        const tbody = document.getElementById('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr')).map((row) => {
+            return Array.from(row.querySelectorAll('td')).map((cell, index) => {
+                let text = cell.textContent;
+                if (text.includes('₹')) {
+                    text = text.replace('₹', '\u20B9');
+                }
+
+                return text;
+            });
+        });
+        body.push(...rows);
+        const max_columns = Math.max(...body.map(row => row.length));
+        body.forEach(row => {
+            while (row.length < max_columns) {
+                row.splice(1, 0, ''); 
+            }
+        });
+
+        const docDefinition = {
+            content: [
+                { text: 'Sales Report', style: 'header' },
+                {
+                    text: `Generated on ${new Date().toLocaleString()}`,
+                    alignment: 'right',
+                    margin: [0, 0, 0, 10],
+                },
+                {
+                    table: {
+                        headerRows: 1,
+                        body: body,
+                    },
+                },
+                {
+                    text: `Discounts : ${document.getElementById('discounts').innerHTML.split(': ')[1]}`,
+                    style: 'subheader',
+                    alignment: 'left',
+                    margin: [10, 10, 10, 10],
+                },
+                {
+                    text: `Coupon Discount : ${document.getElementById('coupon-discounts').innerHTML.split(': ')[1]}`,
+                    alignment: 'left',
+                    style: 'subheader',
+                    margin: [10, 0, 0, 10],
+                },
+                {
+                    text: `Net Revenue : ${document.getElementById('net-revenue').innerHTML.split(': ')[1]}`,
+                    alignment: 'left',
+                    style: 'subheader',
+                    margin: [10, 0, 0, 10],
+                }
+            ],
+            styles: {
+                header: {
+                    fontSize: 18,
+                    bold: true,
+                    margin: [0, 0, 0, 10],
+                },
+                subheader: {
+                    fontSize: 14,
+                    bold: true,
+                }
+            },
+            defaultStyle: {
+                font: 'Roboto',
+                fontSize: 12,
+                alignment: 'center'
+            },
+        };
+
+        pdfMake.createPdf(docDefinition).download('sales_report.pdf');
+    });
+
+    document.getElementById('download-excel').addEventListener('click', () => {
+        const headers = ['Product Name', 'Product ID', 'Total Sold', 'Returns', 'Revenue ( ₹ )'];
+
+        const tbody = document.getElementById('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr:not(#total-row)')).map((row) => {
+            return Array.from(row.querySelectorAll('td')).map((cell) => {
+                let text = cell.textContent;
+                if (text.includes('₹')) {
+                    text = text.replace('₹', '\u20B9');
+                }
+                return text;
+            });
+        });
+
+        const totalRow = Array.from(document.querySelector('#total-row').querySelectorAll('td')).map((cell, index) => {
+            let text = cell.textContent;
+            if (text.includes('₹')) {
+                text = text.replace('₹', '\u20B9');
+            }
+            return text || (index === 0 ? 'Total' : '');
+        });
+        totalRow.splice(1, 0, "");
+        rows.push(totalRow);
+
+        const data = [headers, ...rows];
+
+
+        data.push([]);
+        data.push(['Discounts', document.getElementById('discounts').innerHTML.split(': ')[1]]);
+        data.push(['Coupon Discount', document.getElementById('coupon-discounts').innerHTML.split(': ')[1]]);
+        data.push(['Net Revenue', document.getElementById('net-revenue').innerHTML.split(': ')[1]]);
+
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sales Report');
+
+        XLSX.writeFile(workbook, 'sales_report.xlsx');
+    });
+
+
+    document.getElementById('date').addEventListener('change', (e) => {
+        const selected_date = document.getElementById('date').value;
+        const start_date_element = document.getElementById('start');
+        const end_date_element = document.getElementById('end');
+        const extras = document.getElementById('extras');
+        if (selected_date === 'custom') {
+            extras.style.display = 'flex';
+            end_date_element.addEventListener('change', () => {
+                const start_date = start_date_element.value;
+                if (start_date.trim() != "") {
+                    const start_date = new Date(start_date_element.value);
+                    const end_date = new Date(end_date_element.value);
+                    return update_table(start_date, end_date, "product");
+                }
+            });
+        } else {
+            extras.style.display = 'none';
+        }
+        if (selected_date === 'day') {
+            let start_date = new Date();
+            start_date.setHours(0, 0, 0, 0);
+            let end_date = new Date();
+            end_date.setHours(23, 59, 59, 999);
+            update_table(start_date, end_date, 'product');
+        } else if (selected_date === 'week') {
+            update_table(new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0], new Date(Date.now()).toISOString(), 'product');
+        } else if (selected_date === 'month') {
+            update_table(new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], new Date().toISOString(), 'product');
+        } else if (selected_date === "year") {
+            update_table(new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().split('T')[0], new Date().toISOString(), 'product');
+        }
+    });
+
+
+    const start_date_picker = flatpickr("#start", {
+        dateFormat: "d-M-Y",
+        onChange: function (selected_dates) {
+            const start_date = selected_dates[0];
+            if (start_date) {
+                end_date_picker.set("minDate", new Date(start_date.getTime() + 24 * 60 * 60 * 1000));
+                end_date_picker.setDate(null);
+            }
+        }
+    });
+
+    const end_date_picker = flatpickr("#end", {
+        dateFormat: "d-M-Y",
+        minDate: "today"
+    });
+
+    document.getElementById("filter").addEventListener("change", (e) => {
+        const selected_filter = e.target.value;
+    const filters = ["product_name", "product_id", "sold", "returns", "revenue"];
+    const tbody = document.getElementById("tbody");
+    
+    const rows = Array.from(tbody.querySelectorAll("tr:not(#total-row)"));
+
+    rows.sort((a, b) => {
+        const column_index = filters.indexOf(selected_filter);
+        let cell_a = a.cells[column_index].textContent.replace("₹", "");
+        let cell_b = b.cells[column_index].textContent.replace("₹", "");
+        console.log(column_index, cell_a, cell_b);
+
+        if (!isNaN(cell_a) && !isNaN(cell_b)) {
+            cell_a = parseFloat(cell_a);
+            cell_b = parseFloat(cell_b);
+            return cell_b - cell_a;
+        }
+
+        return cell_a.localeCompare(cell_b);
+        });
+
+        rows.forEach(function(row) {
+            tbody.appendChild(row);
+        });
+
+        const totalRow = document.getElementById('total-row');
+        if (totalRow) {
+            tbody.appendChild(totalRow);
+        }
+    });
+
+    let start_date = new Date();
+    start_date.setHours(0, 0, 0, 0);
+    let end_date = new Date();
+    end_date.setHours(23, 59, 59, 999);
+    update_table(start_date, end_date, 'product');
+</script>
+<%- include('../partials/admin/footer.ejs') %>

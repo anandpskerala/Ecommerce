@@ -122,8 +122,9 @@ header {
   position: fixed;
   flex-direction: row;
   width: 100%;
-  padding: 20px 50px;
+  padding: 0 50px 0 0;
   justify-content: space-between;
+  align-items: center;
   z-index: 10;
 }
 
@@ -131,10 +132,16 @@ header {
   display: flex;
   flex-direction: row;
   gap: 120px;
+  align-items: center;
 }
 
 .navbar .head .logo {
-  padding: 0 20px;
+  display: flex;
+  min-height: 70px;
+  min-width: 250px;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--white);
 }
 
 .navbar .head .logo a {
@@ -204,7 +211,8 @@ header {
   font-size: 14px;
 }
 
-.state-button.processing {
+.state-button.processing,
+.state-button.returned {
   background-color: var(--gold-bg);
   font-weight: 600;
   border: 2px solid var(--gold);
@@ -249,8 +257,9 @@ header {
   list-style: none;
   gap: 20px;
   flex-direction: column;
-  margin-top: 70px;
-  position: fixed;
+  margin-top: 80px;
+  position: sticky;
+  max-width: 100vh;
 }
 
 .sidebar ul li {
@@ -304,6 +313,7 @@ header {
   min-height: 90vh;
   padding: 40px 40px;
   border-radius: 6px;
+  margin-top: 20px;
 }
 
 .cover .cover-head {
@@ -364,7 +374,8 @@ header {
  .cover form  input[type="number"],
  .cover form  input[type="tel"],
  .cover form  input[type="url"],
-.cover form select{
+.cover form select,
+.date-range{
   display: flex;
   width: 280px;
   height: 35px;
@@ -740,6 +751,10 @@ table thead {
   text-align: left;
   color: var(--grey);
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
 }
 
 .product-price {
@@ -770,3 +785,212 @@ table thead {
   color: #555;
   resize: none;
 }
+
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  width: 90%;
+  margin: 10px auto;
+}
+
+.dashboard-container .chart-container {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  min-height: 245px;
+  gap: 10px;
+}
+
+.dashboard-container .chart-container canvas {
+  max-width: 300px;
+  width: 300px;
+  max-height: 150px;
+}
+
+.dashboard-container .row {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 30px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.sales-table thead {
+  background: linear-gradient(90deg, #6a11cb, #2575fc);
+  color: white;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.sales-table thead th {
+  padding: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sales-table tbody tr {
+  background-color: #ffffff;
+  transition: all 0.2s ease-in-out;
+}
+
+.sales-table tbody tr:nth-child(even) {
+  background-color: #f9fafc;
+}
+
+.sales-table tbody tr:hover {
+  background: #e3f2fd;
+  transform: scale(1.01);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.sales-table td {
+  padding: 15px;
+  text-align: center;
+  font-size: 14px;
+  color: #34495e;
+  cursor: pointer;
+  max-width: 250px;
+}
+
+.sales-table .total-td {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+h5 {
+  font-size: 18px;
+  margin: 10px 0;
+  text-align: right;
+  font-weight: 600;
+  color: #34495e;
+}
+
+#discounts, #net-revenue {
+  font-size: 18px;
+  color: #000000;
+  text-shadow: 0px 2px 4px rgba(106, 17, 203, 0.2);
+}
+
+.download-btn {
+  background: linear-gradient(90deg, #6a11cb, #2575fc);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0px 5px 15px rgba(106, 17, 203, 0.4);
+}
+
+.download-btn:hover {
+  background: linear-gradient(90deg, #2575fc, #6a11cb);
+  box-shadow: 0px 8px 25px rgba(37, 117, 252, 0.6);
+  transform: translateY(-3px);
+}
+/* .grid {
+  display: grid;
+  gap: 20px;
+}
+
+.analytics-grid {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.card h2 {
+  font-size: 24px;
+  margin: 0;
+}
+
+.card p {
+  color: #555;
+  margin: 10px 0;
+}
+
+.bar {
+  height: 6px;
+  width: 100%;
+  background-color: #eaeaea;
+  border-radius: 5px;
+  margin-top: 10px;
+  position: relative;
+}
+
+.bar-inner {
+  height: 100%;
+  background-color: #4caf50;
+  border-radius: 5px;
+}
+
+.table-container {
+  grid-template-columns: 2fr 3fr;
+  gap: 20px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.table th, .table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.table th {
+  background: #f1f1f1;
+  font-weight: bold;
+}
+
+.table-container h3 {
+  margin: 10px 0;
+}
+
+.stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.stats-card {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.stats-card h4 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.stats-card p {
+  color: #555;
+  margin-top: 5px;
+} */
