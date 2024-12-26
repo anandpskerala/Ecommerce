@@ -19,17 +19,34 @@
         <h2 style="margin-bottom: 30px;">Products</h2>
 
         <div class="order-list">
+            <% let order_status = "delivered" %>
             <% orders.forEach((order) => { %>
+                <% if (order.status != "delivered")  { %>
+                    <% order_status = "pending" %>
+                <% } %>
                 <div class="orders">
                     <img src="/images/<%= order.image %>" alt="Product Image" class="product-image">
                     <h3 style="display: flex; align-items: center; max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
                         <a href="/product/<%= order.product_id %>" style="text-decoration: none; color: black;"><%= order.name %></a>
                     </h3>
                     <p>QTY : <%= order.quantity %></p>
-                    <p>Price: &#8377;<%= currency.parse_currency(order.price, 0) %></p>
+                    <p>Price: &#8377; <%= currency.parse_currency(order.price, 0) %></p>
                 </div>
             <% }); %>
         </div>
+        <hr class="divider" style="margin-top: 30px; margin-bottom: 30px;">
+        <% if (payment.status == "success" && order_status == "delivered") { %>
+            <button class="btn success" style="width: 50%; align-self: center;" onclick='generateInvoice(`<%- JSON.stringify(orders) %>`, `<%- JSON.stringify(user) %>`, `<%- JSON.stringify(address) %>`, `<%- JSON.stringify(payment) %>`)'>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20px" height="20px" fill="#fff">
+                    <path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 242.7-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7 288 32zM64 352c-35.3 0-64 28.7-64 64l0 32c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-32c0-35.3-28.7-64-64-64l-101.5 0-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352 64 352zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/>
+                </svg>
+                <span>Download Invoice</span>
+            </button>
+        <% } else if (payment.status == "failed") { %>
+            <button class="btn success" style="width: 50%; align-self: center;">
+                <span>Pay Now</span>
+            </button>
+        <% } %>
     </div>
 
 
@@ -39,7 +56,7 @@
             <li><span><strong>Name: </strong></span><span><%= user.first_name + " " + user.last_name %></span></li>
             <li style="gap: 50px;">
                 <span><strong>Address:</strong></span>
-                <span style="font-size: 14px;">
+                <span style="font-size: 14px; text-align: right;">
                     <%= address.house_address %>,
                     <%= address.street_address %>,
                     <%= address.city %>
@@ -52,13 +69,77 @@
                 <span><strong>Phone Number:</strong></span>
                 <span><%- user.phone_number? user.phone_number: '<a class="btn" href="/user/account">Add Phone Number</a>' %></span>
             </li>
+            <hr class="divider">
             <h3>Your Order</h3>
-            <li><span>Subtotal:</span> <span>&#8377;<%= currency.parse_currency(payment.amount - 3, 2) %></span></li>
-            <li><span>Shipping:</span> <span>Free</span></li>
+            <li><span>Order ID:</span> <span style="font-size: 13px;"><%= payment.order_number %></span></li>
+            <li><span>Payment Method:</span><span style="font-size: 13px;"><%= payment.method.toUpperCase() %></span></li>
+            <li><span>Payment Status:</span><span style="font-size: 13px;"><%= payment.status.toUpperCase() %></span></li>
+            <hr class="divider">
+            <li><span>Subtotal with Discount:</span> <span>&#8377;<%= currency.parse_currency(payment.amount - 3, 2) %></span></li>
+            <li><span>Shipping Fee:</span> <span><%- payment.delivery_fee > 0? `&#8377;${currency.parse_currency(payment.delivery_fee, 2)}`: 'Free' %></span></li>
             <li><span>Tax:</span> <span>&#8377;3.00</span></li>
             <hr class="divider">
-            <li id="price" value="<%= payment.amount + 3 %>"><strong>Total:</strong> <strong>&#8377;<%= currency.parse_currency(payment.amount, 2) %></strong></li>
+            <li id="price" value="<%= payment.amount + 3 %>"><strong>Total:</strong> <strong>&#8377;<%= currency.parse_currency(payment.amount + payment.delivery_fee, 2) %></strong></li>
         </ul>
     </div>
 </div>
+
+<script>
+    const generateInvoice = (order, user, address, payment) => {
+        order = JSON.parse(order);
+        user = JSON.parse(user);
+        address = JSON.parse(address);
+        payment = JSON.parse(payment);
+        const docDefinition = {
+            content: [
+                { text: 'Invoice', style: 'header' },
+                { text: `Order ID: ${payment.order_number}`, margin: [0, 10, 0, 10] },
+                {
+                    text: 'Customer Details',
+                    style: 'subheader',
+                },
+                {
+                    ul: [
+                        `Name: ${user.first_name} ${user.last_name}`,
+                        `Phone Number: ${user.phone_number || 'N/A'}`,
+                        `Address: ${address.house_address}, ${address.street_address}, ${address.city}, ${address.state}, ${address.country}, ZIP CODE: ${address.zip_code}`,
+                    ],
+                    margin: [0, 0, 0, 10],
+                },
+                { text: 'Products', style: 'subheader' },
+                {
+                    table: {
+                        headerRows: 1,
+                        widths: ['*', 'auto', 'auto'],
+                        body: [
+                            ['Product', 'Quantity', 'Price (₹)'],
+                            ...order.map((item) => [item.name, item.quantity, item.price.toFixed(2)]),
+                        ],
+                    },
+                    margin: [0, 0, 0, 10],
+                },
+                { text: 'Summary', style: 'subheader' },
+                {
+                    table: {
+                        widths: ['*', 'auto'],
+                        body: [
+                            ['Subtotal with Discount:', `₹${(payment.amount - 3).toFixed(2)}`],
+                            ['Shipping Fee:', payment.delivery_fee > 0 ? `₹${payment.delivery_fee.toFixed(2)}` : 'Free'],
+                            ['Tax:', '₹3.00'],
+                            ['Total:', `₹${payment.amount.toFixed(2)}`],
+                        ],
+                    },
+                    margin: [0, 0, 0, 10],
+                },
+            ],
+            styles: {
+                header: { fontSize: 18, bold: true, alignment: 'center', margin: [0, 0, 0, 20] },
+                subheader: { fontSize: 14, bold: true, margin: [0, 10, 0, 5] },
+            },
+        };
+
+        // Generate and open/download the PDF
+        pdfMake.createPdf(docDefinition).download(`invoice_${payment.order_number}.pdf`);
+    };
+</script>
 <%- include('../partials/user/footer.ejs') %>

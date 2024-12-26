@@ -1,17 +1,23 @@
 const search_element = document.getElementById('product-search');
+const cart_minus_buttons = document.querySelectorAll('.cart-minus');
+const cart_plus_buttons = document.querySelectorAll('.cart-plus');
 
 if (search_element) {
     search_element.addEventListener('keyup', (event) => {
         if (event.keyCode === 13) {
             const search_term = event.target.value.trim();
-            if (search_term.length > 0) {
-                window.location.href = `/products?search=${search_term}`;
+            const current_path = window.location.pathname;
+            const search_query = `?search=${encodeURIComponent(search_term)}`;
+            console.log(current_path.split("?")[0])
+
+            if (current_path.split("?")[0] != `/products`) {
+                window.location.href = `/products${search_query}`;
             } else {
-                window.location.href = '/products';
+                window.history.pushState({}, "", search_query);
+                fetch_data_from_server();
             }
         }
     });
- 
 }
 
 const open_cart_menu = (session) => {
@@ -55,3 +61,70 @@ function formatDate(date) {
 
     return `${day} ${month} ${year}`;
 }
+
+cart_minus_buttons.forEach((minus_element, index) => {
+    minus_element.addEventListener('click', () => {
+        const cart_quantity = document.getElementById(`cart-quantity-${index}`);
+        let current_quantity = parseInt(cart_quantity.value);
+        const min = parseInt(cart_quantity.min);
+        if (current_quantity > min) {
+            cart_quantity.value = --current_quantity;
+        }
+        update_cart_buttons(index, current_quantity);
+        update_cart_quantity(index, current_quantity);
+    });
+});
+
+cart_plus_buttons.forEach((plus_element, index) => {
+    plus_element.addEventListener('click', () => {
+        const cart_quantity = document.getElementById(`cart-quantity-${index}`);
+        let current_quantity = parseInt(cart_quantity.value);
+        const max = parseInt(cart_quantity.max);
+        if (current_quantity < max) {
+            cart_quantity.value = ++current_quantity;
+        }
+        update_cart_buttons(index, current_quantity);
+        update_cart_quantity(index, current_quantity);
+    });
+});
+
+const update_cart_buttons = (index, value) => {
+    const cart_quantity = document.getElementById(`cart-quantity-${index}`);
+    const minus_button = document.getElementById(`cart-minus-${index}`);
+    const plus_button = document.getElementById(`cart-plus-${index}`);
+    const min = parseInt(cart_quantity.min);
+    const max = parseInt(cart_quantity.max);
+    minus_button.disabled = value <= min;
+    plus_button.disabled = value >= max;
+};
+
+const debounce_request = (func, delay) => {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => func(...args), delay);
+    };
+};
+
+
+const update_cart_quantity = debounce_request(async (index, quantity) => {
+    const cart_quantity = document.getElementById(`cart-quantity-${index}`);
+    const cart_id = cart_quantity.dataset.value;
+    const req = await fetch(`/user/update-cart`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            cart_id,
+            quantity,
+        }),
+    });
+    if (!req.ok) {
+        return alert_error("An error occurred while updating the cart quantity. Please try again.");
+    }
+    const res = await req.json();
+    if (!res.success) {
+        alert_error(res.message);
+    }
+}, 1000);

@@ -162,7 +162,7 @@
                     </svg>
                 </button>
               </div>
-              <p class="free-shipping">— FREE SHIPPING ON ORDERS &#8377;10000+</p>
+              <p class="free-shipping">— FREE SHIPPING ON ORDERS BELOW &#8377;1000</p>
         </div>
     </section>
 
@@ -292,6 +292,8 @@
 
     let min = parseInt(quantityInput.min);
     let max = parseInt(availableStock.value || quantityInput.max);
+    let cartMin = parseInt(quantityInput.min);
+    let cartMax = parseInt(availableStock.value || cartQuantityInput.max);
 
     minusButton.addEventListener('click', () => {
       let currentValue = parseInt(quantityInput.value);
@@ -308,6 +310,7 @@
       }
       updateButtons(currentValue);
     });
+
 
     function updateButtons(value) {
       minusButton.disabled = value <= min;
@@ -364,7 +367,7 @@
         max = parseInt(quantity)
         updateButtons(1);
         quantityInput.value = 1;
-    }
+    };
 
     function sectionSelector(section) {
         let details = document.getElementById("details");
@@ -523,7 +526,8 @@
         
         const res = await req.json();
         if (res.success) {
-            alert_success(res.message);
+            localStorage.setItem("callOpenCartMenu", "true");
+            window.location.reload();
         } else {
             alert_error(res.message);
         }
@@ -537,6 +541,8 @@
         }
         const data = {
             product_id: product_id,
+            variant_id: document.getElementById('variants').value,
+            color: document.getElementById('color-option').value,
         };
         const req = await fetch("/user/update-wishlist", {
             method: 'POST',
@@ -576,6 +582,14 @@
             stock_element.style.display = "none";
         }
     };
+
+    window.addEventListener("load", () => {
+        const call_open_cart_menu = localStorage.getItem("callOpenCartMenu");
+        if (call_open_cart_menu) {
+            open_cart_menu('<%- JSON.stringify(session) %>');
+            localStorage.removeItem("callOpenCartMenu");
+        }
+    });
 
     stock_alert('<%= product.variants[0].quantity %>');
 </script>

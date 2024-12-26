@@ -35,7 +35,7 @@ async function sendVerificationEmail(email, otp) {
 
 Schema.pre("save", async function (next) {
     if (this.isNew) {
-      //await sendVerificationEmail(this.email, this.otp);
+      await sendVerificationEmail(this.email, this.otp);
     }
     next();
 });

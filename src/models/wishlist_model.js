@@ -11,6 +11,14 @@ const Schema = mongoose.Schema({
         ref: 'User',
         required: true
     },
+    variant_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
+    color: {
+        type: String,
+        required: true
+    }
 }, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}})
 
 module.exports = mongoose.model('Wishlist', Schema);

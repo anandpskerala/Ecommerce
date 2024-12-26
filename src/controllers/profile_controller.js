@@ -334,7 +334,7 @@ const remove_from_cart = async (req, res) => {
 
 const add_order = async (req, res) => {
     try {
-        const { carts, payment_method, address, price, response, coupon_discount } = req.body;
+        let { carts, payment_method, address, price, razorpay_order_id, status, coupon_discount } = req.body;
         console.log("Price:", price);
 
         if (!carts || !payment_method || !address) {
@@ -344,6 +344,10 @@ const add_order = async (req, res) => {
         const user = await user_model.findOne({ _id: req.session.user.id });
         if (!user) {
             return res.json({ success: false, message: `User not found` });
+        }
+
+        if (payment_method == "cod" && price > 1000) {
+            return res.json({ success: false, message: "COD payment is not available for orders above ₹ 1000" });
         }
 
         if (payment_method == "wallet") {
@@ -365,11 +369,10 @@ const add_order = async (req, res) => {
             method: payment_method,
             amount: price,
         });
-        if (payment_method == "razorpay" && response) {
-            payment_data.razorpay_order_id = response.razorpay_order_id;
-            payment_data.razorpay_payment_id = response.razorpay_payment_id;
-            payment_data.razorpay_signature = response.razorpay_signature;
-            payment_data.status = "success";
+
+        if (payment_method == "razorpay" && razorpay_order_id != "") {
+            payment_data.razorpay_order_id = razorpay_order_id;
+            payment_data.status = status;
         }
 
         if (payment_method == "wallet") {
@@ -489,7 +492,7 @@ const cancel_order = async (req, res) => {
             wallet.balance += order.quantity * order.price;
             wallet.transactions.push({amount: order.quantity * order.price, type: 'credit', description: "Refund due to cancellation"})
         }
-        await payment_model.updateOne({_id: payment._id}, {$inc: {amount: -(order.quantity * order.price)}, $pull: {orders: order._id}});
+        await payment_model.updateOne({_id: payment._id}, {$inc: {amount: -(order.quantity * order.price)}, $pull: {orders: order._id}}, {$set: {status: "refund"}});
     }
     await wallet.save();
     const product = await product_model.findOne({_id: order.product_id});
@@ -555,7 +558,7 @@ const change_name = async (req, res) => {
 
 const apply_coupon = async (req, res) => {
     const { coupon_code, min_amount } = req.body;
-    const coupon = await coupon_model.findOne({_id: coupon_code});
+    const coupon = await coupon_model.findOne({coupon_code: coupon_code});
     if (!coupon || coupon.limit <= 0) {
         return res.json({success: false, message: "Invalid coupon code"});
     }
@@ -604,7 +607,7 @@ const apply_coupon = async (req, res) => {
 
 const remove_coupon = async (req, res) => {
     const { coupon_code } = req.body;
-    const coupon = await coupon_model.findOne({_id: coupon_code});
+    const coupon = await coupon_model.findOne({coupon_code: coupon_code});
     if (!coupon) {
         return res.json({ success: false, message: "Coupon not found" });
     }
@@ -612,7 +615,8 @@ const remove_coupon = async (req, res) => {
     if (!user) {
         return res.json({ success: false, message: "User not found" });
     }
-    if (user.coupon == coupon_code) {
+    console.log(user.coupon, coupon._id);
+    if (user.coupon.toString() == coupon._id.toString()) {
         delete user.coupon;
         coupon.users.pull(user._id)
         if (coupon.type == "multiple") {
@@ -626,7 +630,7 @@ const remove_coupon = async (req, res) => {
 }
 
 const update_wishlist = async (req, res) => {
-    const { product_id } = req.body;
+    const { product_id, variant_id, color } = req.body;
     const user = await user_model.findOne({ _id: req.session.user.id });
     if (!user) {
         return res.json({ success: false, message: "User not found" });
@@ -634,12 +638,12 @@ const update_wishlist = async (req, res) => {
 
     const wishlist = await wishlist_model.findOne({product_id});
     if (!wishlist) {
-        const new_wishlist = new wishlist_model({
+        const new_wishlist = await wishlist_model.create({
             user_id: user._id,
             product_id,
-        })
-
-        await new_wishlist.save();
+            variant_id,
+            color,
+        });
         return res.json({ success: true, message: "Product added to wishlist successfully" });
     } else {
         await wishlist_model.deleteOne({product_id});
@@ -668,6 +672,16 @@ const get_referrals = async (req, res) => {
     return res.json({ referral_code: referrals.referral_code, referral_link, referred_users: referrals.referred_users, amount: referrals.amount_earned });
 }
 
+const update_cart_quantity = async (req, res) => {
+    const {cart_id, quantity} = req.body;
+    const cart = await cart_model.findOne({_id: cart_id});
+    if (!cart) {
+        return res.json({ success: false, message: "Cart not found" });
+    }
+    await cart_model.updateOne({_id: cart_id}, {$set: {quantity: quantity}})
+    return res.json({ success: true, message: "Cart quantity updated successfully" });
+};
+
 
 module.exports= { 
     send_otp, 
@@ -693,5 +707,6 @@ module.exports= {
     remove_coupon,
     update_wishlist,
     load_wallet,
-    get_referrals
+    get_referrals,
+    update_cart_quantity
 }; 

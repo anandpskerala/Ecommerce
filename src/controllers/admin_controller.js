@@ -56,8 +56,8 @@ const admin_login = async (req, res) => {
 const load_user = async (req, res) => {
     const { page = 1, limit = 10, email = "" } = req.query;
     const search_email = email != "" ? {email: {$regex: email}}: {};
-    const all_users = await users.find(search_email).skip((page - 1) * limit).limit(Number(limit));
-    const total = await users.countDocuments();
+    const all_users = await users.find(search_email).sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit));
+    const total = await users.countDocuments(search_email);
     return res.render(
         "admin/customers", {
             title: "Customers", 
@@ -130,8 +130,8 @@ const delete_user = async (req, res) => {
 const load_products = async (req, res) => {
     const { page = 1, limit = 10, product = "" } = req.query;
     const search_product = product != "" ? {title: {$regex: product}}: {};
-    const products = await product_model.find(search_product).skip((page - 1) * limit).limit(Number(limit));
-    const total = await product_model.countDocuments();
+    const products = await product_model.find(search_product).sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit));
+    const total = await product_model.countDocuments(search_product);
     return res.render(
         "admin/products", 
         {
@@ -213,7 +213,7 @@ const add_brand_form = async (req, res) => {
 
 const load_brands = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
-    const all_brands = await brands.find().skip((page - 1) * limit).limit(Number(limit));
+    const all_brands = await brands.find().sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit));
     const total = await brands.countDocuments();
     return res.render(
         "admin/brands", 
@@ -285,7 +285,7 @@ const add_category_form = async (req, res) => {
 
 const load_category = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
-    const categories = await category.find().skip((page - 1) * limit).limit(Number(limit));
+    const categories = await category.find().sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit));
     const offers = await offer_model.find({type: "category"});
     const total = await category.countDocuments();
     return res.render(
@@ -356,7 +356,7 @@ const create_offer = async (req, res) => {
 
 const load_offers = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
-    const offers = await offer.find().skip((page - 1) * limit).limit(Number(limit));
+    const offers = await offer.find().sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit));
     const total = await offer.countDocuments();
     return res.render(
         "admin/offers", 
@@ -450,7 +450,7 @@ const load_orders = async (req, res) => {
     const { page = 1, limit = 10, status = "" } = req.query;
     const query = status ? { status } : {};
     const orders = await order_model.find(query).sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit)).populate('user_id', 'first_name last_name email');
-    const total = await order_model.countDocuments();
+    const total = await order_model.countDocuments(query);
     return res.render("admin/orders", {
         title: "Orders", 
         page: "Orders", 
@@ -515,7 +515,7 @@ const add_coupon = async (req, res) => {
 
 const load_coupons = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
-    const coupons = await coupon_model.find().skip((page - 1) * limit).limit(Number(limit));
+    const coupons = await coupon_model.find().sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit));
     const total = await coupon_model.countDocuments();
     return res.render("admin/coupons", {
         title: "Coupons", 
@@ -595,15 +595,19 @@ const update_return = async (req, res) => {
     if (!return_data) {
         return res.status(400).json({success: false, message: "Invalid return request"});
     }
+    const order = await order_model.findOne({_id: return_data.order_id});
+    if (!order) {
+        return res.status(400).json({success: false, message: "Invalid order"});
+    }
 
     return_data.status = status;
     if (status === "rejected") {
         return_data.rejection_reason = rejection_reason;
+    } else {
+        await order_model.updateOne({_id: order._id}, {$set: {status: "returned"}});
+        await payment_model.updateOne({_id: order.payment}, {$set: {status: "refund"}});
     }
     await return_data.save();
-    const order = await order_model.findOne({_id: return_data.order_id});
-    order.status = "returned";
-    await order.save();
     return res.status(200).json({success: true, message: "Return status updated successfully"});
 };
 

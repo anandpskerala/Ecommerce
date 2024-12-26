@@ -12,6 +12,12 @@
 
     <% if (carts && carts.length > 0) { %>
       <% carts.forEach((cart, index) => { %>
+        <% let stocks = 0; %>
+        <% cart.product.variants.forEach((variant) => { %>
+            <% if (variant.name == cart.variant) { %>
+                <% stocks = variant.quantity; %>
+            <% } %>
+        <% }); %>
         <div class="cart-item">
           <img class="item-image" src="/images/<%= cart.image %>" alt="Product Image <%= index %>">
           <div class="item-details">
@@ -24,9 +30,9 @@
             </div>
             <div class="item-info">
               <div class="cart-quantity-controls">
-                <button class="cart-minus" aria-label="Decrease quantity" style="border-top-left-radius: 6px; border-bottom-left-radius: 6px; border-right: 1px solid #ccc;">−</button>
-                <input type="number" id="quantity" value="<%= cart.quantity %>" min="1" max="99">
-                <button class="cart-plus" aria-label="Increase quantity" style="border-top-right-radius: 6px; border-bottom-right-radius: 6px; border-left: 1px solid #ccc;">+</button>
+                <button class="cart-minus" id="cart-minus-<%= index %>" aria-label="Decrease quantity" style="border-top-left-radius: 6px; border-bottom-left-radius: 6px; border-right: 1px solid #ccc;">−</button>
+                <input type="number" id="cart-quantity-<%= index %>" value="<%= cart.quantity %>" min="1" max="<%= stocks %>" data-value="<%= cart._id %>">
+                <button class="cart-plus" id="cart-plus-<%= index %>" aria-label="Increase quantity" style="border-top-right-radius: 6px; border-bottom-right-radius: 6px; border-left: 1px solid #ccc;">+</button>
               </div>
             </div>
             <span>$<%= cart.price %>.00</span>

@@ -16,6 +16,7 @@
                     </div>
                     <div class="order-actions">
                         <a href="/product/<%= wishlist.product_id._id %>" class="btn view-item">View Item</a>
+                        <button class="btn return" onclick="cart_from_wishlist('<%= wishlist.product_id._id %>', '<%= wishlist.variant_id %>', '<%= wishlist.color %>')">Add to cart</button>
                         <button class="btn cancel" onclick="remove_from_wishlist('<%= wishlist.product_id._id %>')">Remove</button>
                     </div>
                 </div>
@@ -26,7 +27,7 @@
         <% } %>
     </main>
 </div>
-
+<%- include('../partials/user/cart.ejs') %>
 <script>
     const remove_from_wishlist = async (product_id) => {
         const req = await fetch("/user/update-wishlist", {
@@ -50,5 +51,43 @@
     
         }
     };
+
+    const cart_from_wishlist = async (product_id, variant_id, color) => {
+        const data = {
+            product_id: product_id,
+            variant_id: variant_id,
+            quantity: 1,
+            color: color,
+        };
+        const req = await fetch("/user/add-to-cart", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(data),
+        })
+
+        if (!req.ok) {
+            console.log(req)
+            alert_error("An Error occured. Try again");
+            return false;
+        }
+        
+        const res = await req.json();
+        if (res.success) {
+            localStorage.setItem("callOpenCartMenu", "true");
+            window.location.reload();
+        } else {
+            alert_error(res.message);
+        }
+    }
+
+    window.addEventListener("load", () => {
+        const call_open_cart_menu = localStorage.getItem("callOpenCartMenu");
+        if (call_open_cart_menu) {
+            open_cart_menu('<%- JSON.stringify(session) %>');
+            localStorage.removeItem("callOpenCartMenu");
+        }
+    });
 </script>
 <%- include('../partials/user/footer.ejs') %>

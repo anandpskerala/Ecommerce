@@ -39,30 +39,28 @@
                 </div>
             <% }) %>
         </div>
-        <% if (totalPages > 1) { %>
-            <ul class="pagination">
-                <!-- Previous Page -->
-                <% if (currentPage > 1) { %>
-                    <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
-                <% } else { %>
-                    <li><span>&lt;</span></li>
-                <% } %>
+        <ul class="pagination">
+            <!-- Previous Page -->
+            <% if (currentPage > 1) { %>
+                <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
+            <% } else { %>
+                <li><span>&lt;</span></li>
+            <% } %>
         
-                <!-- Page Numbers -->
-                <% for (let i = 1; i <= totalPages; i++) { %>
-                    <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
-                        <%= i %>
-                    </li>
-                <% } %>
+            <!-- Page Numbers -->
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
+                    <%= i %>
+                </li>
+            <% } %>
         
-                <!-- Next Page -->
-                <% if (currentPage < totalPages) { %>
-                    <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
-                <% } else { %>
-                    <li><span>&gt;</span></li>
-                <% } %>
-            </ul>
-        <% } %>
+            <!-- Next Page -->
+            <% if (currentPage < totalPages) { %>
+                <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
+            <% } else { %>
+                <li><span>&gt;</span></li>
+            <% } %>
+        </ul>
     </div>
 </div>
 <%- include('../partials/admin/footer.ejs') %>

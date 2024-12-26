@@ -49,7 +49,7 @@
                     <img src="/images/<%= product.images[0] %>" alt="<%= product.title %> Image" class="product-image" />
                     <h3 class="product-name" aria-label="<%= product.title %>" title="<%= product.title %>"><%= product.title %></h3>
                     <p class="product-price">&#8377;<%= product.variants.price %></p>
-                    <button class="add-to-cart">Add to Cart</button>
+                    <button class="add-to-cart"><%= product.variants.name %></button>
                 </a>
             <% }) %>
         </div>

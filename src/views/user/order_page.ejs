@@ -12,7 +12,7 @@
             <% orders.forEach((order, index) => { %>
             <div class="order-item">
               <img src="/images/<%= order.image %>" alt="Product Image <%= index %>" class="product-image">
-              <a href="/user/order-summary/<%= order.payment %>" class="order-details">
+              <a href="/product/<%= order.product_id %>" class="order-details">
                 <p><strong><%= order.name %></strong></p>
                 <p>Ordered On: <%= time.formatDate(order.createdAt) %></p>
                 <p>QTY: <%= order.quantity %></p>
@@ -33,15 +33,23 @@
                 <span class="status <%= order.status %>"><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></span>
               </div>
               <div class="order-actions">
-                <a href="/product/<%= order.product_id %>" class="btn view-item">View Item</a>
-                <% if (order.status == "processing") { %>
+                <% if (order.status == "processing" && order.payment.status != "failed") { %>
+                  <% console.log(order.payment.status) %>
+                  <a href="/user/order-summary/<%= order.payment._id %>" class="btn view-item">Order details</a>
                   <button class="btn cancel" onclick="cancel_order('<%= order._id %>')">Cancel</button>
                 <% } else if (order.status == "cancelled") { %>
-                  <span class="btn cancel">Cancelled</span>
+                  <span class="btn hollow">&nbsp;&nbsp;</span>
+                  <span class="btn hollow">&nbsp;&nbsp;</span>
                 <% } else if (order.status == "returned") { %>
-                  <span class="btn return">Returned</span>
+                  <a href="/user/order-summary/<%= order.payment._id %>" class="btn view-item">Order details</a>
+                  <span class="btn hollow">&nbsp;</span>
                 <% } else { %>
-                  <button class="btn return" onclick="return_order('<%= order._id %>')">Return</button>
+                  <a href="/user/order-summary/<%= order.payment._id %>" class="btn view-item">Order details</a>
+                  <% if (order.payment.status == "failed") { %>
+                    <span class="btn hollow">&nbsp;</span>
+                  <% } else { %>
+                    <button class="btn return" onclick="return_order('<%= order._id %>')">Return</button>
+                  <% } %>
                 <% } %>
               </div>
             </div>
@@ -51,7 +59,6 @@
           <p>No orders found.</p>
         <% } %>
 
-        <% if (totalPages > 1) { %>
           <ul class="pagination">
               <!-- Previous Page -->
               <% if (currentPage > 1) { %>
@@ -74,7 +81,6 @@
                   <li><span>&gt;</span></li>
               <% } %>
           </ul>
-      <% } %>
     </main>
 </div>
 <script>

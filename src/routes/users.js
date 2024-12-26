@@ -115,7 +115,7 @@ routes.get("/product/:id", async (req, res) => {
         let carts;
         let result = [];
         if (req.session.user) {
-            carts = await cart_model.find({user: req.session.user.id});
+            carts = await cart_model.find({user: req.session.user.id}).sort({createdAt: -1}).populate("product");
             wishlist = await wishlist_model.findOne({product_id: product._id, user_id: req.session.user.id});
             result = await cart_model.aggregate([
                 {
@@ -135,7 +135,7 @@ routes.get("/product/:id", async (req, res) => {
         console.log(err);   
         return res.redirect('/');
     }
-})
+});
 
 routes.post("/signup", controllers.user_signup);
 routes.post("/login", controllers.user_login);

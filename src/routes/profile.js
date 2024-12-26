@@ -73,7 +73,7 @@ routes.get("/orders", auth.authenticateUser, async (req, res) => {
         const error_message = req.session.error || null;
         req.session.error = null;
         const { page = 1, limit = 10} = req.query;
-        const orders = await order_model.find({user_id: req.session.user.id}).sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit));
+        const orders = await order_model.find({user_id: req.session.user.id}).sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit)).populate('payment');
         const returns = await return_model.find({user_id: req.session.user.id});
         const total = await order_model.countDocuments({user_id: req.session.user.id});
         return res.render('user/order_page', {
@@ -98,7 +98,7 @@ routes.get("/change-password", auth.authenticateUser, (req, res) => {
 });
 
 routes.get("/carts", auth.authenticateUser, async (req, res) => {
-    const carts = await cart_model.find({user: req.session.user.id})
+    const carts = await cart_model.find({user: req.session.user.id}).sort({createdAt: -1}).populate("product");
     const result = await cart_model.aggregate([
         {
             $match: { user: new mongoose.Types.ObjectId(req.session.user.id) }
@@ -122,7 +122,24 @@ routes.get("/manage-address", auth.authenticateUser, async (req, res) => {
 routes.get("/wishlists", auth.authenticateUser, async (req, res) => {
     const user = await user_model.findOne({_id: req.session.user.id});
     const wishlists = await wishlist_model.find({user_id: user._id}).populate("product_id", "_id title images");
-    return res.render('user/wishlist_page', {title: "Wishlists", cart_option: "page", wishlists});
+    let carts;
+    let result = [];
+    if (req.session.user) {
+        carts = await cart_model.find({user: req.session.user.id}).sort({createdAt: -1}).populate("product");
+        result = await cart_model.aggregate([
+            {
+                $match: { user: new mongoose.Types.ObjectId(req.session.user.id) }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalPrice: { $sum: { $multiply: ["$price", "$quantity"] } }
+                }
+            }
+        ]);
+    }
+    const total_price = result.length > 0 ? result[0].totalPrice : 0;
+    return res.render('user/wishlist_page', {title: "Wishlists", cart_option: "popup", wishlists, session: req.session, carts, total_price});
 });
 
 routes.get("/referrals", auth.authenticateUser, async (req, res) => {
@@ -144,14 +161,13 @@ routes.get("/checkout", auth.authenticateUser, async (req, res) => {
             }
         }
     ]);
-    let coupon = await coupon_model.findOne({users: {$in: [user._id]}})
+    let coupon = await coupon_model.findOne({users: {$in: [user._id]}}).sort({updatedAt: -1});
     console.log(coupon);
     if (coupon && user.coupon) {
         if (coupon._id.toString() != user.coupon.toString()) {
             coupon = null;
         }
     }
-    console.log(coupon);
     console.log(result)
     const total_price = result.length > 0 ? result[0].totalPrice : 0;
     if (carts && carts.length > 0) {
@@ -176,6 +192,15 @@ routes.get("/order-summary/:id", auth.authenticateUser, async (req, res) => {
     const address = user.addresses.find(v => v._id.toString() == orders[0].address.toString());
     console.log(address)
     return res.render('user/order_summary', {title: "Order Summary", cart_option: "page", payment, orders, time, user, address, currency});
+});
+
+routes.get("/ordered/:id", auth.authenticateUser, async (req, res) => {
+    const {id} = req.params;
+    if (!id) {
+        return res.redirect("/user/orders");
+    }
+    const payment = await payment_model.findOne({_id: id});
+    return res.render('user/order_result', {title: "Order", cart_option: "page", session: req.session, payment});
 });
 
 
@@ -203,5 +228,6 @@ routes.post("/apply-coupon", auth.authenticateUserApi, controllers.apply_coupon)
 routes.post("/remove-coupon", auth.authenticateUserApi, controllers.remove_coupon);
 routes.post("/update-wishlist", auth.authenticateUserApi, controllers.update_wishlist);
 routes.post("/referrals", auth.authenticateUserApi, controllers.get_referrals);
+routes.post("/update-cart", auth.authenticateUserApi, controllers.update_cart_quantity);
 
 module.exports = routes;

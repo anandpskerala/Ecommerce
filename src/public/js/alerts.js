@@ -21,3 +21,15 @@ const alert_success = (message) => {
         }
     });
 }
+
+const alert_warning = (message) => {
+    Swal.fire({
+        icon: "warning",
+        title: "Attention",
+        text: message,
+    }).then(async (res) => {
+        if (res.isConfirmed) {
+            window.location.reload();
+        }
+    });
+}

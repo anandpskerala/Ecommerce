@@ -50,41 +50,43 @@
             </tbody>
         </table>
 
-        <% if (totalPages > 1) { %>
-            <ul class="pagination">
-                <!-- Previous Page -->
-                <% if (currentPage > 1) { %>
-                    <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
-                <% } else { %>
-                    <li><span>&lt;</span></li>
-                <% } %>
+        <ul class="pagination">
+            <!-- Previous Page -->
+            <% if (currentPage > 1) { %>
+                <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
+            <% } else { %>
+                <li><span>&lt;</span></li>
+            <% } %>
         
-                <!-- Page Numbers -->
-                <% for (let i = 1; i <= totalPages; i++) { %>
-                    <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
-                        <%= i %>
-                    </li>
-                <% } %>
+            <!-- Page Numbers -->
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
+                    <%= i %>
+                </li>
+            <% } %>
         
-                <!-- Next Page -->
-                <% if (currentPage < totalPages) { %>
-                    <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
-                <% } else { %>
-                    <li><span>&gt;</span></li>
-                <% } %>
-            </ul>
-        <% } %>
+            <!-- Next Page -->
+            <% if (currentPage < totalPages) { %>
+                <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
+            <% } else { %>
+                <li><span>&gt;</span></li>
+            <% } %>
+        </ul>
     </div>
 </div>
 <script>
     const filter_orders = (state) => {
         let url = new URL(window.location.href);
+        if (url.searchParams.get('page') != null) {
+            url.searchParams.delete('page');
+        }
         if (url.searchParams.get('status') == state) {
             url.searchParams.delete('status');
         } else {
             url.searchParams.set('status', state);
         }
         window.location.href = url.toString();
+        window.reload();
     }
 </script>
 <%- include('../partials/admin/footer.ejs') %>

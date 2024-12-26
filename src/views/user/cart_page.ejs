@@ -9,22 +9,34 @@
         <% if (carts && carts.length > 0) { %> 
             <div class="cart-items">
                 <h2>Your Cart</h2>
-                <% carts.forEach((cart) => { %>
+                <% carts.forEach((cart, index) => { %>
                     <div class="cart-item">
                         <div class="cart-row">
                             <img src="/images/<%= cart.image %>" alt="Images">
                             <div class="cart-details">
                                 <span class="cart-item-name"><%= cart.name %></span>
-                                <div class="cart-row">
-                                    <span>Color:</span>
-                                    <span class="color" style="background-color: <%= cart.color %>;"></span>
-                                    <span>-</span>
+                                <div class="cart-row" style="flex-direction: column; align-items: start;">
+                                    <div class="cart-row" style="gap: 10px; justify-content: left;">
+                                        <span>Color:</span>
+                                        <span class="color" style="background-color: <%= cart.color %>;"></span>
+                                    </div>
                                     <span>Variant : <%= cart.variant %></span>
                                 </div>
                             </div>
                             <span>&#8377;<%= cart.price %></span>
+                            <% let stocks = 0; %>
+                            <% cart.product.variants.forEach((variant) => { %>
+                                <% if (variant.name == cart.variant) { %>
+                                    <% console.log(true) %>
+                                    <% stocks = variant.quantity; %>
+                                <% } %>
+                            <% }); %>
                             <div class="quantity-selector" style="margin: 0;">
-                                QTY: <%= cart.quantity %>
+                                <div class="cart-quantity-controls">
+                                    <button class="cart-minus" id="cart-minus-<%= index %>" aria-label="Decrease quantity" style="border-top-left-radius: 6px; border-bottom-left-radius: 6px; border-right: 1px solid #ccc;">−</button>
+                                    <input type="number" id="cart-quantity-<%= index %>" value="<%= cart.quantity %>" min="1" max="<%= stocks %>" data-value="<%= cart._id %>">
+                                    <button class="cart-plus" id="cart-plus-<%= index %>" aria-label="Increase quantity" style="border-top-right-radius: 6px; border-bottom-right-radius: 6px; border-left: 1px solid #ccc;">+</button>
+                                </div>
                             </div>
                             <button class="remove-btn" onclick="remove_from_cart('<%= cart._id %>')">
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -46,7 +58,7 @@
                 </div>
                 <div class="summary-row">
                     <span><strong>Shipping:</strong></span>
-                    <span>Free</span>
+                    <%- total_price > 1000? '<span>&#8377;500</span>':'<span>Free</span>' %>
                 </div>
                 <div class="summary-row">
                     <span><strong>Tax:</strong></span>
@@ -54,7 +66,7 @@
                 </div>
                 <div class="summary-row total">
                     <span><strong>Total:</strong></span>
-                    <span>&#8377;<%= total_price + 3 %>.00</span>
+                    <span>&#8377;<%= total_price + 3 + (total_price > 1000? 500: 0) %>.00</span>
                 </div>
                 <a href="/user/checkout" class="save-btn">Checkout</button>
                 <a href="/products" class="continue-shopping" style="text-align: center;">Continue Shopping</a>

@@ -353,7 +353,7 @@
     <hr class="divider">
     <div class="coupon-section">
         <div style="display: flex; flex-direction: column; width: 60%;">
-            <input id="coupon-code" type="text" placeholder="Coupon Code" style="width: 100%;" data-validate="required" value="<%= coupon && user.coupon? user.coupon: '' %>" <%- coupon && user.coupon? 'readonly': ''%>>
+            <input id="coupon-code" type="text" placeholder="Coupon Code" style="width: 100%;" data-validate="required" value="<%= coupon && user.coupon? coupon.coupon_code: '' %>" <%- coupon && user.coupon? 'readonly': ''%>>
             <span class="form-error"></span>
         </div>
         <% if (coupon && user.coupon) { %>
@@ -366,22 +366,22 @@
     <hr class="divider">
     <ul>
         <li><span>Subtotal:</span> <span>&#8377;<%= total_price %>.00</span></li>
-        <li><span>Shipping:</span> <span>Free</span></li>
-        <li><span>Tax:</span> <span>&#8377;3.00</span></li>
+        <li><span>Shipping:</span><%- total_price > 1000 ? '<span>+ &#8377;500</span>':'<span>Free</span>' %></li>
+        <li><span>Tax:</span> <span>+ &#8377;3.00</span></li>
         <% let order_amount; %>
         <% if (coupon && user.coupon) { %>
             <% order_amount = Math.ceil(total_price * (coupon.discount / 100)) %>
-            <li><span id="coupon-discount" value="<%= Math.ceil(total_price * (coupon.discount / 100)) %>">Coupon discount : </span><span>-&#8377;<%= Math.ceil(total_price * (coupon.discount / 100)) %>.00</span></li>
+            <li><span class="green" id="coupon-discount" value="<%= Math.ceil(total_price * (coupon.discount / 100)) %>">Coupon discount : </span><span class="green">- &#8377;<%= Math.ceil(total_price * (coupon.discount / 100)) %>.00</span></li>
             <hr class="divider">
-        <li id="price" value="<%= Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) %>"><strong>Total:</strong> <strong>&#8377;<%= Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) %>.00</strong></li>
+        <li id="price" value="<%= Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) + (total_price > 1000? 500: 0) %>"><strong>Total:</strong> <strong>&#8377;<%= Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) + + (total_price > 1000? 500: 0) %>.00</strong></li>
         <% } else { %>
             <% order_amount = Math.ceil(total_price + 3) %>
             <hr class="divider">
-            <li id="price" value="<%= total_price + 3 %>"><strong>Total:</strong> <strong>&#8377;<%=total_price + 3 %>.00</strong></li>
+            <li id="price" value="<%= total_price + 3 + (total_price > 1000? 500: 0) %>"><strong>Total:</strong> <strong>&#8377;<%=total_price + 3 + (total_price > 1000? 500: 0) %>.00</strong></li>
         <% } %>
 
     </ul>
-    <button class="add-to-cart" type="button" onclick='place_order(<%- JSON.stringify(product_in_cart) %>, "")'>Place Order</button>
+    <button class="add-to-cart" type="button" onclick='place_order(`<%- JSON.stringify(product_in_cart) %>`, "", "pending")'>Place Order</button>
     </div>
 </div>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -488,59 +488,6 @@
         editId = null;
     };
 
-    const place_order = async (carts, response) => {
-        if (carts.length <= 0) {
-            alert_error("No products in cart");
-            return;
-        }
-
-        let price = document.getElementById("price").value;
-        let payment_element = document.querySelectorAll("input[name=payment]");
-        const coupon_discount =document.getElementById("coupon-discount");
-        let payment_method = null;
-        let coupon_price;
-        payment_element.forEach((pay_element) => {
-            if (pay_element.checked) {
-                payment_method = pay_element.value;
-            }
-        });
-
-        let address_element = document.querySelectorAll("input[name=address]");
-        let address = null;
-        address_element.forEach((ad_element) => {
-            if (ad_element.checked) {
-                address = ad_element.value;
-            }
-        });
-        if (!payment_method ||!address) {
-            alert_error("Please select payment method and address");
-            return;
-        }
-
-        if (payment_method == "razorpay" && response == "") {
-            return razorpay_payment();
-        }
-
-        if (coupon_discount) {
-            coupon_price = coupon_discount.getAttribute("value");
-        }
-        const req = await fetch('/user/place-order', {
-            method: 'POST',
-            body: new URLSearchParams({carts: JSON.stringify(carts), payment_method, address, price, response, coupon_discount: coupon_price})
-        });
-        if (!req.ok) {
-            alert_error("An error occured. Try again");
-            return;
-        }
-        const res = await req.json();
-        if (res.success) {
-            alert_success(res.message);
-            window.location.href = '/user/orders';
-        } else {
-            alert_error(res.message);
-        }
-    }
-
     const apply_coupon = async () => {
         const coupon_code = document.getElementById('coupon-code');
         if (!handleValidation(coupon_code)) return;
@@ -595,25 +542,91 @@
 
             const options = {
                 key: orderData.order.key, 
-                amount: orderData.order.amount, // Amount in paise
+                amount: orderData.order.amount,
                 currency: 'INR',
                 name: 'APPX Store',
                 description: 'Payment for your order',
                 order_id: orderData.order.id,
                 handler: async function (response) {
                     console.log('Payment successful', response);
-                    await place_order(<%- JSON.stringify(product_in_cart) %>, response);
+                    await place_order(`<%- JSON.stringify(product_in_cart) %>`, orderData.order.id, "success");
                 },
                 theme: {
                     color: '#3399cc',
                 },
+                // modal: {
+                //     ondismiss: async function () {
+                //         console.log(orderData.order.id)
+                //         await place_order(`<%- JSON.stringify(product_in_cart) %>`, orderData.order.id, "failed");
+                //     }
+                // }
             };
 
             const rzp = new Razorpay(options);
             rzp.open();
+            rzp.on('payment.failed', async function (response){
+                await place_order(`<%- JSON.stringify(product_in_cart) %>`, orderData.order.id, "failed");
+            })
         } catch (error) {
             console.error('Error initializing Razorpay:', error);
         }
     };
+
+    const place_order = async (carts, razorpay_order_id, status) => {
+        carts = JSON.parse(carts);
+        if (carts.length <= 0) {
+            alert_error("No products in cart");
+            return;
+        }
+
+        let price = document.getElementById("price").value;
+        let payment_element = document.querySelectorAll("input[name=payment]");
+        const coupon_discount = document.getElementById("coupon-discount");
+        let payment_method = null;
+        let coupon_price;
+        payment_element.forEach((pay_element) => {
+            if (pay_element.checked) {
+                payment_method = pay_element.value;
+            }
+        });
+
+        if (payment_method == "cod" && price > 1000) {
+            return alert_warning("Payment using cash on delivery is not available for orders above ₹ 1000");
+        }
+
+        let address_element = document.querySelectorAll("input[name=address]");
+        let address = null;
+        address_element.forEach((ad_element) => {
+            if (ad_element.checked) {
+                address = ad_element.value;
+            }
+        });
+        if (!payment_method ||!address) {
+            alert_error("Please select payment method and address");
+            return;
+        }
+
+        if (payment_method == "razorpay" && razorpay_order_id == "") {
+            return razorpay_payment();
+        }
+
+        if (coupon_discount) {
+            coupon_price = coupon_discount.getAttribute("value");
+        }
+        const req = await fetch('/user/place-order', {
+            method: 'POST',
+            body: new URLSearchParams({carts: JSON.stringify(carts), payment_method, address, price, status, razorpay_order_id, coupon_discount: coupon_price})
+        });
+        if (!req.ok) {
+            alert_error("An error occured. Try again");
+            return;
+        }
+        const res = await req.json();
+        if (res.success) {
+            window.location.href = `/user/ordered/${res.order_id}`;
+        } else {
+            alert_error(res.message);
+        }
+    }
 </script>
 <%- include('../partials/user/footer.ejs') %>

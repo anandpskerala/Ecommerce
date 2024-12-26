@@ -78,7 +78,9 @@
                     <select name="offer" id="offer">
                         <option value="none" <%- product.offer == "none" ? 'selected' : '' %>>None</option>
                         <% offers.forEach((offer) => { %>
-                            <option value="<%= offer.name %>" <%- product.offer == offer.name ? 'selected' : '' %>><%= offer.name %></option>
+                            <% if (offer.type == "products") { %>
+                                <option value="<%= offer.name %>" <%- product.offer == offer.name ? 'selected' : '' %>><%= offer.name %></option>
+                            <% } %>
                         <% }) %>
                     </select>
                     <span class="form-error" id="offer-error"></span>

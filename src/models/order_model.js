@@ -11,6 +11,10 @@ const Schema = mongoose.Schema({
         ref: 'Product',
         required: true
     },
+    order_number: {
+        type: String,
+        required: false
+    },
     name: {
         type: String,
         required: true
@@ -64,5 +68,17 @@ const Schema = mongoose.Schema({
         required: false
     }
 }, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}});
+
+function generateOrderNumber(prefix = "ORD") {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `${prefix}-${timestamp}-${randomPart}`;
+}
+
+Schema.pre('save', function(next) {
+    if (!this.isNew) return next();
+    this.order_number = generateOrderNumber();
+    next();
+})
 
 module.exports = mongoose.model('Order', Schema);

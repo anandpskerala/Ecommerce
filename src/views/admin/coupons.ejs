@@ -33,7 +33,7 @@
             <tbody id="user-table">
                 <% coupons.forEach((coupon) => { %>
                     <tr>
-                        <td><%= coupon._id %></td>
+                        <td><%= coupon.coupon_code %></td>
                         <td style="color: red;"><%= coupon.discount %>%</td>
                         <td><%= coupon.min_amount %></td>
                         <td><%= time.formatDate(coupon.activation) %></td>
@@ -41,7 +41,7 @@
                         <td><span class="status-<%= coupon.status %>"><%= coupon.status == true ? 'Active': 'Inactive' %></span></td>
                         <td><%= time.formatDate(coupon.createdAt) %></td>
                         <td>
-                            <div class="col">
+                            <div class="col" style="display: flex; flex-direction: row;">
                                 <a class="action-btn action-edit" href="/admin/edit-coupon/<%= coupon._id %>">Edit</a>
                                 <button class="action-btn action-delete" onclick="delete_coupon('<%= coupon._id %>')">Delete</button>
                             </div>
@@ -50,30 +50,28 @@
                 <% }) %>
             </tbody>
         </table>
-        <% if (totalPages > 1) { %>
-            <ul class="pagination">
-                <!-- Previous Page -->
-                <% if (currentPage > 1) { %>
-                    <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
-                <% } else { %>
-                    <li><span>&lt;</span></li>
-                <% } %>
+        <ul class="pagination">
+            <!-- Previous Page -->
+            <% if (currentPage > 1) { %>
+                <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
+            <% } else { %>
+                <li><span>&lt;</span></li>
+            <% } %>
         
-                <!-- Page Numbers -->
-                <% for (let i = 1; i <= totalPages; i++) { %>
-                    <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
-                        <%= i %>
-                    </li>
-                <% } %>
+            <!-- Page Numbers -->
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
+                    <%= i %>
+                </li>
+            <% } %>
         
-                <!-- Next Page -->
-                <% if (currentPage < totalPages) { %>
-                    <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
-                <% } else { %>
-                    <li><span>&gt;</span></li>
-                <% } %>
-            </ul>
-        <% } %>
+            <!-- Next Page -->
+            <% if (currentPage < totalPages) { %>
+                <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
+            <% } else { %>
+                <li><span>&gt;</span></li>
+            <% } %>
+        </ul>
     </div>
 </div>
 <script>

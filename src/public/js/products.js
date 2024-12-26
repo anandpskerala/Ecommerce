@@ -303,9 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         let form = document.getElementById("coupon-form");
         let formdata = new URLSearchParams();
+        let isValid = true;
         Array.from(form.elements).forEach((input) => {
             if (!handleValidation(input)) {
-                return false;
+                isValid = false;
             } else {
                 if (input.id == "expiry" || input.id == "activation") {
                     let date = new Date(input.value).toISOString();
@@ -316,6 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        if (!isValid) return;
         let req = await fetch("/admin/create-coupon", {
             method: "POST",
             body: formdata,
@@ -337,9 +339,10 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         let form = document.getElementById("edit-coupon-form");
         let formdata = new URLSearchParams();
+        let isValid = true;
         Array.from(form.elements).forEach((input) => {
             if (!handleValidation(input)) {
-                return false;
+                isValid = false;
             } else {
                 if (input.id == "expiry" || input.id == "activation") {
                     let date = new Date(input.value).toISOString();
@@ -349,6 +352,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+
+        if (!isValid) return;
 
         let req = await fetch("/admin/edit-coupon", {
             method: "POST",
