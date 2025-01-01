@@ -1,0 +1,129 @@
+<%- include('../partials/user/header.ejs') %>
+<header>
+    <%- include('../partials/user/navbar.ejs') %>
+</header>
+
+<div class="jackpot-container" style="width: 100%; background-color: transparent; box-shadow: none;">
+  <div class="page-name" style="padding: 0; align-self: start;">
+    <a href="/" class="base-page">Home</a>
+    <svg width="6" height="12" viewBox="0 0 6 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M5.81168 5.46731C6.06095 5.74435 6.06303 6.19578 5.81633 6.47571L0.948585 12L0.0460425 10.9967L4.46723 5.97935L0 1.01366L0.89321 0L5.81168 5.46731Z" fill="#71747E"/>
+    </svg>
+    <a href="/user/checkout" class="base-page">Check out</a>
+    <svg width="6" height="12" viewBox="0 0 6 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M5.81168 5.46731C6.06095 5.74435 6.06303 6.19578 5.81633 6.47571L0.948585 12L0.0460425 10.9967L4.46723 5.97935L0 1.01366L0.89321 0L5.81168 5.46731Z" fill="#71747E"/>
+    </svg>
+    <p class="current">Coupons</p> 
+  </div>
+
+   <div class="jackpot-container">
+    <div class="jackpot-header">
+      <h1>🎰 Coupon Machine</h1>
+    </div>
+    <div class="reels-container">
+      <div class="reel" id="reel1">
+        <div class="slot">
+          <div class="symbol">🍎</div>
+          <div class="symbol">🍒</div>
+          <div class="symbol">🍋</div>
+          <div class="symbol">🍇</div>
+          <div class="symbol">⭐</div>
+          <div class="symbol">🍉</div>
+        </div>
+      </div>
+      <div class="reel" id="reel2">
+        <div class="slot">
+          <div class="symbol">🍎</div>
+          <div class="symbol">🍒</div>
+          <div class="symbol">🍋</div>
+          <div class="symbol">🍇</div>
+          <div class="symbol">⭐</div>
+          <div class="symbol">🍉</div>
+        </div>
+      </div>
+      <div class="reel" id="reel3">
+        <div class="slot">
+          <div class="symbol">🍎</div>
+          <div class="symbol">🍒</div>
+          <div class="symbol">🍋</div>
+          <div class="symbol">🍇</div>
+          <div class="symbol">⭐</div>
+          <div class="symbol">🍉</div>
+        </div>
+      </div>
+    </div>
+    <button class="spin-button" onclick="spin()">Spin</button>
+  </div>
+
+    <div id="winner-section" class="result-section hidden">
+        <h2 class="result-title">🏆 Winner</h2>
+        <p class="winner-name">Congratulations, You have won a coupon</p>
+        <p class="winner-prize">Your coupon code is <span id="prize-amount"></span></p>
+    </div>
+
+    <!-- Better Luck Next Time Section -->
+    <div id="better-luck-section" class="result-section hidden">
+        <h2 class="result-title">😔 Better Luck Next Time!</h2>
+        <p class="message">Don’t give up! The next draw could be yours.</p>
+    </div>
+</div>
+
+  <script>
+    const symbols = ["🍎", "🍒", "🍋", "🍇", "⭐", "🍉"];
+    const reels = [document.getElementById("reel1"), document.getElementById("reel2"), document.getElementById("reel3")];
+
+    async function spin() {
+      const spin_req = await fetch("/user/get-spin", {
+        method: "POST",
+      });
+      if (!spin_req.ok) return alert_error("An error occurred");
+      const spin_res = await spin_req.json();
+      
+      if (!spin_res.success) {
+        alert_error(spin_res.message)
+        return;
+      }
+      const results = [];
+      reels.forEach((reel, index) => {
+        const randomIndex = Math.floor(Math.random() * symbols.length);
+        const slot = reel.querySelector(".slot");
+        
+        results.push(randomIndex);
+
+        const fullSpins = 3;
+        const spinDistance = (fullSpins * symbols.length + randomIndex) * 100;
+
+        const spinDuration = 1 + index * 0.1;
+        
+        slot.style.transition = `transform ${spinDuration}s cubic-bezier(0.25, 1, 0.5, 1)`;
+        slot.style.transform = `translateY(-${spinDistance}px)`;
+
+        setTimeout(() => {
+          slot.style.transition = "transform 1.5s cubic-bezier(0.25, 1, 0.5, 1)";
+          slot.style.transform = `translateY(0)`;
+
+          slot.innerHTML = symbols.map((symbol, i) => `<div class="symbol">${symbols[(randomIndex + i) % symbols.length]}</div>`).join('');
+        }, spinDuration * 1000);
+        });
+
+      setTimeout(async () => {
+        //const isJackpot = results.every((val, i, arr) => val === arr[0]);
+        const isJackpot = true;
+        if (isJackpot) {
+          const req = await fetch("/user/get-all-coupons", {
+            method: "POST",
+            body: new URLSearchParams({
+              user: '<%- session.user.id %>'
+            })
+          });
+          if (!req.ok) return alert_error("An error occurred");
+          const res = await req.json();
+          show_loading(res);
+        } else {
+          document.getElementById("better-luck-section").classList.remove("hidden");
+          document.getElementById("winner-section").classList.add("hidden");
+        }
+      }, 2500);
+    }
+  </script>
+<%- include('../partials/user/footer.ejs') %>

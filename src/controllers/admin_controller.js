@@ -157,7 +157,6 @@ const add_product_form = async (req, res) => {
             variant_list.push({name: variant, ...parse_variants[variant]})
         }
         let data = {...body, images: files, variants: variant_list, colors: colors.split(",")};
-        console.log(data)
         const product = new product_model(data);
         await product.save();
         return res.status(200).json({success: true, message: "Product added successfully"});
@@ -313,7 +312,6 @@ const edit_category = async (req, res) => {
             });
         }
 
-        console.log(req.file)
         const data = req.file ? {name: name, description: description, status: status, image: req.file.filename, offer, updatedAt: Date.now()} : {name: name, description: description, status: status, offer, updatedAt: Date.now()};
         await category.updateOne({_id: id}, {$set: data});
         return res.status(200).json({success: true, message: "Category updated successfully"});
@@ -419,7 +417,6 @@ const add_product_image = async (req, res) => {
 const product_options = async (req, res) => {
     try {
         const {id, action} = req.body;
-        console.log(action)
         await product_model.updateOne({_id: id}, {$set: {listed: action}});
         return res.status(200).json({success: true, message: `Product ${action == 'true' ? 'listed': 'unlisted'} successfully`});
     } catch (error) {
@@ -494,7 +491,8 @@ const add_coupon = async (req, res) => {
             activation, 
             expiry, 
             discount, 
-            min_amount, 
+            min_amount,
+            max_amount,
             type,
             status,
             limit
@@ -503,7 +501,7 @@ const add_coupon = async (req, res) => {
         if (exists) {
             return res.json({success: false, message: "Coupon already exists"});
         }
-        const coupon = new coupon_model({ name, description, activation, discount, expiry, type, min_amount, status, limit});
+        const coupon = new coupon_model({ name, description, activation, discount, expiry, type, min_amount, max_amount, status, limit});
         await coupon.save();
         return res.status(201).json({success: true, message: "Coupon added successfully"});
     } catch (error) {
@@ -578,7 +576,6 @@ const load_returns = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const returns = await return_model.find().sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit)).populate('order_id', 'name price image').populate('user_id', 'first_name last_name');
     const total = await return_model.countDocuments();
-    console.log(returns)
     return res.render("admin/return_page", {
         title: "Returns", 
         page: "Returns", 
@@ -612,9 +609,11 @@ const update_return = async (req, res) => {
 };
 
 const get_reports = async (req, res) => {
-    const now = new Date();
-    const start_date = new Date(now.getFullYear(), now.getMonth() + 0, 1);
-    const end_date = new Date(now.getFullYear(), now.getMonth() + 0 + 1, 0)
+    let { start_date, end_date } = req.body;
+    start_date = new Date(start_date);
+    end_date = new Date(end_date);
+    start_date.setUTCHours(0,0,0);
+    end_date.setUTCHours(23,59,59);
     const user_data = await users.aggregate([
         {
             $match: {
@@ -657,6 +656,7 @@ const get_reports = async (req, res) => {
     const sales_data = await payment_model.aggregate([
         {
             $match: {
+                status: "success",
                 createdAt: {
                     $gte: start_date, 
                     $lte: end_date 
@@ -694,6 +694,7 @@ const get_reports = async (req, res) => {
     const order_data = await order_model.aggregate([
         {
             $match: {
+                status: { $in: ["delivered"] },
                 createdAt: {
                     $gte: start_date, 
                     $lte: end_date
@@ -715,7 +716,96 @@ const get_reports = async (req, res) => {
         }
     ])
 
-    const orders = await order_model.find({}).sort({createdAt: -1}).limit(5).populate('user_id');
+    const orders = await order_model.aggregate([
+        {
+            $match: {
+                status: { $in: ["delivered"] },
+                createdAt: {
+                    $gte: start_date, 
+                    $lte: end_date 
+                }
+            }
+        },
+        {
+            $lookup: {
+                from: "products",
+                localField: "product_id",
+                foreignField: "_id",
+                as: "product_info"
+            }
+        },
+        {
+            $unwind: "$product_info"
+        },
+        {
+            $group: {
+                _id: { product_id: "$product_id", product_name: "$product_info.title", category: "$product_info.category", brand: "$product_info.brand" },
+                product_count: { $sum: "$quantity" }
+            }
+        },
+        {
+            $facet: {
+                product_counts: [
+                    {
+                        $project: {
+                            _id: 0,
+                            product_id: "$_id.product_id",
+                            product_name: "$_id.product_name",
+                            product_count: 1
+                        }
+                    },
+                    {
+                        $sort: { product_count: -1 },
+                    },
+                    {
+                        $limit: 10
+                    }
+                ],
+                category_counts: [
+                    {
+                        $group: {
+                            _id: "$_id.category",
+                            category_count: { $sum: "$product_count" }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            category: "$_id",
+                            category_count: 1
+                        },
+                    },
+                    {
+                        $sort: { category_count: -1 },
+                    },
+                    {
+                        $limit: 10
+                    }
+                ],
+                brand_counts: [
+                    {
+                        $group: {
+                            _id: "$_id.brand",
+                            brand_count: { $sum: "$product_count" }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            brand: "$_id",
+                            brand_count: 1
+                        }
+                    },
+                    {
+                        $sort: { brand_count: -1 },
+                    },
+                    {
+                        $limit: 10
+                    }
+                ]
+            }
+        }
+    ]);
     return res.json({success: true, sales_data, user_data, order_data, orders});
 };
 
@@ -811,7 +901,6 @@ const get_category_report = async (start, end) => {
 
 const get_sales_report = async (req, res) => {
     let { method, start = null, end = null } = req.body;
-    console.log(start, end);
     const sales_report =
             method === "product"
                 ? await get_product_report(start, end)
@@ -820,6 +909,53 @@ const get_sales_report = async (req, res) => {
     const payment_report = await payment_model.find({createdAt: {$gte: start, $lte: end}}, {coupon_discount: 1});
     return res.json({sales: sales_report, coupons: payment_report});
 };
+
+
+const get_ledger_book = async (req, res) => {
+    try {
+        const { startDate, endDate } = req.body;
+        const filter = {};
+
+        if (startDate && endDate) {
+            filter.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+        }
+
+        const orders = await order_model.find(filter)
+            .populate('user_id', 'name email')
+            .populate('product_id', 'name price')
+            .populate('payment', 'method status amount');
+
+        const payments = await payment_model.find(filter)
+            .populate('user_id', 'name email')
+            .populate('orders', 'order_number');
+
+        const ledger = orders.map(order => {
+            if (order.payment) {
+                return {
+                    order_number: order.order_number,
+                    user: order.user_id.name,
+                    product: order.product_id.name,
+                    quantity: order.quantity,
+                    price: order.price,
+                    discount: order.discount,
+                    status: order.status,
+                    payment_method: order.payment.method,
+                    payment_status: order.payment.status,
+                    payment_mount: order.payment.amount,
+                    created_at: order.createdAt
+                };
+            }
+        });
+
+        const total_revenue = payments.reduce((sum, payment) => sum + payment.amount, 0);
+        const total_orders = orders.length;
+
+        res.json({ success: true, ledger, summary: { total_revenue, total_orders } });
+    } catch (error) {
+        console.error('Error fetching ledger book:', error);
+        return res.status(500).json({ success: false, message: 'Server Error' });
+    }
+}
 
 module.exports = { 
     admin_login, 
@@ -855,5 +991,6 @@ module.exports = {
     load_returns,
     update_return,
     get_reports,
-    get_sales_report
+    get_sales_report,
+    get_ledger_book
 };

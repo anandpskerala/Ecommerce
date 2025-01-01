@@ -24,18 +24,21 @@
                     <th>Discount</th>
                     <th>Activation Date</th>
                     <th>Expiry Date</th>
+                    <th>Status</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody id="user-table">
                 <% offers.forEach((offer) => { %>
+                    <% let status = offer.status != false ? 'active' : 'blocked' %>
                     <tr>
-                        <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                        <td>
                             <span><%= offer.name %></span>
                         </td>
                         <td><%= offer.discount %>%</td>
                         <td><%= time.formatDate(offer.activation) %></td>
                         <td><%= time.formatDate(offer.expiry) %></td>
+                        <td><span class="status-<%= status %>"><%= status %></span></td>
                         <td>
                             <button class="action-btn action-delete" onclick="delete_offer('<%= offer._id %>')">Delete</button>                               
                         </td>

@@ -1,4 +1,4 @@
-const { name } = require('ejs');
+const cron = require('node-cron');
 const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema({
@@ -35,6 +35,21 @@ const Schema = mongoose.Schema({
         type: Number,
         required: true
     }
-}, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}})
+}, {timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"}});
 
-module.exports = mongoose.model('Offer', Schema);
+const Offer = mongoose.model('Offer', Schema);
+
+cron.schedule('0 * * * *', async () => {
+    try {
+        const now = new Date();
+        const updated = await Offer.updateMany(
+            { expiry: { $lt: now }, status: true },
+            { $set: { status: false } }
+        );
+        console.log(`Updated ${updated.modifiedCount} expired discounts.`);
+    } catch (error) {
+        console.error("Error updating expired discounts:", error);
+    }
+});
+
+module.exports = Offer;

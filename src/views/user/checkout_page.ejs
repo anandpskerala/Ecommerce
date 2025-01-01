@@ -345,10 +345,28 @@
         </div>
     <hr class="divider">
     <div class="radio-group">
-        <h3>Payment Method</h3>
-        <label><input type="radio" name="payment" value="razorpay" checked> RazorPay</label>
+        <h3>Payment Methods</h3>
+        <!-- <label><input type="radio" name="payment" value="razorpay" checked> RazorPay</label>
         <label><input type="radio" name="payment" value="wallet"> Wallet</label>
-        <label><input type="radio" name="payment" value="cod"> Cash On Delivery</label>
+        <label><input type="radio" name="payment" value="cod"> Cash On Delivery</label> -->
+
+        <div class="radio-group-box">
+            <label class="radio-container">
+              <input type="radio" name="payment" value="razorpay" checked>
+              <span class="radio-label">RazorPay</span>
+              <span class="radio-mark"></span>
+            </label>
+            <label class="radio-container">
+              <input type="radio" name="payment" value="wallet">
+              <span class="radio-label">Wallet</span>
+              <span class="radio-mark"></span>
+            </label>
+            <label class="radio-container">
+              <input type="radio" name="payment" value="cod">
+              <span class="radio-label">Cash On Delivery</span>
+              <span class="radio-mark"></span>
+            </label>
+        </div>
       </div>
     <hr class="divider">
     <div class="coupon-section">
@@ -361,8 +379,13 @@
         <% } else { %>
             <button class="button" onclick="apply_coupon()">Apply Coupon</button>
         <% } %>
-
     </div>
+    <!-- <% if (!user.coupon) { %> -->
+        <div style="display: flex; flex-direction: row; gap: 5px; font-size: 14px;">
+            <span>Get a coupoun</span>
+            <a href="/user/get-a-coupon" style="text-decoration: none; color: rgb(0, 85, 255);">Try your luck</a>
+        </div>
+    <!-- <% } %> -->
     <hr class="divider">
     <ul>
         <li><span>Subtotal:</span> <span>&#8377;<%= total_price %>.00</span></li>
@@ -379,12 +402,10 @@
             <hr class="divider">
             <li id="price" value="<%= total_price + 3 + (total_price > 1000? 500: 0) %>"><strong>Total:</strong> <strong>&#8377;<%=total_price + 3 + (total_price > 1000? 500: 0) %>.00</strong></li>
         <% } %>
-
     </ul>
     <button class="add-to-cart" type="button" onclick='place_order(`<%- JSON.stringify(product_in_cart) %>`, "", "pending")'>Place Order</button>
     </div>
 </div>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
     let editId = null;
     const address_form = document.getElementById('address-form');
@@ -538,7 +559,6 @@
                 })
             });
             const orderData = await response.json();
-            console.log(orderData)
 
             const options = {
                 key: orderData.order.key, 
@@ -547,6 +567,14 @@
                 name: 'APPX Store',
                 description: 'Payment for your order',
                 order_id: orderData.order.id,
+                method: {
+                    netbanking: true,
+                    debit: true,
+                    credit: true,
+                    upi: true,
+                    emi: true,
+                    wallet: true,
+                },
                 handler: async function (response) {
                     console.log('Payment successful', response);
                     await place_order(`<%- JSON.stringify(product_in_cart) %>`, orderData.order.id, "success");

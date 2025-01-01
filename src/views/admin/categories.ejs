@@ -23,17 +23,20 @@
                 <tr>
                     <th>Category Name</th>
                     <th>Added</th>
+                    <th>Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody id="user-table">
                 <% categories.forEach((category) => { %>
+                    <% let status = category.status != false ? 'active' : 'blocked' %>
                     <tr>
                         <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
                             <img src="/images/<%= category.image %>" style="width: 44px; height: 44px; border-radius: 6px;" alt="<%= category.name %> logo">
                             <span><%= category.name %></span>
                         </td>
                         <td><%= time.formatDate(category.createdAt) %></td>
+                        <td><span class="status-<%= status %>"><%= category.status == true ? 'Active': 'Inactive' %></span></td>
                         <td>
                             <button class="action-btn action-edit" onclick="edit_category('<%= JSON.stringify(category) %>', '<%= JSON.stringify(offers) %>')">Edit</button>
                             <button class="action-btn action-delete" onclick="delete_category('<%= category._id %>')">Delete</button>                              

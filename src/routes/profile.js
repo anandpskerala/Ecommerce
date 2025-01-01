@@ -91,6 +91,36 @@ routes.get("/orders", auth.authenticateUser, async (req, res) => {
         console.log(err);
         return res.redirect('/error');
     }
+});
+
+routes.get("/pending-orders", auth.authenticateUser, async (req, res) => {
+    try {
+        const error_message = req.session.error || null;
+        req.session.error = null;
+        const { page = 1, limit = 10} = req.query;
+        const orders = await order_model.find({user_id: req.session.user.id}).sort({createdAt: -1}).skip((page - 1) * limit).limit(Number(limit)).populate('payment');
+        const returns = await return_model.find({user_id: req.session.user.id});
+        const total = orders.reduce((acc, curr) => {
+            if (curr.payment && curr.payment.status == "failed") {
+                acc++;
+            }
+            return acc;
+        }, 0)
+        return res.render('user/pending_orders', {
+            title: "Pending Orders", 
+            cart_option: "page", 
+            error_message, 
+            orders, 
+            time,
+            totalPages: Math.ceil(total / limit),
+            currentPage: Number(page),
+            currency,
+            returns
+        });
+    } catch (err) {
+        console.log(err);
+        return res.redirect('/error');
+    }
 })
 
 routes.get("/change-password", auth.authenticateUser, (req, res) => {
@@ -144,7 +174,7 @@ routes.get("/wishlists", auth.authenticateUser, async (req, res) => {
 
 routes.get("/referrals", auth.authenticateUser, async (req, res) => {
     const user = await user_model.findOne({_id: req.session.user.id});
-    return res.render('user/referral_page', {title: "Referrals", cart_option: "page", user});
+    return res.render('user/referral_page', {title: "Referral", cart_option: "page", user});
 });
 
 routes.get("/checkout", auth.authenticateUser, async (req, res) => {
@@ -162,13 +192,11 @@ routes.get("/checkout", auth.authenticateUser, async (req, res) => {
         }
     ]);
     let coupon = await coupon_model.findOne({users: {$in: [user._id]}}).sort({updatedAt: -1});
-    console.log(coupon);
     if (coupon && user.coupon) {
         if (coupon._id.toString() != user.coupon.toString()) {
             coupon = null;
         }
     }
-    console.log(result)
     const total_price = result.length > 0 ? result[0].totalPrice : 0;
     if (carts && carts.length > 0) {
         return res.render('user/checkout_page', {title: "Check Out", cart_option: "page", user, carts, total_price, coupon});
@@ -203,6 +231,10 @@ routes.get("/ordered/:id", auth.authenticateUser, async (req, res) => {
     return res.render('user/order_result', {title: "Order", cart_option: "page", session: req.session, payment});
 });
 
+routes.get("/get-a-coupon", auth.authenticateUser, (req, res) => {
+    return res.render('user/random_coupon', {title: "Get Coupon", cart_option: "page", session: req.session});
+});
+
 
 routes.post("/send-otp", controllers.send_otp);
 routes.post("/verify-otp", controllers.verify_otp);
@@ -229,5 +261,7 @@ routes.post("/remove-coupon", auth.authenticateUserApi, controllers.remove_coupo
 routes.post("/update-wishlist", auth.authenticateUserApi, controllers.update_wishlist);
 routes.post("/referrals", auth.authenticateUserApi, controllers.get_referrals);
 routes.post("/update-cart", auth.authenticateUserApi, controllers.update_cart_quantity);
+routes.post("/get-all-coupons", auth.authenticateUserApi, controllers.get_all_coupouns);
+routes.post("/get-spin", auth.authenticateUserApi, controllers.validate_spin);
 
 module.exports = routes;

@@ -23,23 +23,22 @@
                     <th>Coupon code</th>
                     <th>Discount</th>
                     <th>Min</th>
-                    <th>Start</th>
                     <th>Expiry</th>
-                    <th>Status</th>
                     <th>Created</th>
+                    <th>Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody id="user-table">
                 <% coupons.forEach((coupon) => { %>
+                    <% let status = coupon.status != false ? 'active' : 'blocked' %>
                     <tr>
                         <td><%= coupon.coupon_code %></td>
                         <td style="color: red;"><%= coupon.discount %>%</td>
                         <td><%= coupon.min_amount %></td>
-                        <td><%= time.formatDate(coupon.activation) %></td>
                         <td><%= time.formatDate(coupon.expiry) %></td>
-                        <td><span class="status-<%= coupon.status %>"><%= coupon.status == true ? 'Active': 'Inactive' %></span></td>
                         <td><%= time.formatDate(coupon.createdAt) %></td>
+                        <td><span class="status-<%= status %>"><%= status %></span></td>
                         <td>
                             <div class="col" style="display: flex; flex-direction: row;">
                                 <a class="action-btn action-edit" href="/admin/edit-coupon/<%= coupon._id %>">Edit</a>

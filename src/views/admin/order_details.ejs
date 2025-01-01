@@ -12,7 +12,7 @@
         <div class="row" style="align-items: center; gap: 80px;">
             <img src="/images/<%= order.image %>" alt="Order image" style="width: 100px; height: 100px; object-fit: cover;">
             <div class="col">
-                <span><strong><%= order.name %></strong></span>
+                <span style="max-width: 360px;"><strong><%= order.name %></strong></span>
                 <span><strong>Price : &#8377;<%= currency.parse_currency(order.price, 2) %> </strong></span>
                 <span><strong>QTY : <%= order.quantity %></strong></span>
                 <span class="row" style="align-items: center; gap: 10px;">
@@ -27,6 +27,12 @@
                     <strong>Status : </strong>
                     <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
                 </span>
+                <% if (order.payment) { %>
+                    <span>
+                        <strong>Payment Status : </strong>
+                        <%= order.payment.status.charAt(0).toUpperCase() + order.payment.status.slice(1) %>
+                    </span>
+                <% } %>
             </div>
             <div class="col" style="gap: 20px;">
                 <span>

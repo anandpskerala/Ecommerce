@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const colorElement = document.getElementById('colors');
     const selectedColors = new Set();
     let cropper;
+    const variantColorStock = {}; 
     const MAX_FILE_SIZE = 2 * 1024 * 1024;
     const imageArray = [];
     let currentFileIndex = 0;
@@ -223,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
             method: "POST",
             body: formdata,
         });
-        if (!req.ok) return alert_error("An error has occurred. Please try again.");
+        // if (!req.ok) return alert_error("An error has occurred. Please try again.");
         let res = await req.json();
         if (res.success) {
             alert_success(res.message)
@@ -249,14 +250,11 @@ document.addEventListener('DOMContentLoaded', () => {
             method: "POST",
             body: formdata,
         });
-        if (!req.ok) return alert_error("An error has occurred. Please try again.");
+        // if (!req.ok) return alert_error("An error has occurred. Please try again.");
         let res = await req.json();
         if (res.success) {
             alert_success(res.message)
-            setTimeout(() => {
-                window.location.href = "/admin/categories"
-            }, 1000);
-            
+            window.location.href = "/admin/categories"   
         } else {
             alert_error(res.message)
         }
@@ -286,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
             method: "POST",
             body: formdata,
         });
-        if (!req.ok) return alert_error("An error has occurred. Please try again.");
+        // if (!req.ok) return alert_error("An error has occurred. Please try again.");
         let res = await req.json();
         if (res.success) {
             alert_success(res.message)
@@ -305,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let formdata = new URLSearchParams();
         let isValid = true;
         Array.from(form.elements).forEach((input) => {
+            console.log(input)
             if (!handleValidation(input)) {
                 isValid = false;
             } else {
@@ -322,14 +321,11 @@ document.addEventListener('DOMContentLoaded', () => {
             method: "POST",
             body: formdata,
         });
-        if (!req.ok) return alert_error("An error has occurred. Please try again.");
+        // if (!req.ok) return alert_error("An error has occurred. Please try again.");
         let res = await req.json();
         if (res.success) {
             alert_success(res.message)
-            setTimeout(() => {
-                window.location.href = "/admin/coupons"
-            }, 1000);
-            
+            window.location.href = "/admin/coupons"
         } else {
             alert_error(res.message)
         }
@@ -359,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
             method: "POST",
             body: formdata,
         });
-        if (!req.ok) return alert_error("An error has occurred. Please try again.");
+        // if (!req.ok) return alert_error("An error has occurred. Please try again.");
         let res = await req.json();
         if (res.success) {
             alert_success(res.message)
@@ -373,57 +369,132 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
     const variant_elements = document.querySelectorAll(".variant-option");
+    // variant_elements.forEach((element) => {
+    //     element.addEventListener("click", async (e) => {
+    //         e.preventDefault();
+    //         let tbody = document.getElementById("variants");
+    //         let data = tbody.value != "" ? JSON.parse(tbody.value): {};
+    //         const { value: formValues } = await Swal.fire({
+    //             title: "Add Variant",
+    //             html: `
+    //             <form id="variant-form" style="display: flex; flex-direction: column; width: 100%; align-items: center; gap: 20px;">
+    //                 <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+    //                     <label for="name" class="form-label">Variant Name</label>
+    //                     <input id="name" name="name" class="swal2-input" value="${e.target.title}" data-validate="required|min:2" disabled>
+    //                 </div>
+    //                 <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+    //                     <label for="price" class="form-label">Price</label>
+    //                     <input id="price" type="number" name="price" class="swal2-input" value="${data[e.target.title]? data[e.target.title].price: ''}" data-validate="required|nonegative">
+    //                     <span class="form-error"></span>
+    //                 </div>
+    //                 <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+    //                     <label for="quantity" class="form-label">Quantity</label>
+    //                     <input id="quantity" type="number" name="quantity" class="swal2-input" value="${data[e.target.title]? data[e.target.title].quantity: ''}" data-validate="required|nonegative">
+    //                     <span class="form-error"></span>
+    //                 </div>
+    //             </form>
+    //             `,
+    //             focusConfirm: false,
+    //             showCancelButton: true,
+    //             confirmButtonText: "Save",
+    //             cancelButtonColor: 'Crimson',
+    //             preConfirm: () => {
+    //                 let form = document.getElementById('variant-form');
+    //                 let res = {...data};
+    //                 let isValid = true;
+
+    //                 if (form) {
+    //                     Array.from(form.elements).forEach((input) => {
+    //                         if (!handleValidation(input)) {
+    //                             isValid = false;
+    //                         } else {
+    //                             res[input.id] = input.value;
+    //                         }
+    //                     })
+    //                 }
+    //                 return isValid? res : false;
+    //             }
+    //         });
+
+    //         if (formValues) {
+    //             data[formValues.name] = {price: formValues.price, quantity: formValues.quantity};
+    //             tbody.value = JSON.stringify(data)
+    //         }
+    //     })
+    // });
+
+
+
+
+
     variant_elements.forEach((element) => {
         element.addEventListener("click", async (e) => {
             e.preventDefault();
-            let tbody = document.getElementById("variants");
-            let data = tbody.value != "" ? JSON.parse(tbody.value): {};
+    
+            const variantName = e.target.title;
+    
+            // Initialize data for variant if not present
+            if (!variantColorStock[variantName]) {
+                variantColorStock[variantName] = {};
+            }
+    
+            let variantData = variantColorStock[variantName]; 
+    
+            // Step 1: Allow user to select a color
+            const { value: selectedColor } = await Swal.fire({
+                title: `Select a Color for Variant: ${variantName}`,
+                input: 'select',
+                inputOptions: {
+                    black: "Black",
+                    gold: "Gold",
+                    green: "Green",
+                    blue: "Blue",
+                },
+                inputValue: Object.keys(variantData)[0] || '', // Preselect first color if available
+                showCancelButton: true,
+                confirmButtonText: "Next",
+            });
+    
+            if (!selectedColor) return; // Exit if no color selected
+    
+            // Step 2: Prompt user to add/update price and quantity for the color
+            const colorDetails = variantData[selectedColor] || { price: '', quantity: '' };
             const { value: formValues } = await Swal.fire({
-                title: "Add Variant",
+                title: `Add Details for ${selectedColor} (${variantName})`,
                 html: `
-                <form id="variant-form" style="display: flex; flex-direction: column; width: 100%; align-items: center; gap: 20px;">
-                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
-                        <label for="name" class="form-label">Variant Name</label>
-                        <input id="name" name="name" class="swal2-input" value="${e.target.title}" data-validate="required|min:2" disabled>
-                    </div>
-                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
-                        <label for="price" class="form-label">Price</label>
-                        <input id="price" type="number" name="price" class="swal2-input" value="${data[e.target.title]? data[e.target.title].price: ''}" data-validate="required|nonegative">
-                        <span class="form-error"></span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
-                        <label for="quantity" class="form-label">Quantity</label>
-                        <input id="quantity" type="number" name="quantity" class="swal2-input" value="${data[e.target.title]? data[e.target.title].quantity: ''}" data-validate="required|nonegative">
-                        <span class="form-error"></span>
-                    </div>
-                </form>
+                    <form id="color-details-form" style="display: flex; flex-direction: column; gap: 10px;">
+                        <label>Price</label>
+                        <input id="price" type="number" class="swal2-input" value="${colorDetails.price}" data-validate="required|nonegative">
+                        
+                        <label>Quantity</label>
+                        <input id="quantity" type="number" class="swal2-input" value="${colorDetails.quantity}" data-validate="required|nonegative">
+                    </form>
                 `,
                 focusConfirm: false,
                 showCancelButton: true,
                 confirmButtonText: "Save",
-                cancelButtonColor: 'Crimson',
                 preConfirm: () => {
-                    let form = document.getElementById('variant-form');
-                    let res = {...data};
-                    let isValid = true;
-
-                    if (form) {
-                        Array.from(form.elements).forEach((input) => {
-                            if (!handleValidation(input)) {
-                                isValid = false;
-                            } else {
-                                res[input.id] = input.value;
-                            }
-                        })
+                    const form = document.getElementById("color-details-form");
+                    const price = form.querySelector("#price").value;
+                    const quantity = form.querySelector("#quantity").value;
+    
+                    if (!price || price < 0 || !quantity || quantity < 0) {
+                        Swal.showValidationMessage("Please provide valid price and quantity.");
+                        return false;
                     }
-                    return isValid? res : false;
-                }
+    
+                    return { price, quantity };
+                },
             });
-
+    
             if (formValues) {
-                data[formValues.name] = {price: formValues.price, quantity: formValues.quantity};
-                tbody.value = JSON.stringify(data)
+                // Step 3: Update central data structure
+                variantData[selectedColor] = formValues;
+                variantColorStock[variantName] = variantData;
+    
+                // Optionally update the hidden input to store the full structure
+                document.getElementById("variants").value = JSON.stringify(variantColorStock);
             }
-        })
+        });
     });
 });

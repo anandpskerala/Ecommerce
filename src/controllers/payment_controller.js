@@ -1,6 +1,7 @@
 const razorpay = require("../utils/razorpay");
 const dotenv = require('dotenv');
 const crypto = require('crypto');
+const payment_model = require('../models/payment_model');
 
 dotenv.config();
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
@@ -48,4 +49,22 @@ const verify_payment = async (req, res) => {
     }
 };
 
-module.exports = { create_payment, verify_payment };
+const retry_payment = async (req, res) => {
+  const { order_id } = req.body;
+  if (!order_id) {
+    return res.status(400).json({ success: false, message: "Invalid request" });
+  }
+  const order = await razorpay.orders.fetch(order_id);
+  return res.status(200).json({
+    success: true,
+    order: { key: RAZORPAY_KEY_ID, ...order },
+  });
+};
+
+const set_payment_status = async (req, res) => {
+  const { id, status} = req.body;
+  const payment = await payment_model.updateOne({_id: id}, {status: status});
+  return res.status(200).json({success: true, message: "Payment status updated", order_id: id});
+};
+
+module.exports = { create_payment, verify_payment, retry_payment, set_payment_status };

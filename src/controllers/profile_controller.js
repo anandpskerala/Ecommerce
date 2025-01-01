@@ -15,6 +15,7 @@ const wishlist_model = require('../models/wishlist_model');
 const wallet_model = require('../models/wallet_model');
 const return_model = require('../models/return_model');
 const referral_model = require('../models/referral_model');
+const spin_model = require('../models/spin_model');
 
 const time = require('../utils/time');
 const currency = require('../utils/currency');
@@ -402,9 +403,14 @@ const add_order = async (req, res) => {
                 return res.json({ success: false, message: `Insufficient quantity in stock for cart item` });
             }
 
+            console.log(product.offer)
             if (product.offer && product.offer !== "none") {
                 const offer = await offer_model.findOne({ name: product.offer });
-                variant.price = product_cart.quantity * variant.price - Math.ceil(variant.price * offer.discount / 100);
+                if (!offer) {
+                    variant.price = product_cart.quantity * variant.price;
+                } else {
+                    variant.price = product_cart.quantity * variant.price - Math.ceil(variant.price * offer.discount / 100);
+                }
             } else {
                 variant.price = product_cart.quantity * variant.price;
             }
@@ -670,7 +676,7 @@ const get_referrals = async (req, res) => {
     const referrals = await referral_model.findOne({ user: user._id }).populate('referred_users');
     const referral_link = `${req.protocol}://${req.get('host')}/signup?refer=${referrals.referral_code}`;
     return res.json({ referral_code: referrals.referral_code, referral_link, referred_users: referrals.referred_users, amount: referrals.amount_earned });
-}
+};
 
 const update_cart_quantity = async (req, res) => {
     const {cart_id, quantity} = req.body;
@@ -681,6 +687,43 @@ const update_cart_quantity = async (req, res) => {
     await cart_model.updateOne({_id: cart_id}, {$set: {quantity: quantity}})
     return res.json({ success: true, message: "Cart quantity updated successfully" });
 };
+
+const get_all_coupouns = async (req, res) => {
+    try {
+        const {user} = req.body;
+        const coupons = await coupon_model.find({
+            status: true, 
+            limit: {$gt: 0},
+            expiry: {$gt: new Date()},
+            users: {$nin: [user]}
+        });
+        return res.json({ success: true, coupons });
+    } catch (error) {
+        console.error("Error in coupons" + error)
+        return res.json({ success: false, message: "Error fetching coupons" });
+    }
+};
+
+const validate_spin = async (req, res) => {
+    const user_id = req.session.user.id;
+    const spins = await spin_model.findOne({user_id});
+    if (spins) {
+        return res.json({ success: false, message: `You can spin again on ${spins.expires.toLocaleString('en-IN', {
+            weekday: 'long',
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: true
+        })}`});
+    }
+    await spin_model.create({
+        user_id
+    });
+    return res.json({ success: true, message: "Spin registered"});
+}
 
 
 module.exports= { 
@@ -708,5 +751,7 @@ module.exports= {
     update_wishlist,
     load_wallet,
     get_referrals,
-    update_cart_quantity
+    update_cart_quantity,
+    get_all_coupouns,
+    validate_spin,
 }; 

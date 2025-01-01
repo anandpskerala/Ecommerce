@@ -6,52 +6,76 @@
     <%- include('../partials/admin/sidebar.ejs') %>
     <div class="cover" style="background-color: transparent;">
       <div class="dashboard-container">
-        <div class="row">
-          <div class="chart-container">
-            <div class="title">Monthly Sales</div>
-            <div class="sales" id="sales-amount"></div>
-            <canvas id="salesChart"></canvas>
-          </div>
-
-          <div class="chart-container">
-            <div class="title">Monthly Users</div>
-            <div class="sales" id="user-count"></div>
-            <canvas id="userChart"></canvas>
-          </div>
-
-          <div class="chart-container">
-            <div class="title">Monthly Orders</div>
-            <div class="sales" id="order-count"></div>
-            <canvas id="orderChart"></canvas>
+        <div class="filter-section">
+          <div class="dropdown-container">
+            <button class="filter-button" onclick="toggleDropdown()">
+              Filter
+              <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16px" height="16px"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>
+            </button>
+              <div class="dropdown-menu" id="dropdownMenu">
+                  <div class="dropdown-item" onclick="applyFilter('today')">Today</div>
+                  <div class="dropdown-item" onclick="applyFilter('week')">Week</div>
+                  <div class="dropdown-item" onclick="applyFilter('month')">Month</div>
+                  <div class="dropdown-item" onclick="applyFilter('year')">Year</div>
+              </div>
           </div>
         </div>
-
-        <div class="chart-container">
-          <div class="cover-head">
-            <h2>Recent Orders</h2>
-            <a href="/admin/orders" class="button">View all</a>
+        <div class="stats-container">
+          <div class="dashboard-card">
+              <div class="icon">📦</div>
+              <div class="card-title"><span id="order-dated">Today</span>'s Sales</div>
+              <div class="card-value" id="order-count">0</div>
+              <div class="card-description">We have sold <span id="semi-orders">0</span> items</div>
           </div>
-          <table>
-            
-            <thead style="background-color: transparent; border: none;">
-              <tr>
-                <th>Order</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th>Total</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="order-table">
+  
+          <div class="dashboard-card">
+              <div class="icon">💰</div>
+              <div class="card-title"><span id="revenue-dated">Today</span>'s Revenue</div>
+              <div class="card-value" id="sales-amount">₹0</div>
+              <div class="card-description">Profit made so far</div>
+          </div>
 
-            </tbody>
-          </table>
+          <div class="dashboard-card">
+              <div class="icon">👥</div>
+              <div class="card-title">Users Count</div>
+              <div class="card-value" id="user-count">0</div>
+              <div class="card-description">Total users signed up</div>
+          </div>
+      </div>
+      <div class="stats-container">
+        <div class="dashboard-card" style="width: 100%;">
+          <canvas id="salesChart"></canvas>
+        </div>
+      </div>
+
+      <div class="stats-container">
+        <div class="dashboard-card" style="width: 100%;">
+          <div class="card-title">Top Selling Products</div>
+          <div id="top-product"></div>
+        </div>
+      </div>
+
+      <div class="stats-container">
+        <div class="dashboard-card" style="width: 49%;">
+          <div class="card-title">Top Selling Categories</div>
+          <div id="top-category"></div>
+        </div>
+
+        <div class="dashboard-card" style="width: 49%;">
+          <div class="card-title">Top Selling Brands</div>
+          <div id="top-brands"></div>
         </div>
       </div>
     </div>
+  </div>
 </div>
 
 <script>
+  let start_date = new Date();
+  let end_date = new Date();
+  let filter_type = 'today';
+  let chart;
+
   const get_random_color = () => {
     const r = Math.floor(Math.random() * 256); 
     const g = Math.floor(Math.random() * 256);
@@ -62,41 +86,92 @@
 
   const get_data_from_server = async () => {
     try {
-      const response = await fetch('/admin/get-reports', {
-        method: 'POST'
-      });
-      return await response.json();
+        const response = await fetch('/admin/get-reports', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                start_date: start_date.toISOString(),
+                end_date: end_date.toISOString(),
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        return await response.json();
     } catch (error) {
-      console.error(error);
-      return null;
+        console.error('Error fetching data from server:', error);
+        return null;
     }
   };
   
-  const parse_date = (raw_data) => {
-    const labels = raw_data.map(data => {
-      const month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      return `${month_names[data.month - 1]} ${data.year}`;
-    });
-    return labels;
+  function getMonthName(monthIndex) {
+        const months = [
+            "Jan", "Feb", "Mar", "Apr", "May", "June", 
+            "July", "Aug", "Sept", "Oct", "Nov", "Dec"
+        ];
+        return months[monthIndex];
   }
+
+
   const plot_sales_data = async () => {
     let raw_data = await get_data_from_server();
     console.log(raw_data)
+
+    if (chart) {
+      chart.destroy();
+    }
+
+    let groupedData = [];
+
+    raw_data.sales_data.forEach(item => {
+        const date = new Date(item.date);
+        let groupKey = "";
+
+        if (filter_type === "day" || filter_type == "week" || filter_type === "month" ) {
+            groupKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+        }
+
+        if (filter_type == "year") {
+            groupKey = `${getMonthName(date.getMonth())}`;
+        }
+        let group = groupedData.find(group => group.key === groupKey);
+
+        if (group) {
+            group.total_amount += item.total_amount;
+        } else {
+            groupedData.push({
+                key: groupKey,
+                total_amount: item.total_amount
+            });
+        }
+    });
+
+
     const ctx = document.getElementById('salesChart').getContext('2d');
     const color = get_random_color();
+    let total_amounts;
+    if (filter_type === "year") {
+      total_amounts = [raw_data.sales_data.reduce((sum, item) => sum + item.total_amount, 0)];
+    } else {
+      total_amounts = raw_data.sales_data.map(data => data.total_amount);
+    }
     const data = {
-      labels: raw_data.sales_data.map(data => data.date),
-      datasets: [{
-        label: 'Daily Sales',
-        data: raw_data.sales_data.map(data => data.total_amount),
-        backgroundColor: color,
-        borderColor: color,
-        borderWidth: 1,
-        borderRadius: 5,
-      }],
+        labels: groupedData.map((data) => data.key),
+        datasets: [{
+          label: 'Sales',
+          data: total_amounts,
+          backgroundColor: color,
+          borderColor: color,
+          borderWidth: 1,
+          borderRadius: 5,
+        }],
     };
 
-    new Chart(ctx, {
+    chart = new Chart(ctx, {
       type: 'bar',
       data: data,
       options: {
@@ -122,102 +197,124 @@
     const total_amount = raw_data.sales_data.reduce((acc, cur) => {
       return acc + cur.total_amount;
     }, 0)
-    sales_amount.innerHTML = `&#8377; ${total_amount}`;
+    sales_amount.innerHTML = `${formatCurrency(total_amount)}`;
     plot_user_data(raw_data);
     plot_order_data(raw_data);
-    if (raw_data.orders && raw_data.orders.length > 0) {
-      plot_orders(raw_data.orders)
-    }
+    raw_data.orders && raw_data.orders.length > 0 ? plot_tops(raw_data.orders[0]): '';
   };
 
   const plot_user_data = (raw_data) => {
-    const ctx = document.getElementById('userChart').getContext('2d');
-    const data = {
-      labels: raw_data.user_data.map((data, index) => `Week ${index + 1}`),
-      datasets: [{
-        label: 'Users',
-        data: raw_data.user_data.map(data => data.user_count),
-        backgroundColor: get_random_color(),
-        fill: false
-      }],
-    };
-
-    new Chart(ctx, {
-      type: 'line',
-      data: data,
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            grid: {
-              display: false,
-            },
-          },
-          y: {
-            beginAtZero: true,
-            grid: {
-              display: false,
-            },
-          }
-        },
-      }
-    });
-
     const user_element = document.getElementById('user-count');
     const total_user = raw_data.user_data.reduce((acc, cur) => {
       return acc + cur.user_count;
     }, 0)
-    user_element.textContent = `No of users : ${total_user}`;
+    user_element.textContent = `${total_user}`;
   };
 
 
   const plot_order_data = (raw_data) => {
-    const ctx = document.getElementById('orderChart').getContext('2d');
-    const data = {
-      labels: raw_data.order_data.map(order => `${order.status.charAt(0).toUpperCase()}${order.status.slice(1)}`),
-      datasets: [{
-        label: 'Orders',
-        data: raw_data.order_data.map(order => order.order_count),
-        backgroundColor: raw_data.order_data.map(order => get_random_color()),
-        borderWidth: 1,
-        borderRadius: 5,
-      }],
-      hoverOffset: 4,
-    };
-    new Chart(ctx, {
-      type: 'doughnut',
-      data: data,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'top',
-          },
-        },
-      },
-      cutout: '70%'
-    })
     const order_element = document.getElementById('order-count');
+    const semi_orders = document.getElementById('semi-orders');
     const total_orders = raw_data.order_data.reduce((acc, cur) => {
       return acc + cur.order_count;
     }, 0)
-    order_element.textContent = `Total Orders : ${total_orders}`;
+    order_element.textContent = `${total_orders}`;
+    semi_orders.textContent = `${total_orders}`;
   };
 
-  const plot_orders = (raw_data) => {
-    const orders_table = document.getElementById('order-table');
-    raw_data.forEach(order => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td style="display: flex; max-width: 500px">${order.name}</td>
-        <td>${order.user_id.first_name} ${order.user_id.last_name}</td>
-        <td>${formatDate(order.createdAt)}</td>
-        <td>&#8377;${order.price}</td>
-        <td class="state-button ${order.status} label">${order.status.charAt(0).toUpperCase()}${order.status.slice(1)}</td>
-      `;
-      orders_table.appendChild(row);
+  const plot_tops = (raw_data) => {
+    console.log(raw_data)
+    const top_products = document.getElementById('top-product');
+    const top_categories = document.getElementById('top-category');
+    const top_brands = document.getElementById('top-brands');
+    top_products.innerHTML = "";
+    top_categories.innerHTML = "";
+    top_brands.innerHTML = "";
+
+    const product_ul = document.createElement('ul');
+    product_ul.classList.add('top-lists');
+    raw_data.product_counts.forEach(product => {
+      const product_li = document.createElement('li');
+      product_li.classList.add('top-item');
+      product_li.innerHTML = `<span class="product-name">${product.product_name}</span> 
+      <span class="product-count">${product.product_count}</span>`
+      product_ul.appendChild(product_li);
     });
+    top_products.appendChild(product_ul);
+
+    const category_ul = document.createElement('ul');
+    category_ul.classList.add('top-lists');
+    raw_data.category_counts.forEach(category => {
+      const category_li = document.createElement('li');
+      category_li.classList.add('top-item');
+      category_li.innerHTML = `<span class="category-name">${category.category}</span> 
+      <span class="category-count">${category.category_count}</span>`
+      category_ul.appendChild(category_li);
+    });
+    top_categories.appendChild(category_ul);
+
+    const brand_ul = document.createElement('ul');
+    brand_ul.classList.add('top-lists');
+    raw_data.brand_counts.forEach(brand => {
+      const brand_li = document.createElement('li');
+      brand_li.classList.add('top-item');
+      brand_li.innerHTML = `<span class="brand-name">${brand.brand}</span> 
+      <span class="brand-count">${brand.brand_count}</span>`
+      brand_ul.appendChild(brand_li);
+    });
+    top_brands.appendChild(brand_ul);
   }
+
+  function toggleDropdown() {
+      const dropdown = document.getElementById('dropdownMenu');
+      const arrowIcon = document.querySelector('.arrow-icon');
+      dropdown.classList.toggle('active');
+      arrowIcon.classList.toggle('rotate');
+  }
+
+  function applyFilter(filterType) {
+      if (filterType == "today") {
+        start_date = new Date();
+        end_date = new Date();
+        start_date.setUTCHours(0, 0, 0);
+        end_date.setUTCHours(23, 59, 59);
+        document.getElementById("order-dated").textContent = "Today";
+        document.getElementById("revenue-dated").textContent = "Today";
+        filter_type = "today";
+      } else if (filterType == "week") {
+        start_date = new Date();
+        let day = start_date.getDay() || 7;
+        if (day !== 1) start_date.setHours(-24 * (day - 1));
+        start_date.setHours(0, 0, 0);
+        document.getElementById("order-dated").textContent = "This Week";
+        document.getElementById("revenue-dated").textContent = "This Week";
+        filter_type = "week";
+      } else if (filterType == "month") {
+        start_date = new Date();
+        start_date.setDate(1);
+        start_date.setHours(0, 0, 0);
+        document.getElementById("order-dated").textContent = "This Month";
+        document.getElementById("revenue-dated").textContent = "This Month";
+        filter_type = "month";
+      } else if  (filterType == "year") {
+        start_date = new Date();
+        start_date.setMonth(0, 1);
+        start_date.setHours(0, 0, 0);
+        document.getElementById("order-dated").textContent = "This Year";
+        document.getElementById("revenue-dated").textContent = "This Year";
+        filter_type = "year";
+      }
+      plot_sales_data();
+      toggleDropdown();
+  }
+
+  document.addEventListener('click', function (event) {
+      const dropdown = document.getElementById('dropdownMenu');
+      const filterButton = document.querySelector('.filter-button');
+      if (!dropdown.contains(event.target) && !filterButton.contains(event.target)) {
+          dropdown.classList.remove('active');
+      }
+  });
 
   plot_sales_data();
 </script>

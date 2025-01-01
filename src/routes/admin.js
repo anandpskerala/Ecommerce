@@ -74,7 +74,7 @@ routes.get("/orders", auth.authenticateAdmin, controller.load_orders);
 
 routes.get("/order/:id", auth.authenticateAdmin, async (req, res) => {
     const {id} = req.params;
-    const order = await order_model.findOne({_id: id}).populate('user_id', 'first_name last_name email addresses phone_number');
+    const order = await order_model.findOne({_id: id}).populate('user_id', 'first_name last_name email addresses phone_number').populate('payment');
     const address = order.user_id.addresses.find(v => v._id.toString() == order.address.toString());
     return res.render("admin/order_details", {title: "Orders", page: "Order Details", order, time, address, currency});
 })
@@ -111,6 +111,11 @@ routes.get("/sales-report", auth.authenticateAdmin, (req, res) => {
     return res.render("admin/sales_report", {title: "Sales Report", page: "Sales Report"});
 });
 
+routes.get("/ledger-book", auth.authenticateAdmin, (req, res) => {
+    return res.render("admin/ledger_book", {title: "Ledger Book", page: "Ledger Book"});
+});
+
+
 routes.get("/returns", auth.authenticateAdmin, controller.load_returns);
 routes.post("/update-return", auth.authenticateAdminApI, controller.update_return);
 
@@ -138,6 +143,7 @@ routes.post("/create-coupon", auth.authenticateAdminApI, controller.add_coupon);
 routes.post("/edit-coupon", auth.authenticateAdminApI, controller.edit_coupon_form);
 routes.delete("/coupons/:id", auth.authenticateAdminApI, controller.delete_coupon);
 routes.post("/get-reports", auth.authenticateAdminApI, controller.get_reports);
-routes.post("/sales-reports", controller.get_sales_report);
+routes.post("/sales-reports", auth.authenticateAdminApI, controller.get_sales_report);
+routes.post("/load-ledger-book", auth.authenticateAdminApI, controller.get_ledger_book);
 
 module.exports = routes;

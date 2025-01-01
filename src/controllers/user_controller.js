@@ -281,18 +281,20 @@ const get_products = async (req, res) => {
         const {search = ""} = req.query;
         const { sort = null } = req.body;
         let filters = []
-        console.log(sort)
         if (req.body.filters && req.body.filters.length > 0)  {
             req.body.filters.forEach(filter => {
-                filters.push({[filter.type]: filter.name});
+                if (filter.type == "variants") {
+                    filters.push({['variants.name']: filter.name});
+                } else {
+                    filters.push({[filter.type]: filter.name});
+                }
             });
         }
-        console.log(filters)
         let products;
         if (sort) {
             products = await product_model.aggregate([
                 {$unwind: '$variants'},
-                {$match: {title: {$regex: new RegExp(`^${search}`, "i")}, ...(filters.length > 0 ? { $and: filters } : {})}},
+                {$match: {title: {$regex: new RegExp(`.*${search}.*`, "i")}, ...(filters.length > 0 ? { $or: filters } : {})}},
                 {$project: {_id: 1, title: 1, description: 1, images: 1, variants: 1}},
                 {$sort: sort},
                 {$limit: 25}
@@ -300,7 +302,7 @@ const get_products = async (req, res) => {
         } else {
             products = await product_model.aggregate([
                 {$unwind: '$variants'},
-                {$match: {title: {$regex: new RegExp(`^${search}`, "i")}, ...(filters.length > 0 ? { $and: filters } : {})}},
+                {$match: {title: {$regex: new RegExp(`.*${search}.*`, "i")}, ...(filters.length > 0 ? { $or: filters } : {})}},
                 {$project: {_id: 1, title: 1, description: 1, images: 1, variants: 1}},
                 {$limit: 25}
             ])

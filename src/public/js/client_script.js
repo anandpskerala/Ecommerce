@@ -126,5 +126,22 @@ const update_cart_quantity = debounce_request(async (index, quantity) => {
     const res = await req.json();
     if (!res.success) {
         alert_error(res.message);
+    } else {
+        if (window.location.pathname == '/user/carts') {
+            window.location.reload();
+        }
     }
 }, 1000);
+
+
+function formatCurrency(value) {
+    if (value >= 1e7) {
+        return `₹${(value / 1e7).toFixed(2)} Cr`;
+    } else if (value >= 1e5) {
+        return `₹${(value / 1e5).toFixed(2)} L`;
+    } else if (value >= 1e3) {
+        return `₹${(value / 1e3).toFixed(2)} K`;
+    } else {
+        return `₹${value.toFixed(2)}`;
+    }
+}
