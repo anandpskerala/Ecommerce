@@ -165,8 +165,13 @@ if (timerElement) {
     }
 }
 
-const paginate = (page) => {
-    let url = new URL(window.location.href);
-    url.searchParams.set('page', page);
-    window.location.href = url.toString();
+// const paginate = (page) => {
+//     let url = new URL(window.location.href);
+//     url.searchParams.set('page', page);
+//     window.location.href = url.toString();
+// }
+
+function paginate(page, total, func) {
+    if (page < 1 || page > total) return;
+    func(page);
 }

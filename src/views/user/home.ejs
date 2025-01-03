@@ -66,7 +66,7 @@
       <a class="product-card" href="/product/<%= arrival._id %>">
         <img src="/images/<%= arrival.images[0] %>" alt="<%= arrival.title %> Image" class="product-image" />
         <h3 class="product-name"><%= arrival.title %></h3>
-        <p class="product-price">&#8377;<%= arrival.variants[0].price %></p>
+        <p class="product-price">&#8377;<%= arrival.variants[0].colors[0].price %></p>
         <button class="add-to-cart">Add to Cart</button>
       </a>
     <% }) %>
@@ -83,7 +83,7 @@
       <a class="product-card" href="/product/<%= product._id %>">
         <img src="/images/<%= product.images[0] %>" alt="<%= product.title %> Image" class="product-image" />
         <h3 class="product-name"><%= product.title %></h3>
-        <p class="product-price">&#8377;<%= product.variants[0].price %></p>
+        <p class="product-price">&#8377;<%= product.variants[0].colors[0].price %></p>
         <button class="add-to-cart">Add to Cart</button>
       </a>
     <% }) %>

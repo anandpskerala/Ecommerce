@@ -1,5 +1,11 @@
 const express = require('express');	
-const controller = require('../controllers/admin_controller');
+const admin_controller = require('../controllers/admin/admin_controller');
+const product_controller = require('../controllers/admin/product_controller');
+const brand_controller = require('../controllers/admin/brand_controller');
+const category_controller = require('../controllers/admin/category_controller');
+const offer_controller = require('../controllers/admin/offer_controller');
+const coupon_controller = require('../controllers/admin/coupon_controller');
+const order_controller = require('../controllers/admin/order_controller');
 const auth = require('../middlewares/admin_authentication');
 const user_model = require("../models/user_model");
 const category_model = require("../models/category_model");
@@ -26,7 +32,8 @@ routes.get("/dashboard", auth.authenticateAdmin, async (req, res) => {
     return res.render("admin/dashboard", {title: "Dashboard", page: "Dashboard"});
 });
 
-routes.get("/products", auth.authenticateAdmin, controller.load_products);
+routes.get("/products", auth.authenticateAdmin, product_controller.load_products);
+routes.post("/products", auth.authenticateAdminApI, product_controller.get_products);
 
 routes.get("/add-product", auth.authenticateAdmin, async (req, res) => {
     const categories = await category_model.find({});
@@ -63,14 +70,16 @@ routes.get("/edit-product/:id", auth.authenticateAdmin, async (req, res) => {
     );
 });
 
-routes.get("/categories", auth.authenticateAdmin, controller.load_category);
+routes.get("/categories", auth.authenticateAdmin, category_controller.load_category);
+routes.post("/categories", auth.authenticateAdminApI, category_controller.get_categories);
 
 routes.get("/add-category", auth.authenticateAdmin, async (req, res) => {
     const offers = await offer_model.find({});
     return res.render("admin/add_category", {title: "Categories", page: "Create Category", offers});
 })
 
-routes.get("/orders", auth.authenticateAdmin, controller.load_orders);
+routes.get("/orders", auth.authenticateAdmin, order_controller.load_orders);
+routes.post("/orders", auth.authenticateAdminApI, order_controller.get_orders);
 
 routes.get("/order/:id", auth.authenticateAdmin, async (req, res) => {
     const {id} = req.params;
@@ -79,20 +88,23 @@ routes.get("/order/:id", auth.authenticateAdmin, async (req, res) => {
     return res.render("admin/order_details", {title: "Orders", page: "Order Details", order, time, address, currency});
 })
 
-routes.get("/brands", auth.authenticateAdmin, controller.load_brands);
+routes.get("/brands", auth.authenticateAdmin, brand_controller.load_brands);
+routes.post("/brands", auth.authenticateAdminApI, brand_controller.get_brands);
 
 routes.get("/add-brand", auth.authenticateAdmin, (req, res) => {
     return res.render("admin/add_brand", {title: "Brands", page: "Create Brand"});
 })
 
-routes.get("/customers", auth.authenticateAdmin, controller.load_user);
+routes.get("/customers", auth.authenticateAdmin, admin_controller.load_user);
+routes.post("/customers", auth.authenticateAdminApI, admin_controller.get_users);
 
 routes.get("/create-offer", auth.authenticateAdmin, (req, res) => {
     return res.render("admin/create_offer", {title: "Offers", page: "Create Offer"});
 });
 
-routes.get("/coupons", auth.authenticateAdmin, controller.load_coupons);
-routes.get("/edit-coupon/:id", auth.authenticateAdmin, controller.edit_coupon);
+routes.get("/coupons", auth.authenticateAdmin, coupon_controller.load_coupons);
+routes.post("/coupons", auth.authenticateAdminApI, coupon_controller.get_coupons);
+routes.get("/edit-coupon/:id", auth.authenticateAdmin, coupon_controller.edit_coupon);
 
 routes.get("/create-coupon", auth.authenticateAdmin, (req, res) => {
     return res.render("admin/create_coupon", {title: "Coupons", page: "Create Coupons"});
@@ -115,35 +127,37 @@ routes.get("/ledger-book", auth.authenticateAdmin, (req, res) => {
     return res.render("admin/ledger_book", {title: "Ledger Book", page: "Ledger Book"});
 });
 
+routes.get("/offers", auth.authenticateAdmin, offer_controller.load_offers);
+routes.post("/offers", auth.authenticateAdminApI, offer_controller.get_offers);
 
-routes.get("/returns", auth.authenticateAdmin, controller.load_returns);
-routes.post("/update-return", auth.authenticateAdminApI, controller.update_return);
 
-routes.post("/login", controller.admin_login);
-routes.get("/logout", controller.admin_logout);
-routes.get("/offers", auth.authenticateAdminApI, controller.load_offers);
-routes.post("/edit-user", auth.authenticateAdminApI, controller.edit_user);
-routes.post("/delete-user", auth.authenticateAdminApI, controller.delete_user);
-routes.post("/add-product", multer.array("images"), auth.authenticateAdminApI, controller.add_product_form);
-routes.post("/edit-product", multer.none(), auth.authenticateAdminApI, controller.edit_product_form);
-routes.post("/add-brand", multer.single("image"), auth.authenticateAdminApI, controller.add_brand_form);
-routes.post("/edit-brand", multer.single("image"), auth.authenticateAdminApI, controller.edit_brands);
-routes.delete("/delete-brand/:id", auth.authenticateAdminApI, controller.delete_brand);	
-routes.post("/add-category", multer.single("image"), auth.authenticateAdminApI, controller.add_category_form);
-routes.post("/edit-category", multer.single("image"), auth.authenticateAdminApI, controller.edit_category);
-routes.delete("/delete-category/:id", auth.authenticateAdminApI, controller.delete_category);
-routes.post("/create-offer", auth.authenticateAdminApI, controller.create_offer);
-routes.delete("/delete-offer/:id", auth.authenticateAdminApI, controller.delete_offer);
-routes.delete("/delete-product/:id", auth.authenticateAdminApI, controller.delete_product);
-routes.post("/remove-product-image", auth.authenticateAdminApI, controller.remove_product_image);
-routes.post("/edit-product-image", multer.array("images"), auth.authenticateAdminApI, controller.add_product_image);
-routes.post("/product-options", auth.authenticateAdminApI, controller.product_options);
-routes.patch("/order/:id", auth.authenticateAdminApI, controller.set_order_status);
-routes.post("/create-coupon", auth.authenticateAdminApI, controller.add_coupon);
-routes.post("/edit-coupon", auth.authenticateAdminApI, controller.edit_coupon_form);
-routes.delete("/coupons/:id", auth.authenticateAdminApI, controller.delete_coupon);
-routes.post("/get-reports", auth.authenticateAdminApI, controller.get_reports);
-routes.post("/sales-reports", auth.authenticateAdminApI, controller.get_sales_report);
-routes.post("/load-ledger-book", auth.authenticateAdminApI, controller.get_ledger_book);
+routes.get("/returns", auth.authenticateAdmin, order_controller.load_returns);
+routes.post("/update-return", auth.authenticateAdminApI, order_controller.update_return);
+
+routes.post("/login", admin_controller.admin_login);
+routes.get("/logout", admin_controller.admin_logout);
+routes.post("/edit-user", auth.authenticateAdminApI, admin_controller.edit_user);
+routes.post("/delete-user", auth.authenticateAdminApI, admin_controller.delete_user);
+routes.post("/add-product", multer.array("images"), auth.authenticateAdminApI, product_controller.add_product_form);
+routes.post("/edit-product", multer.none(), auth.authenticateAdminApI, product_controller.edit_product_form);
+routes.post("/add-brand", multer.single("image"), auth.authenticateAdminApI, brand_controller.add_brand_form);
+routes.post("/edit-brand", multer.single("image"), auth.authenticateAdminApI, brand_controller.edit_brands);
+routes.delete("/delete-brand/:id", auth.authenticateAdminApI, brand_controller.delete_brand);	
+routes.post("/add-category", multer.single("image"), auth.authenticateAdminApI, category_controller.add_category_form);
+routes.post("/edit-category", multer.single("image"), auth.authenticateAdminApI, category_controller.edit_category);
+routes.delete("/delete-category/:id", auth.authenticateAdminApI, category_controller.delete_category);
+routes.post("/create-offer", auth.authenticateAdminApI, offer_controller.create_offer);
+routes.delete("/delete-offer/:id", auth.authenticateAdminApI, offer_controller.delete_offer);
+routes.delete("/delete-product/:id", auth.authenticateAdminApI, product_controller.delete_product);
+routes.post("/remove-product-image", auth.authenticateAdminApI, product_controller.remove_product_image);
+routes.post("/edit-product-image", multer.array("images"), auth.authenticateAdminApI, product_controller.add_product_image);
+routes.post("/product-options", auth.authenticateAdminApI, product_controller.product_options);
+routes.patch("/order/:id", auth.authenticateAdminApI, order_controller.set_order_status);
+routes.post("/create-coupon", auth.authenticateAdminApI, coupon_controller.add_coupon);
+routes.post("/edit-coupon", auth.authenticateAdminApI, coupon_controller.edit_coupon_form);
+routes.delete("/coupons/:id", auth.authenticateAdminApI, coupon_controller.delete_coupon);
+routes.post("/get-reports", auth.authenticateAdminApI, admin_controller.get_reports);
+routes.post("/sales-reports", auth.authenticateAdminApI, admin_controller.get_sales_report);
+routes.post("/load-ledger-book", auth.authenticateAdminApI, admin_controller.get_ledger_book);
 
 module.exports = routes;

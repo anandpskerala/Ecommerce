@@ -29,47 +29,79 @@
                 </tr>
             </thead>
             <tbody id="user-table">
-                <% offers.forEach((offer) => { %>
-                    <% let status = offer.status != false ? 'active' : 'blocked' %>
-                    <tr>
-                        <td>
-                            <span><%= offer.name %></span>
-                        </td>
-                        <td><%= offer.discount %>%</td>
-                        <td><%= time.formatDate(offer.activation) %></td>
-                        <td><%= time.formatDate(offer.expiry) %></td>
-                        <td><span class="status-<%= status %>"><%= status %></span></td>
-                        <td>
-                            <button class="action-btn action-delete" onclick="delete_offer('<%= offer._id %>')">Delete</button>                               
-                        </td>
-                    </tr>
-                <% }) %>
             </tbody>
         </table>
 
-        <ul class="pagination">
-            <!-- Previous Page -->
-            <% if (currentPage > 1) { %>
-                <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
-            <% } else { %>
-                <li><span>&lt;</span></li>
-            <% } %>
-        
-            <!-- Page Numbers -->
-            <% for (let i = 1; i <= totalPages; i++) { %>
-                <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
-                    <%= i %>
-                </li>
-            <% } %>
-        
-            <!-- Next Page -->
-            <% if (currentPage < totalPages) { %>
-                <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
-            <% } else { %>
-                <li><span>&gt;</span></li>
-            <% } %>
+        <ul class="pagination" id="pagination">
         </ul>
     </div>
     </div>
 </div>
+<script>
+    const fetch_offer_data = async (page) => {
+        const response = await fetch(`/admin/offers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                page: page
+            }),
+        });
+        const data = await response.json();
+        render_offers(data);
+        createPagination(data.totalPages, data.currentPage);
+    };
+
+    const render_offers = (data) => {
+        const userTable = document.getElementById('user-table');
+        userTable.innerHTML = '';
+        if (data && data.offers && data.offers.length > 0) {
+            data.offers.forEach((offer) => {
+                let status = offer.status!= false? 'active' : 'blocked';
+                userTable.innerHTML += `
+                    <tr>
+                        <td>
+                            <span>${offer.name}</span>
+                        </td>
+                        <td>${offer.discount}%</td>
+                        <td>${formatDate(new Date(offer.activation))}</td>
+                        <td>${formatDate(new Date(offer.expiry))}</td>
+                        <td><span class="status-${status}">${status == 'active'? 'active': 'inactive'}</span></td>
+                        <td>
+                            <button class="action-btn action-delete" onclick="delete_offer('${offer._id}')">Delete</button>                               
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+    };
+
+    function createPagination(totalPages, currentPage) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        const prevLi = document.createElement('li');
+        prevLi.textContent = '<';
+        prevLi.className = currentPage === 1 ? 'disabled' : '';
+        prevLi.onclick = () => paginate(currentPage - 1, totalPages, fetch_offer_data);
+        pagination.appendChild(prevLi);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const pageLi = document.createElement('li');
+            pageLi.textContent = i;
+            pageLi.className = i === currentPage ? 'active' : '';
+            pageLi.onclick = () => paginate(i, totalPages, fetch_offer_data);
+            pagination.appendChild(pageLi);
+        }
+
+        const nextLi = document.createElement('li');
+        nextLi.textContent = '>';
+        nextLi.className = currentPage === totalPages ? 'disabled' : '';
+        nextLi.onclick = () => paginate(currentPage + 1, totalPages, fetch_offer_data);
+        pagination.appendChild(nextLi);
+    }
+
+    fetch_offer_data(1);
+</script>
 <%- include('../partials/admin/footer.ejs') %>

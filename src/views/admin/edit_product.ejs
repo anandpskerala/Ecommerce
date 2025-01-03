@@ -86,26 +86,6 @@
                     <span class="form-error" id="offer-error"></span>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <label>Colors</label>
-                    <div class="colors">
-                        <div class="color-option <%- product.colors.includes('black') == true ? 'selected': '' %>" style="background-color: black;" title="Black" data-color="black"></div>
-                        <div class="color-option <%- product.colors.includes('gold') ? 'selected': '' %>" style="background-color: gold;" title="Gold" data-color="gold"></div>
-                        <div class="color-option <%- product.colors.includes('green') ? 'selected': '' %>" style="background-color: lightgreen;" title="Green" data-color="green"></div>
-                        <div class="color-option <%- product.colors.includes('blue') ? 'selected': '' %>" style="background-color: blue;" title="Blue" data-color="blue"></div>
-                    </div>
-                    <input type="hidden" name="colors" id="colors" value="<%= product.colors %>" data-validate="required">
-                    <span class="form-error" id="colors-error"></span>
-                </div>
-            </div>
-
-            <div class="input-row">
-                <div class="input-col">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="4" cols="40" placeholder="Enter product description..." data-validate="required"><%= product.description %></textarea>
-                    <span class="form-error" id="description-error"></span>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 10px;">
                     <label>Variants</label>
                     <div class="variants">
                         <div class="variant-option" title="128 GB">128 GB</div>
@@ -116,20 +96,35 @@
                     </div>
                     <% let variants = {} %>
                     <% product.variants.forEach((variant) => { %>
-                        <% variants[variant.name] = {price: variant.price, quantity: variant.quantity} %>
+                        <% let color_list = {} %>
+                        <% variant.colors.forEach((color) => { %>
+                            <% color_list[color.color] = {price: color.price, quantity: color.quantity} %>
+                        <% }); %>
+                        <% variants[variant.name] = {...color_list} %>
                     <% }); %>
                     <input type="hidden" id="variants" name="variants" value="<%= JSON.stringify(variants) %>" data-validate="required">
                     <span class="form-error" id="variants-error"></span>
                 </div>
             </div>
+
+            <div class="input-row">
+                <div class="input-col">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" cols="100" placeholder="Enter product description..." data-validate="required"><%= product.description %></textarea>
+                    <span class="form-error" id="description-error"></span>
+                </div>
+            </div>
             <h3>Variant Details</h3>
             <div style="display: flex; flex-direction: row; gap: 20px; flex-wrap: wrap;">
                 <% product.variants.forEach((variant) => { %>
-                    <div style="display: flex; flex-direction: column; gap: 10px; border: 1px solid black; padding: 10px;">
-                        <span><strong>Variant : </strong><%= variant.name %></span>
-                        <span><strong>Price : </strong><%= variant.price %></span>
-                        <span><strong>Stock : </strong><%= variant.quantity %></span>
-                    </div>
+                    <% variant.colors.forEach((color) => { %>
+                        <div style="display: flex; flex-direction: column; gap: 10px; border: 1px solid black; padding: 10px;">
+                            <span><strong>Variant : </strong><%= variant.name %></span>
+                            <span><strong>Color : </strong><span style="text-transform: capitalize;"><%= color.color %></span></span>
+                            <span><strong>Price : </strong><%= color.price %></span>
+                            <span><strong>Stock : </strong><%= color.quantity %></span>
+                        </div>
+                    <% }); %>
                 <% }); %>
             </div>
             <div class="input-row">
@@ -351,7 +346,6 @@
         let brand = document.getElementById("brand").value;
         let offer = document.getElementById("offer").value;
         let description = document.getElementById("description").value;
-        let colors = `${document.getElementById("colors").value}`;
         let variant = document.getElementById("variants").value;
         formData["id"] = id;
         formData["title"] = title;
@@ -360,7 +354,6 @@
         formData["brand"] = brand;
         formData["offer"] = offer;
         formData["description"] = description;
-        formData["colors"] = colors;
         formData["variants"] = variant;
 
         let req = await fetch("/admin/edit-product", {
@@ -378,28 +371,6 @@
             alert_error(res.message);
         }
     })
-
-    const colors = document.querySelectorAll('.color-option');
-    const availableColors = document.getElementById("colors").value;
-    const selectedColors = new Set(availableColors.split(","));
-
-    if (colors) {
-        colors.forEach((colorElement) => {
-            colorElement.addEventListener('click', () => {
-                const color = colorElement.getAttribute('data-color');
-
-                if (selectedColors.has(color)) {
-                    selectedColors.delete(color);
-                    colorElement.classList.remove('selected');
-                } else {
-                    selectedColors.add(color);
-                    colorElement.classList.add('selected');
-                }
-
-                document.getElementById('colors').value = `${[...selectedColors]}`; 
-            });
-        });
-    }
 
     const unlist_product = async (id, action) => {
         let req = await fetch(`/admin/product-options`, {
@@ -421,55 +392,67 @@
     variant_elements.forEach((element) => {
         element.addEventListener("click", async (e) => {
             e.preventDefault();
+    
+            const variantName = e.target.title;
             let tbody = document.getElementById("variants");
-            let data = tbody.value != "" ? JSON.parse(tbody.value): {};
+            let variantColorStock = tbody.value != "" ? JSON.parse(tbody.value): {};
+            console.log(variantColorStock);
+    
+            let variantData = variantColorStock[variantName]; 
+    
+            const { value: selectedColor } = await Swal.fire({
+                title: `Select a Color for Variant: ${variantName}`,
+                input: 'select',
+                inputOptions: {
+                    black: "Black",
+                    gold: "Gold",
+                    green: "Green",
+                    blue: "Blue",
+                },
+                inputValue: Object.keys(variantData)[0] || '',
+                showCancelButton: true,
+                confirmButtonText: "Next",
+            });
+    
+            if (!selectedColor) return;
+
+            const colorDetails = variantData[selectedColor] || { price: '', quantity: '' };
+            console.log(colorDetails)
             const { value: formValues } = await Swal.fire({
-                title: "Add Variant",
+                title: `Add Details for ${selectedColor} (${variantName})`,
                 html: `
-                <form id="variant-form" style="display: flex; flex-direction: column; width: 100%; align-items: center; gap: 20px;">
-                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
-                        <label for="name" class="form-label">Variant Name</label>
-                        <input id="name" name="name" class="swal2-input" value="${e.target.title}" data-validate="required|min:2" disabled>
-                    </div>
-                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
-                        <label for="price" class="form-label">Price</label>
-                        <input id="price" type="number" name="price" class="swal2-input" value="${data[e.target.title]? data[e.target.title].price: ''}" data-validate="required|nonegative">
-                        <span class="form-error"></span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
-                        <label for="quantity" class="form-label">Quantity</label>
-                        <input id="quantity" type="number" name="quantity" class="swal2-input" value="${data[e.target.title]? data[e.target.title].quantity: ''}" data-validate="required|nonegative">
-                        <span class="form-error"></span>
-                    </div>
-                </form>
+                    <form id="color-details-form" style="display: flex; flex-direction: column; gap: 10px;">
+                        <label>Price</label>
+                        <input id="price" type="number" class="swal2-input" value="${colorDetails.price}" data-validate="required|nonegative">
+                        
+                        <label>Quantity</label>
+                        <input id="quantity" type="number" class="swal2-input" value="${colorDetails.quantity}" data-validate="required|nonegative">
+                    </form>
                 `,
                 focusConfirm: false,
                 showCancelButton: true,
                 confirmButtonText: "Save",
-                cancelButtonColor: 'Crimson',
                 preConfirm: () => {
-                    let form = document.getElementById('variant-form');
-                    let res = {...data};
-                    let isValid = true;
-
-                    if (form) {
-                        Array.from(form.elements).forEach((input) => {
-                            if (!handleValidation(input)) {
-                                isValid = false;
-                            } else {
-                                res[input.id] = input.value;
-                            }
-                        })
+                    const form = document.getElementById("color-details-form");
+                    const price = form.querySelector("#price").value;
+                    const quantity = form.querySelector("#quantity").value;
+    
+                    if (!price || price < 0 || !quantity || quantity < 0) {
+                        Swal.showValidationMessage("Please provide valid price and quantity.");
+                        return false;
                     }
-                    return isValid? res : false;
-                }
+    
+                    return { price, quantity };
+                },
             });
-
+    
             if (formValues) {
-                data[formValues.name] = {price: formValues.price, quantity: formValues.quantity};
-                tbody.value = JSON.stringify(data)
+                variantData[selectedColor] = formValues;
+                variantColorStock[variantName] = variantData;
+    
+                document.getElementById("variants").value = JSON.stringify(variantColorStock);
             }
-        })
+        });
     });
 
 </script>

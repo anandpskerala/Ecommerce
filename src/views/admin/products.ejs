@@ -16,51 +16,92 @@
                         <path d="M12.1383 19.219C14.1931 19.219 16.1638 18.4027 17.6168 16.9498C19.0697 15.4968 19.886 13.5261 19.886 11.4713C19.886 9.41651 19.0697 7.44585 17.6168 5.99288C16.1638 4.53991 14.1931 3.72363 12.1383 3.72363C10.0835 3.72363 8.11284 4.53991 6.65987 5.99288C5.2069 7.44585 4.39063 9.41651 4.39062 11.4713C4.39063 13.5261 5.2069 15.4968 6.65987 16.9498C8.11284 18.4027 10.0835 19.219 12.1383 19.219Z" stroke="#878A92" stroke-width="1.44" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M21.4356 21.7546L17.4913 17.8104" stroke="#878A92" stroke-width="1.44" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>                    
-                    <input type="text" placeholder="Search products" id="product-search" />
+                    <input type="text" placeholder="Search products" id="products-search" />
                 </div>
             </div>
         </div>
-        <div class="product-grid">
-            <% products.forEach((product) => { %>
-                <% let status = product.listed == false ? 'blocked' : 'active' %>
-                <% let stock = product.stock == false ? 'Out of Stock' : 'In Stock' %>
-                <% let stock_status = product.stock == false ? 'blocked' : 'active' %>
-                <div class="product-card">
-                    <img src="/images/<%= product.images[0] %>" alt="<%= product.title %> Image" class="product-image" />
-                    <h3 class="product-name"><%= product.title %></h3>
-                    <p class="product-price">Base Price : &#8377;<%= product.variants[0].price %></p>
-                    <span class="status-<%= status %>"><%= status %></span>
-                    <span class="status-<%= stock_status %>"><%= stock %></span>
-                    <br>
-                    <div class="product-actions">
-                        <a href="/admin/edit-product/<%= product._id %>" class="action-btn action-edit">Edit</a>
-                        <button class="action-btn action-delete" onclick="delete_product('<%= product._id %>')">Delete</button>
-                    </div>
-                </div>
-            <% }) %>
+        <div class="product-grid" id="product-grid">
         </div>
-        <ul class="pagination">
-            <!-- Previous Page -->
-            <% if (currentPage > 1) { %>
-                <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
-            <% } else { %>
-                <li><span>&lt;</span></li>
-            <% } %>
-        
-            <!-- Page Numbers -->
-            <% for (let i = 1; i <= totalPages; i++) { %>
-                <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
-                    <%= i %>
-                </li>
-            <% } %>
-        
-            <!-- Next Page -->
-            <% if (currentPage < totalPages) { %>
-                <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
-            <% } else { %>
-                <li><span>&gt;</span></li>
-            <% } %>
+        <ul class="pagination" id="pagination">
         </ul>
     </div>
 </div>
+<script>
+    const fetch_product_data = async (page, product) => {
+        const response = await fetch(`/admin/products`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                page,
+                product
+            }),
+        });
+        const data = await response.json();
+        console.log(data)
+        render_products(data);
+        createPagination(data.totalPages, data.currentPage);
+    };
+
+    const render_products = (data) => {
+        const productGrid = document.getElementById('product-grid');
+        productGrid.innerHTML = '';
+        if (data && data.products && data.products.length > 0) {
+            data.products.forEach((product) => {
+                let status = product.listed == false ? 'blocked' : 'active';
+                let stock = product.stock == false ? 'Out of Stock' : 'In Stock';
+                let stock_status = product.stock == false ? 'blocked' : 'active';
+                productGrid.innerHTML += `
+                <div class="product-card">
+                    <img src="/images/${product.images[0]}" alt="${product.title} Image" class="product-image" />
+                    <h3 class="product-name">${product.title}</h3>
+                    <p class="product-price">Base Price : &#8377;${product.variants[0].colors[0].price}</p>
+                    <span class="status-${status}">${status}</span>
+                    <span class="status-${stock_status}">${stock}</span>
+                    <br>
+                    <div class="product-actions">
+                        <a href="/admin/edit-product/${product._id}" class="action-btn action-edit">Edit</a>
+                        <button class="action-btn action-delete" onclick="delete_product('${product._id}')">Delete</button>
+                    </div>
+                </div>`;
+            });
+        } else {
+            productGrid.innerHTML = '<h3>No products found.</h3>';
+        }
+    };
+
+    function createPagination(totalPages, currentPage) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        const prevLi = document.createElement('li');
+        prevLi.textContent = '<';
+        prevLi.className = currentPage === 1 ? 'disabled' : '';
+        prevLi.onclick = () => paginate_products(currentPage - 1, totalPages, fetch_product_data);
+        pagination.appendChild(prevLi);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const pageLi = document.createElement('li');
+            pageLi.textContent = i;
+            pageLi.className = i === currentPage ? 'active' : '';
+            pageLi.onclick = () => paginate_products(i, totalPages, fetch_product_data);
+            pagination.appendChild(pageLi);
+        }
+
+        const nextLi = document.createElement('li');
+        nextLi.textContent = '>';
+        nextLi.className = currentPage === totalPages ? 'disabled' : '';
+        nextLi.onclick = () => paginate_products(currentPage + 1, totalPages, fetch_product_data);
+        pagination.appendChild(nextLi);
+    }
+
+    function paginate_products(page, total, func) {
+        if (page < 1 || page > total) return;
+
+        func(page, document.getElementById("products-search").value);
+    }
+
+    fetch_product_data(1, "");
+</script>
 <%- include('../partials/admin/footer.ejs') %>

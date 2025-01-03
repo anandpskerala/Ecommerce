@@ -10,6 +10,14 @@ const alert_error = (message) => {
     });
 }
 
+const alert_error_without_reload = (message) => {
+    Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: message,
+    })
+}
+
 const alert_success = (message) => {
     Swal.fire({
         icon: "success",
@@ -19,6 +27,14 @@ const alert_success = (message) => {
         if (res.isConfirmed) {
             window.location.reload();
         }
+    });
+}
+
+const alert_success_without_reload = (message) => {
+    Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: message,
     });
 }
 

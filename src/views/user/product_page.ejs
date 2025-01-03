@@ -24,7 +24,6 @@
                         </div>
                     </div>
                 <% }) %>
-    
                 <div style="text-align:center">
                     <% product.images.forEach((image, index) => { %>
                         <span class="dot" onclick="currentSlide('<%= index %>')"></span>
@@ -34,7 +33,7 @@
                 <a class="next" onclick="plusSlides(1)">&#10095;</a>
             </div>
         </div>
-    
+
         <div class="product-details">
             <div class="p-row">
                 <h1><%= product.title %></h1>
@@ -57,20 +56,32 @@
                         <a href="#" title="WhatsApp">💬</a>
                     </div>
                 </div>
-            </div>
-            <% let discount = null; %>
-            <% offers.forEach((offer) => { %>
-                <% if (offer.name == product.offer && offer.status != false) { %>
-                    <% discount = offer.discount %>
-                <% } %>
-            <%}); %>
-            <% if (discount == null) { %>
+                <% let discount = null; %>
                 <% offers.forEach((offer) => { %>
-                    <% if (offer.type == "category" && category.offer != "" && offer.name == category.offer && offer.status != false) { %>
+                    <% if (offer.name == product.offer) { %>
                         <% discount = offer.discount %>
                     <% } %>
-                <% }); %>
-            <% } %>
+                <%}); %>
+                <% if (discount == null) { %>
+                    <% offers.forEach((offer) => { %>
+                        <% if (offer.type == "category" && category.offer != "" && offer.name == category.offer) { %>
+                            <% discount = offer.discount %>
+                        <% } %>
+                    <% }); %>
+                <% } %>
+
+                <% if (discount == null) { %>
+                    <input id="discount" type="hidden" name="discount" value="">
+                <% } else { %>
+                    <input id="discount" type="hidden" name="discount" value="<%= discount %>">
+                <% } %>
+            </div>
+
+            <input type="hidden" name="available-variants" id="available-variants", value='<%- JSON.stringify(product.variants) %>'>
+            <input type="hidden" name="available-stock" id="available-stock" value="<%- product.variants[0].colors[0].quantity %>">
+            <input type="hidden" name="current-variant" id="current-variant" value="<%- product.variants[0]._id %>">
+            <input type="hidden" name="current-color" id="current-color" value="<%- product.variants[0].colors[0].color %>">
+
             <div class="p-row-half">
                 <span class="rating-element">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -78,28 +89,7 @@
                     </svg>
                     <span><%= rating ? Math.round(rating.averageRating * 10) / 10: 0 %> - <%= rating ? rating.reviewCount: 0 %> reviews</span>   
                 </span>
-                <input type="hidden" name="available-stock" id="available-stock" value="<%- product.variants[0].quantity %>">
-                <% if (!product.listed) { %>
-                    <span class="stock-element" style="color: var(--red); border: 1px solid var(--red);">NOT AVAILABLE</span>
-                <% } else if (!product.stock) { %>
-                    <span class="stock-element" style="color: var(--red); border: 1px solid var(--red);">OUT OF STOCK</span>
-                <% } else { %>
-                    <% product.variants.forEach((variant, index) => { %>
-                        <% if (index == 0) { %>
-                            <% if (variant.quantity > 0) { %>
-                                <span id="stock-<%= variant._id %>" class="stock-element">IN STOCK</span>
-                            <% } else { %>
-                                <span id="stock-<%= variant._id %>" class="stock-element" style="color: var(--red); border: 1px solid var(--red);">OUT OF STOCK</span>
-                            <% } %>
-                        <% } else { %>
-                            <% if (variant.quantity > 0) { %>
-                                <span id="stock-<%= variant._id %>" class="stock-element" style="display: none;">IN STOCK</span>
-                            <% } else { %>
-                                <span id="stock-<%= variant._id %>" class="stock-element" style="color: var(--red); border: 1px solid var(--red); display: none;">OUT OF STOCK</span>
-                            <% } %>
-                        <% } %>
-                    <% }); %>
-                <% } %>
+                <span id="stock" class="stock-element" style="color: var(--red); border: 1px solid var(--red);">OUT OF STOCK</span>
                 <% if (discount) { %>
                     <span class="off-element">
                         <%= discount %>% OFF
@@ -107,43 +97,24 @@
                 <% } %>
             </div>
             <span id="stocks-left"></span>
-            <% if (discount != null && discount != "none") { %>
-                <!-- <span style="font-size: 12px; margin-bottom: 20px;">Discount : <%= discount %>%</span> -->
-                <% product.variants.forEach((variant, index) => { %>
-                    <% let discount_price =  variant.price - Math.ceil(variant.price * discount /100) %>
-                    <% if (index == 0) { %>
-                        <span class="price" style="font-size: 16px; font-weight: 600; margin-bottom: 10px;" id="price-<%= variant._id %>">Discount Price : &#8377;<%= currency.parse_currency(discount_price, 0) %></span> 
-                    <% } else { %>
-                        <span class="price" style="font-size: 16px; font-weight: 600; margin-bottom: 10px; display: none;" id="price-<%= variant._id %>">Discount Price : &#8377;<%= currency.parse_currency(discount_price, 0) %></span> 
-                    <% } %>
-                <% }); %>
-            <% } %>
-
-            <% product.variants.forEach((variant, index) => { %>
-                <% if (index == 0) { %>
-                    <span class="price <%- (discount != null && discount != 'none') ? 'strike': '' %>" style="font-size: 16px; font-weight: 600; margin-bottom: 10px;" id="price-<%= variant._id %>">Price : &#8377;<%= currency.parse_currency(variant.price, 0) %></span>
-                <% } else { %>
-                    <span class="price <%- (discount != null && discount != 'none') ? 'strike': '' %>" style="font-size: 16px; font-weight: 600; margin-bottom: 10px; display: none;" id="price-<%= variant._id %>">Price : &#8377;<%= currency.parse_currency(variant.price, 0) %></span> 
-                <% } %>
-            <% }); %>
+            <span id="price" class="price <%- (discount != null && discount != 'none') ? 'strike': '' %>" data-value="<%- product.variants[0].colors[0].price %>" style="font-size: 16px; font-weight: 600; margin-bottom: 10px;">Price : &#8377;<%= currency.parse_currency(product.variants[0].colors[0].price, 0) %></span>
+            <span id="discount-price" class="price" style="font-size: 16px; font-weight: 600; margin-bottom: 10px;">Discount Price : &#8377;<%= currency.parse_currency(product.variants[0].colors[0].price - Math.ceil(product.variants[0].colors[0].price * discount /100), 0) %></span>
 
             <span class="product-heading">Available Colors</span>
-            <div class="colors" style="margin-bottom: 10px;">
-                <input type="hidden" name="color-option" id="color-option" value="<%= product.colors[0] %>">
-                <% product.colors.forEach((color, index) => { %>
-                    <%- index == 0 ? `<div class="color-option select" style="background-color: ${color};" title="${color}" data-color="${color}"></div>`: `<div class="color-option" style="background-color: ${color};" title="${color}" data-color="${color}"></div>` %>
+            <input type="hidden" name="colors" id="colors" value="<%= product.variants[0].colors[0]._id %>" data-value="<%= product.variants[0].colors[0].color %>">
+            <div id="color-div" class="colors" style="margin-bottom: 10px;">
+                <% product.variants[0].colors.forEach((color, index) => { %>
+                    <%- index == 0 ? `<div class="color-option select" style="background-color: ${color.color};" title="${color.color}" data-color="${color.color}" data-value="${color._id}" onclick="selectColor(this)"></div>`: `<div class="color-option" style="background-color: ${color.color};" title="${color.color}" data-color="${color.color}" data-value="${color._id}" onclick="selectColor(this)"></div>` %>
                 <% }); %>
             </div>
-
 
             <span class="product-heading">Select Variants</span>
             <div class="variants">
-                <input type="hidden" id="variants" name="variants" value="<%= product.variants[0]._id %>">
+                <input type="hidden" id="variants" name="variants" value="<%= product.variants[0]._id %>" data-value="<%= product.variants[0].name %>">
                 <% product.variants.forEach((variant, index) => { %>
-                    <%- index == 0 ? `<div class="variant-option activated" title="${variant._id}" onclick="variantSelector('${variant._id}', '${variant.quantity}', ${product.listed})">${variant.name}</div>`: `<div class="variant-option" title="${variant._id}" onclick="variantSelector('${variant._id}', '${variant.quantity}', ${product.listed})">${variant.name}</div>` %>
+                    <%- index == 0 ? `<div class="variant-option activated" title="${variant.name}" onclick="selectVariant(this)">${variant.name}</div>`: `<div class="variant-option" title="${variant.name}" onclick="selectVariant(this)">${variant.name}</div>` %>
                 <% }); %>
             </div>
-
 
             <span class="product-heading">Quantity</span>
             <div class="quantity-selector">
@@ -155,17 +126,16 @@
             </div>
 
             <div class="cart-section">
-                <button onclick="add_to_cart('<%= product._id %>', '<%= JSON.stringify(session) %>')" id="cart-button" class="add-to-cart <%= (product.listed && product.stock && product.variants[0].quantity > 0) ? '': 'add-to-cart-disabled' %>" <%= (product.listed && product.stock && product.variants[0].quantity > 0) ? '': 'disabled' %>>Add to cart</button>
+                <button onclick="add_to_cart('<%= product._id %>', '<%= JSON.stringify(session) %>')" id="cart-button" class="add-to-cart <%= (product.listed && product.stock && product.variants[0].colors[0].quantity > 0) ? '': 'add-to-cart-disabled' %>" <%= (product.listed && product.stock && product.variants[0].colors[0].quantity > 0) ? '': 'disabled' %>>Add to cart</button>
                 <button class="wishlist" onclick="wishlist_button('<%= product._id %>', '<%= JSON.stringify(session) %>')">
-                    <svg  class="heart-icon" width="19" height="17" viewBox="0 0 19 17" fill="<%= wishlist ? '#ff0400': 'none' %>" xmlns="http://www.w3.org/2000/svg">
+                    <svg  class="heart-icon" width="19" height="17" viewBox="0 0 19 17" fill="<%= wishlist ? '	#ff0400': 'none' %>" xmlns="http://www.w3.org/2000/svg">
                         <path d="M9.50482 15.5L2.291 9.05129C-1.62955 5.18258 4.13333 -2.24663 9.50482 3.76384C14.8763 -2.24663 20.6141 5.20729 16.72 9.05129L9.50482 15.5Z" stroke="<%= wishlist ? '#ff0400': '#5C5F6A' %>" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </button>
-              </div>
-              <p class="free-shipping">— FREE SHIPPING ON ORDERS BELOW &#8377;1000</p>
+            </div>
+            <p class="free-shipping">— FREE SHIPPING ON ORDERS BELOW &#8377;1000</p>
         </div>
     </section>
-
 
     <section class="product-extras">
         <div class="product-side-menu">
@@ -270,7 +240,7 @@
                 <a class="product-card" href="/product/<%= similar._id %>">
                     <img src="/images/<%= similar.images[0] %>" alt="<%= similar.title %> Image" class="product-image" />
                     <h3 class="product-name"><%= similar.title %></h3>
-                    <p class="product-price">&#8377;<%= similar.variants[0].price %></p>
+                    <p class="product-price">&#8377;<%= similar.variants[0].colors[0].price %></p>
                     <button class="add-to-cart">Add to Cart</button>
                 </a>
                 <% }) %>
@@ -279,21 +249,17 @@
     </div>
 </div>
 <%- include('../partials/user/cart.ejs') %>
-<script type="text/javascript" src="/js/carousal.js"></script>
 <script>
+    const review_form = document.getElementById('review-form');
     const minusButton = document.querySelector('.minus');
     const plusButton = document.querySelector('.plus');
     const quantityInput = document.getElementById('quantity');
-    const prices = document.querySelectorAll('.price');
-    const stocks = document.querySelectorAll('.stock-element');
     const availableStock = document.getElementById('available-stock');
-    const review_form = document.getElementById('review-form');
-    let rating = 0;
+
 
     let min = parseInt(quantityInput.min);
     let max = parseInt(availableStock.value || quantityInput.max);
     let cartMin = parseInt(quantityInput.min);
-    let cartMax = parseInt(availableStock.value || cartQuantityInput.max);
 
     minusButton.addEventListener('click', () => {
       let currentValue = parseInt(quantityInput.value);
@@ -317,7 +283,6 @@
       plusButton.disabled = value >= max;
     }
 
-    updateButtons(parseInt(quantityInput.value));
     quantityInput.max = max;
     quantityInput.addEventListener('keyup', (e) => {
         updateButtons(parseInt(e.target.value));
@@ -326,48 +291,6 @@
         }
     });
 
-    function variantSelector(variant, quantity, listed) {
-        availableStock.value = quantity;
-        console.log(quantity);
-        stock_alert(quantity);
-        prices.forEach((price) => {
-            if (price.id == `price-${variant}`) {
-                price.style.display = "flex"
-            } else {
-                price.style.display = "none"
-            }
-        })
-
-        if (stocks.length > 1) {
-            stocks.forEach((stock) => {
-                if (stock.id == `stock-${variant}`) {
-                    stock.style.display = "flex"
-                } else {
-                    stock.style.display = "none"
-                }
-            })
-        }
-
-        const cart_button = document.getElementById("cart-button");
-        if (quantity && quantity > 0 && listed == true) {
-            cart_button.disabled = false;
-            cart_button.classList.remove('add-to-cart-disabled')
-        } else {
-            cart_button.disabled = true;
-            cart_button.classList.add('add-to-cart-disabled')
-        }
-        document.getElementById("variants").value = variant;
-        document.querySelectorAll(".variant-option").forEach((variants) => {
-            if (variants.title == variant) {
-                variants.classList.add("activated");
-            } else {
-                variants.classList.remove("activated");
-            }
-        })
-        max = parseInt(quantity)
-        updateButtons(1);
-        quantityInput.value = 1;
-    };
 
     function sectionSelector(section) {
         let details = document.getElementById("details");
@@ -386,47 +309,6 @@
             reviews.style.display = "block";
             reviewsMenu.classList.add("selected");
         }
-    }
-
-    const shareBtn = document.querySelector('.share-btn');
-    const overlay = document.getElementById('overlay');
-    const popup = document.getElementById('popup');
-    const closePopup = document.getElementById('closePopup');
-
-    shareBtn.addEventListener('click', () => {
-        document.getElementById('currentUrl').value = window.location.href;
-        overlay.style.display = 'block';
-        popup.style.display = 'block';
-    });
-
-    overlay.addEventListener('click', closePopupPopup);
-    closePopup.addEventListener('click', closePopupPopup);
-
-    function closePopupPopup() {
-      overlay.style.display = 'none';
-      popup.style.display = 'none';
-    }
-
-    function copyToClipboard() {
-      const linkInput = popup.querySelector('input');
-      linkInput.select();
-      linkInput.setSelectionRange(0, 99999);
-      navigator.clipboard.writeText(linkInput.value);
-      alert_success('Link copied to clipboard!');
-    }
-
-    function openModal(session) {
-        session = JSON.parse(session);
-        if (!session.user) {
-            window.location.href = "/login";
-            return;
-        }
-        document.getElementById('modalOverlay').style.display = 'flex';
-    }
-
-    function closeModal() {
-        document.getElementById('modalOverlay').style.display = 'none';
-        clear_stars();
     }
 
     const review_element = document.getElementById('rating');
@@ -480,22 +362,218 @@
         }
     });
 
+    const shareBtn = document.querySelector('.share-btn');
+    const overlay = document.getElementById('overlay');
+    const popup = document.getElementById('popup');
+    const closePopup = document.getElementById('closePopup');
 
-    const colors = document.querySelectorAll('.color-option');
-    if (colors) {
-        colors.forEach((colorElement) => {
-            colorElement.addEventListener('click', () => {
-                const color = colorElement.getAttribute('data-color');
-                document.getElementById('color-option').value = color;
-                colors.forEach((colorElement) => {
-                    if (colorElement.getAttribute('data-color') === color) {
-                        colorElement.classList.add('select');
-                    } else {
-                        colorElement.classList.remove('select');
-                    }
-                });
-            });
+    shareBtn.addEventListener('click', () => {
+        document.getElementById('currentUrl').value = window.location.href;
+        overlay.style.display = 'block';
+        popup.style.display = 'block';
+    });
+
+    overlay.addEventListener('click', closePopupPopup);
+    closePopup.addEventListener('click', closePopupPopup);
+
+    function closePopupPopup() {
+      overlay.style.display = 'none';
+      popup.style.display = 'none';
+    }
+
+    function copyToClipboard() {
+      const linkInput = popup.querySelector('input');
+      linkInput.select();
+      linkInput.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(linkInput.value);
+      alert_success('Link copied to clipboard!');
+    }
+
+    function openModal(session) {
+        session = JSON.parse(session);
+        if (!session.user) {
+            window.location.href = "/login";
+            return;
+        }
+        document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+        clear_stars();
+    }
+
+    function updateProductDetails(variant, color) {
+        if (typeof color == "string") {
+            color = JSON.parse(color);
+            variant = JSON.parse(variant);
+        }
+        const priceElement = document.getElementById('price');
+        const stockElement = document.getElementById('stock');
+        const discount_element = document.getElementById('discount');
+        const discountElement = document.getElementById('discount-price');
+
+        priceElement.innerHTML = `Price : &#8377;${color.price}`;
+        priceElement.dataset.value = color.price;
+
+        console.log(discount_element.value)
+        if (discount_element.value != "") {
+            discountElement.style.display = "block";
+            discountElement.innerHTML = `Discount Price : &#8377;${priceElement.dataset.value - Math.ceil(priceElement.dataset.value * discount_element.value / 100)}`;
+        } else {
+            discountElement.innerHTML = "";
+            discountElement.style.display = "none";
+        }
+
+        stockElement.innerText = color.quantity > 0 ? 'In Stock' : 'Out of Stock';
+        stockElement.style.color = color.quantity > 0 ? 'green' : 'red';
+        stockElement.style.borderColor = color.quantity > 0 ? 'green' : 'red';
+        stock_alert(color.quantity);
+    }
+
+    function selectColor(element) {
+        const listed = '<%- product.listed %>';
+        const variantElement = document.querySelector('#available-variants');
+        if (!variantElement) {
+            console.error('Variant element not found');
+            return;
+        }
+
+        let variants;
+        try {
+            variants = JSON.parse(variantElement.value);
+        } catch (error) {
+            console.error('Error parsing variant data:', error);
+            return;
+        }
+
+        const selectedColorId = element.dataset.value;
+        if (!selectedColorId) {
+            console.error('No data-value attribute found on the selected element');
+            return;
+        }
+        let selectedColor = null;
+        let parentVariant = null;
+
+        for (const variant of variants) {
+            const color = variant.colors.find(color => color._id === selectedColorId);
+            if (color) {
+                selectedColor = color;
+                parentVariant = variant;
+                break;
+            }
+        }
+
+        if (!selectedColor) {
+            console.warn('No matching color found for ID:', selectedColorId);
+            return;
+        }
+        updateProductDetails(parentVariant, selectedColor);
+        max = parseInt(selectedColor.quantity);
+        updateButtons(1);
+        const cart_button = document.getElementById("cart-button");
+        if (selectedColor.quantity && selectedColor.quantity > 0 && listed == 'true') {
+            cart_button.disabled = false;
+            cart_button.classList.remove('add-to-cart-disabled')
+        } else {
+            cart_button.disabled = true;
+            cart_button.classList.add('add-to-cart-disabled')
+        }
+        document.getElementById("current-color").value = selectedColor.color;
+        document.querySelectorAll(".color-option").forEach((color_elm) => {
+            color_elm.classList.remove("select");
+            if (color_elm.dataset.value === selectedColor._id) {
+                color_elm.classList.add("select");
+            }
+        })
+    }
+
+    function selectVariant(element) {
+        const listed = '<%= product.listed %>';
+        document.querySelectorAll('.variant-option').forEach(option => {
+            option.classList.remove('activated');
         });
+        element.classList.add('activated');
+
+        let availableVariants = [];
+        try {
+            availableVariants = JSON.parse(document.getElementById('available-variants').value) || [];
+        } catch (error) {
+            console.error('Error parsing available variants:', error);
+            return;
+        }
+
+        const selectedVariantName = element.title;
+        const selectedVariant = availableVariants.find(variant => variant.name === selectedVariantName);
+
+        if (!selectedVariant) {
+            console.error('Selected variant not found.');
+            return;
+        }
+
+        const colorContainer = document.getElementById('color-div');
+        colorContainer.innerHTML = '';
+
+        const colors = selectedVariant.colors || [];
+        if (colors.length === 0) {
+            const noColorsMessage = document.createElement('p');
+            noColorsMessage.textContent = 'No colors available for this variant.';
+            colorContainer.appendChild(noColorsMessage);
+            return;
+        }
+
+        colors.forEach(color => {
+            const colorDiv = document.createElement('div');
+            colorDiv.className = 'color-option';
+            colorDiv.style.backgroundColor = color.color || '#ccc';
+            colorDiv.setAttribute('data-value', color._id || '');
+            colorDiv.onclick = () => selectColor(colorDiv, selectedVariant);
+
+            colorContainer.appendChild(colorDiv);
+        });
+
+        const firstColor = colors[0];
+        const cart_button = document.getElementById("cart-button");
+        if (firstColor) {
+            const firstColorElement = colorContainer.firstChild;
+            firstColorElement.classList.add('select');
+            document.getElementById("current-color").value = firstColor.color;
+            updateProductDetails(colors, firstColor);
+            max = parseInt(firstColor.quantity);
+            updateButtons(1);
+            availableStock.value = firstColor.quantity
+        } else {
+            console.warn('No colors to display');
+        }
+
+        if (firstColor.quantity && firstColor.quantity > 0 && listed == 'true') {
+            cart_button.disabled = false;
+            cart_button.classList.remove('add-to-cart-disabled')
+        } else {
+            cart_button.disabled = true;
+            cart_button.classList.add('add-to-cart-disabled')
+        }
+
+        const variantId = selectedVariant._id;
+        document.getElementById('variants').value = variantId;
+        document.getElementById('variants').setAttribute('data-value', selectedVariant.name);
+    }
+
+    const stock_alert = (quantity) => {
+        const stock_element = document.getElementById("stocks-left");
+        if (quantity <= 0) {
+            stock_element.textContent = "";
+            stock_element.style.display = "none";
+        } else if (quantity > 0 && quantity < 5) {
+            stock_element.textContent = `Only ${quantity} left in stock!`;
+            stock_element.style.display = "flex";
+        } else if (quantity >= 5 && quantity < 10) {
+            stock_element.textContent = `Hurry! Only Few stocks left.`;
+            stock_element.style.display = "flex";
+        } else {
+            stock_element.textContent = "";
+            stock_element.style.display = "none";
+        }
     };
 
     const add_to_cart = async (product_id, session) => {
@@ -508,7 +586,7 @@
             product_id: product_id,
             variant_id: document.getElementById('variants').value,
             quantity: parseInt(document.getElementById('quantity').value),
-            color: document.getElementById('color-option').value,
+            color: document.getElementById('current-color').value,
         };
         const req = await fetch("/user/add-to-cart", {
             method: 'POST',
@@ -531,7 +609,7 @@
         } else {
             alert_error(res.message);
         }
-    }
+    };
 
     const wishlist_button = async (product_id, session) => {
         session = JSON.parse(session);
@@ -542,7 +620,7 @@
         const data = {
             product_id: product_id,
             variant_id: document.getElementById('variants').value,
-            color: document.getElementById('color-option').value,
+            color: document.getElementById('current-color').value,
         };
         const req = await fetch("/user/update-wishlist", {
             method: 'POST',
@@ -566,23 +644,6 @@
         }
     };
 
-    const stock_alert = (quantity) => {
-        const stock_element = document.getElementById("stocks-left");
-        if (quantity <= 0) {
-            stock_element.textContent = "";
-            stock_element.style.display = "none";
-        } else if (quantity > 0 && quantity < 5) {
-            stock_element.textContent = `Only ${quantity} left in stock!`;
-            stock_element.style.display = "flex";
-        } else if (quantity >= 5 && quantity < 10) {
-            stock_element.textContent = `Hurry! Only Few stocks left.`;
-            stock_element.style.display = "flex";
-        } else {
-            stock_element.textContent = "";
-            stock_element.style.display = "none";
-        }
-    };
-
     window.addEventListener("load", () => {
         const call_open_cart_menu = localStorage.getItem("callOpenCartMenu");
         if (call_open_cart_menu) {
@@ -591,6 +652,9 @@
         }
     });
 
-    stock_alert('<%= product.variants[0].quantity %>');
+    updateProductDetails('<%- JSON.stringify(product.variants[0]) %>', '<%- JSON.stringify(product.variants[0].colors[0]) %>');
+    updateButtons(parseInt(quantityInput.value));
+
 </script>
+<script type="text/javascript" src="/js/carousal.js"></script>
 <%- include('../partials/user/footer.ejs') %>

@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
-const variantSchema = new mongoose.Schema({
-    name: {
+const colorDetailSchema = new mongoose.Schema({
+    color: {
         type: String,
         required: true,
     },
@@ -14,6 +15,17 @@ const variantSchema = new mongoose.Schema({
         type: Number,
         required: true,
         min: 0,
+    },
+});
+
+const variantSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+    },
+    colors: {
+        type: [colorDetailSchema],
+        required: true,
     },
 });
 
@@ -60,9 +72,20 @@ const Schema = new mongoose.Schema(
         ordered: {
             type: Number,
             default: 0
+        },
+        product_id: {
+            type: String,
+            required: false
         }
     },
     { timestamps: {createdAt: "createdAt", updatedAt: "updatedAt"} }
 );
+
+Schema.pre('save', function(next) {
+    if (!this.isNew) return next();
+    this.product_id = `PROD-${crypto.randomBytes(4).toString('hex').toUpperCase()}${String(Date.now()).slice(10)}`
+    next();
+})
+
 
 module.exports = mongoose.model('Product', Schema);

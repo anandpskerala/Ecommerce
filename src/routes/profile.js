@@ -1,7 +1,9 @@
 const express = require('express');	
 const mongoose = require('mongoose');
 const auth = require('../middlewares/user_authentication');
-const controllers = require('../controllers/profile_controller');
+const profile_controller = require('../controllers/user/profile_controller');
+const cart_controller = require('../controllers/user/cart_controller');
+const order_controller = require('../controllers/user/order_controller');
 const user_model = require('../models/user_model');
 const cart_model = require('../models/cart_model');
 const order_model = require('../models/order_model');
@@ -199,7 +201,7 @@ routes.get("/checkout", auth.authenticateUser, async (req, res) => {
     }
     const total_price = result.length > 0 ? result[0].totalPrice : 0;
     if (carts && carts.length > 0) {
-        return res.render('user/checkout_page', {title: "Check Out", cart_option: "page", user, carts, total_price, coupon});
+        return res.render('user/checkout_page', {title: "Check Out", cart_option: "page", user, carts, total_price, coupon, session: req.session});
     } else {
         return res.redirect('/user/carts');
     }
@@ -236,32 +238,32 @@ routes.get("/get-a-coupon", auth.authenticateUser, (req, res) => {
 });
 
 
-routes.post("/send-otp", controllers.send_otp);
-routes.post("/verify-otp", controllers.verify_otp);
-routes.post("/verify-signup", controllers.verify_signup);
-routes.post("/reset-password", controllers.reset_password);
-routes.get("/wallet", auth.authenticateUser, controllers.load_wallet);
-routes.post("/change-password", auth.authenticateUserApi, controllers.change_password);
-routes.post("/change-profile-picture", auth.authenticateUserApi, multer.single("image"), controllers.change_profile_picture);
-routes.delete("/remove-profile-image", auth.authenticateUserApi, controllers.remove_profile_picture);
-routes.patch("/change-phone", auth.authenticateUserApi, controllers.change_phone);
-routes.post("/add-address", auth.authenticateUserApi, controllers.add_address);
-routes.delete("/delete-address", auth.authenticateUserApi, controllers.delete_address);
-routes.patch("/update-address", auth.authenticateUserApi, controllers.update_address);
-routes.post("/create-review", auth.authenticateUserApi, controllers.add_review);
-routes.post("/add-to-cart", auth.authenticateUserApi, controllers.add_to_cart);
-routes.delete("/cart/:id", auth.authenticateUserApi, controllers.remove_from_cart);
-routes.post("/place-order", auth.authenticateUserApi, controllers.add_order);
-routes.patch("/cancel-order", auth.authenticateUserApi, controllers.cancel_order);
-routes.post("/return-order", auth.authenticateUserApi, controllers.return_order);
-routes.delete("/delete-account", auth.authenticateUserApi, controllers.delete_account);
-routes.patch("/change-name", auth.authenticateUserApi, controllers.change_name);
-routes.post("/apply-coupon", auth.authenticateUserApi, controllers.apply_coupon);
-routes.post("/remove-coupon", auth.authenticateUserApi, controllers.remove_coupon);
-routes.post("/update-wishlist", auth.authenticateUserApi, controllers.update_wishlist);
-routes.post("/referrals", auth.authenticateUserApi, controllers.get_referrals);
-routes.post("/update-cart", auth.authenticateUserApi, controllers.update_cart_quantity);
-routes.post("/get-all-coupons", auth.authenticateUserApi, controllers.get_all_coupouns);
-routes.post("/get-spin", auth.authenticateUserApi, controllers.validate_spin);
+routes.post("/send-otp", profile_controller.send_otp);
+routes.post("/verify-otp", profile_controller.verify_otp);
+routes.post("/verify-signup", profile_controller.verify_signup);
+routes.post("/reset-password", profile_controller.reset_password);
+routes.get("/wallet", auth.authenticateUser, profile_controller.load_wallet);
+routes.post("/change-password", auth.authenticateUserApi, profile_controller.change_password);
+routes.post("/change-profile-picture", auth.authenticateUserApi, multer.single("image"), profile_controller.change_profile_picture);
+routes.delete("/remove-profile-image", auth.authenticateUserApi, profile_controller.remove_profile_picture);
+routes.patch("/change-phone", auth.authenticateUserApi, profile_controller.change_phone);
+routes.post("/add-address", auth.authenticateUserApi, profile_controller.add_address);
+routes.delete("/delete-address", auth.authenticateUserApi, profile_controller.delete_address);
+routes.patch("/update-address", auth.authenticateUserApi, profile_controller.update_address);
+routes.post("/create-review", auth.authenticateUserApi, profile_controller.add_review);
+routes.post("/add-to-cart", auth.authenticateUserApi, cart_controller.add_to_cart);
+routes.delete("/cart/:id", auth.authenticateUserApi, cart_controller.remove_from_cart);
+routes.post("/place-order", auth.authenticateUserApi, order_controller.add_order);
+routes.patch("/cancel-order", auth.authenticateUserApi, order_controller.cancel_order);
+routes.post("/return-order", auth.authenticateUserApi, order_controller.return_order);
+routes.delete("/delete-account", auth.authenticateUserApi, profile_controller.delete_account);
+routes.patch("/change-name", auth.authenticateUserApi, profile_controller.change_name);
+routes.post("/apply-coupon", auth.authenticateUserApi, profile_controller.apply_coupon);
+routes.post("/remove-coupon", auth.authenticateUserApi, profile_controller.remove_coupon);
+routes.post("/update-wishlist", auth.authenticateUserApi, profile_controller.update_wishlist);
+routes.post("/referrals", auth.authenticateUserApi, profile_controller.get_referrals);
+routes.post("/update-cart", auth.authenticateUserApi, cart_controller.update_cart_quantity);
+routes.post("/get-all-coupons", auth.authenticateUserApi, profile_controller.get_all_coupouns);
+routes.post("/get-spin", auth.authenticateUserApi, profile_controller.validate_spin);
 
 module.exports = routes;

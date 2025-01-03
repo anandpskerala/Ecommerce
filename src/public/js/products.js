@@ -150,12 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (input.type === "file" && input.value.trim() === "") {
                     validForm = false;
-                    alert_error("Please select at least one image");
+                    alert_error_without_reload("Please select at least one image");
                 }
 
                 if (imageArray.length < 3) {
                     validForm = false;
-                    alert_error("Please select at least 3 images");
+                    alert_error_without_reload("Please select at least 3 images");
                 }
             })
 
@@ -179,8 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then((data) => {
                     if (data.success) {
                         alert_success(data.message);
+                        window.location.href = '/admin/products';
                     } else {
-                        alert_error(data.message);
+                        alert_error_without_reload(data.message);
                     }
                 })
                 .catch((error) => {

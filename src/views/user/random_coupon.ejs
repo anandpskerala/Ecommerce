@@ -107,8 +107,8 @@
         });
 
       setTimeout(async () => {
-        //const isJackpot = results.every((val, i, arr) => val === arr[0]);
-        const isJackpot = true;
+        const isJackpot = results.every((val, i, arr) => val === arr[0]);
+        //const isJackpot = true;
         if (isJackpot) {
           const req = await fetch("/user/get-all-coupons", {
             method: "POST",

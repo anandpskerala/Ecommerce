@@ -3,25 +3,26 @@ document.addEventListener("DOMContentLoaded", () => {
     if (userSearchElement) {
         userSearchElement.addEventListener("keyup", async (event) => {
             if (event.keyCode === 13) {
-                const searchTerm = event.target.value.trim();
-                if (searchTerm.length > 0) {
-                    window.location.href = `/admin/customers?email=${searchTerm}`;
+                const search_term = event.target.value.trim();
+                if (search_term.length > 0) {
+                    fetch_user_data(1, search_term);
+
                 } else {
-                    window.location.href = `/admin/customers`;
+                    fetch_user_data(1, '');
                 }
             }
         });
     }
 
-    const productSearchElement = document.getElementById("product-search");
+    const productSearchElement = document.getElementById("products-search");
     if (productSearchElement) {
         productSearchElement.addEventListener("keyup", async (event) => {
             if (event.keyCode === 13) {
                 const searchTerm = event.target.value.trim();
                 if (searchTerm.length > 0) {
-                    window.location.href = `/admin/products?product=${searchTerm}`;
+                    fetch_product_data(1, searchTerm);
                 } else {
-                    window.location.href = `/admin/products`;
+                    fetch_product_data(1, "");
                 }
             }
         });
@@ -29,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const edit_user = async (data) => {
-    const user = JSON.parse(data);
+    const user = typeof data === "string" ? JSON.parse(data) : data;;
     const current = (is_blocked) => {
         return is_blocked? "Blocked" : "Active";
     }
@@ -98,7 +99,8 @@ const edit_user = async (data) => {
         if (!req.ok) return alert_error("An error has occurred. Please try again.");
         const res = await req.json();
         if (res.success) {
-            alert_success(res.message);
+            alert_success_without_reload(res.message);
+            fetch_user_data(1, document.getElementById('user-search').value);
         } else {
             alert_error(res.message);
         }
@@ -126,7 +128,8 @@ const delete_user = async (id) => {
             if (!req.ok) return alert_error("An error has occurred. Please try again.");
             const res = await req.json();
             if (res.success) {
-                alert_success(res.message);
+                alert_success_without_reload(res.message);
+                fetch_user_data(1, document.getElementById('user-search').value);
             } else {
                 alert_error(res.message);
             }
@@ -136,7 +139,7 @@ const delete_user = async (id) => {
 
 
 const edit_brand = async (data) => {
-    const brand = JSON.parse(data);
+    const brand = typeof data === "string" ? JSON.parse(data) : data;
     const current = (is_blocked) => {
         return is_blocked? "Blocked" : "Active";
     }
@@ -194,7 +197,8 @@ const edit_brand = async (data) => {
         if (!req.ok) return alert_error("An error has occurred. Please try again.");
         const res = await req.json();
         if (res.success) {
-            alert_success(res.message);
+            alert_success_without_reload(res.message);
+            fetch_brand_data(1);
         } else {
             alert_error(res.message);
         }
@@ -203,8 +207,8 @@ const edit_brand = async (data) => {
 
 
 const edit_category = async (data, offer_data) => {
-    const category = JSON.parse(data);
-    const offers = JSON.parse(offer_data);
+    const category = typeof data === "string" ? JSON.parse(data) : data;
+    const offers = typeof offer_data === "string" ? JSON.parse(offer_data) : offer_data;
     const current = (is_blocked) => {
         return is_blocked? "Blocked" : "Active";
     }
@@ -271,7 +275,8 @@ const edit_category = async (data, offer_data) => {
         
         const res = await req.json();
         if (res.success) {
-            alert_success(res.message);
+            alert_success_without_reload(res.message);
+            fetch_category_data(1);
         } else {
             alert_error(res.message);
         }
@@ -294,7 +299,8 @@ const delete_brand = (id) => {
            .then(response => response.json())
            .then(data => {
                 if (data.success) {
-                    alert_success(data.message);
+                    alert_success_without_reload(res.message);
+                    fetch_brand_data(1);
                 } else {
                     alert_error(data.message);
                 }
@@ -319,7 +325,8 @@ const delete_category = (id) => {
            .then(response => response.json())
            .then(data => {
                 if (data.success) {
-                    alert_success(data.message);
+                    alert_success_without_reload(res.message);
+                    fetch_category_data(1);
                 } else {
                     alert_error(data.message);
                 }
@@ -344,7 +351,8 @@ const delete_offer = (id) => {
            .then(response => response.json())
            .then(data => {
                 if (data.success) {
-                    alert_success(data.message);
+                    alert_success_without_reload(data.message);
+                    fetch_offer_data(1);
                 } else {
                     alert_error(data.message);
                 }
@@ -370,7 +378,8 @@ const delete_product = async (id) => {
            .then(response => response.json())
            .then(data => {
                 if (data.success) {
-                    alert_success(data.message);
+                    alert_success_without_reload(data.message);
+                    fetch_product_data(1, document.getElementById("products-search").value);
                 } else {
                     alert_error(data.message);
                 }

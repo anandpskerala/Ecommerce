@@ -380,12 +380,19 @@
             <button class="button" onclick="apply_coupon()">Apply Coupon</button>
         <% } %>
     </div>
-    <!-- <% if (!user.coupon) { %> -->
-        <div style="display: flex; flex-direction: row; gap: 5px; font-size: 14px;">
-            <span>Get a coupoun</span>
-            <a href="/user/get-a-coupon" style="text-decoration: none; color: rgb(0, 85, 255);">Try your luck</a>
+    <div id="couponModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>Available Coupons</h2>
+            <br>
+            <div id="couponsContainer" class="coupons-container">
+            </div>
         </div>
-    <!-- <% } %> -->
+    </div>
+    <div style="display: flex; flex-direction: row; gap: 5px; font-size: 14px;">
+        <span>Get a coupon.</span>
+        <button onclick="openModal()" style="color: rgb(0, 85, 255); border: none; background-color: transparent; cursor: pointer;">Show Available Coupons</button>
+    </div>
     <hr class="divider">
     <ul>
         <li><span>Subtotal:</span> <span>&#8377;<%= total_price %>.00</span></li>
@@ -394,7 +401,7 @@
         <% let order_amount; %>
         <% if (coupon && user.coupon) { %>
             <% order_amount = Math.ceil(total_price * (coupon.discount / 100)) %>
-            <li><span class="green" id="coupon-discount" value="<%= Math.ceil(total_price * (coupon.discount / 100)) %>">Coupon discount : </span><span class="green">- &#8377;<%= Math.ceil(total_price * (coupon.discount / 100)) %>.00</span></li>
+            <li><span class="red" id="coupon-discount" value="<%= Math.ceil(total_price * (coupon.discount / 100)) %>">Coupon discount : </span><span class="red">- &#8377;<%= Math.ceil(total_price * (coupon.discount / 100)) %>.00</span></li>
             <hr class="divider">
         <li id="price" value="<%= Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) + (total_price > 1000? 500: 0) %>"><strong>Total:</strong> <strong>&#8377;<%= Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) + + (total_price > 1000? 500: 0) %>.00</strong></li>
         <% } else { %>
@@ -409,6 +416,7 @@
 <script>
     let editId = null;
     const address_form = document.getElementById('address-form');
+    const phone = '<%- user.phone_number %>';
 
     const add_address = () => {
         document.getElementById('form-title').innerText = 'Add Address';
@@ -601,6 +609,18 @@
     };
 
     const place_order = async (carts, razorpay_order_id, status) => {
+        if (!phone) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Missing Phone Number',
+                text: 'Please add a phone number to place an order.',
+                confirmButtonText: 'Go to Account',
+            }).then(() => {
+                window.location.href = "/user/account";
+            });
+
+            return;
+        }
         carts = JSON.parse(carts);
         if (carts.length <= 0) {
             alert_error("No products in cart");
@@ -656,5 +676,55 @@
             alert_error(res.message);
         }
     }
+
+    function openModal() {
+        document.getElementById("couponModal").classList.add("show");
+    }
+
+    function closeModal() {
+        document.getElementById("couponModal").classList.remove("show");
+    }
+
+    async function loadCoupons() {
+        const container = document.getElementById("couponsContainer");
+        container.innerHTML = "";
+        const req = await fetch("/user/get-all-coupons", {
+            method: "POST",
+            body: new URLSearchParams({
+              user: '<%- session.user.id %>'
+            })
+        });
+        if (!req.ok) return alert_error("An error occurred");
+        const res = await req.json();
+        const coupons = res.coupons;
+        coupons.forEach(coupon => {
+            const couponElement = document.createElement("div");
+            couponElement.className = "coupon";
+            couponElement.innerHTML = `
+                <div>
+                    <div class="coupon-code">${coupon.name}</div>
+                    <div class="coupon-description">${coupon.description}</div>
+                    <div class="coupon-description" style="font-weight: 600;">${coupon.discount}% off</div>
+                </div>
+                <div>
+                    <button class="copy-btn" onclick="copyCoupon('${coupon.coupon_code}')">Copy</button>
+                </div>
+            `;
+            container.appendChild(couponElement);
+        });
+    }
+
+    function copyCoupon(code) {
+        navigator.clipboard.writeText(code).then(() => {
+            alert_success(`Coupon code copied to clipboard!`);
+        }).catch(err => {
+            alert_error("Failed to copy coupon code. Please try again.");
+            console.error(err);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadCoupons();
+    });
 </script>
 <%- include('../partials/user/footer.ejs') %>

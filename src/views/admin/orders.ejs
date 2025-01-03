@@ -28,49 +28,10 @@
                 </tr>
             </thead>
             <tbody id="user-table">
-                <% orders.forEach((order) => { %>
-                    <% if (order && order.user_id) { %>	
-                        <tr>
-                            <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
-                                <img src="/images/<%= order.image %>" style="width: 44px; height: 44px; border-radius: 6px;" alt="<%= order.name %> logo">
-                                <span style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= order.name %></span>
-                            </td>
-                            <td style="max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                <%- order.user_id.first_name + " " + order.user_id.last_name %>
-                            </td>
-                            <td><%= time.formatDate(order.createdAt) %></td>
-                            <td>&#8377;<%= order.price %></td>
-                            <td><span class="state-button <%= order.status %> label"><%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></span></td>
-                            <td>
-                                <a class="action-btn action-view" href="/admin/order/<%= order._id %>">View</button>
-                            </td>
-                        </tr>
-                    <% } %>
-                <% }) %>
             </tbody>
         </table>
 
-        <ul class="pagination">
-            <!-- Previous Page -->
-            <% if (currentPage > 1) { %>
-                <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
-            <% } else { %>
-                <li><span>&lt;</span></li>
-            <% } %>
-        
-            <!-- Page Numbers -->
-            <% for (let i = 1; i <= totalPages; i++) { %>
-                <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
-                    <%= i %>
-                </li>
-            <% } %>
-        
-            <!-- Next Page -->
-            <% if (currentPage < totalPages) { %>
-                <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
-            <% } else { %>
-                <li><span>&gt;</span></li>
-            <% } %>
+        <ul class="pagination" id="pagination">
         </ul>
     </div>
 </div>
@@ -79,14 +40,94 @@
         let url = new URL(window.location.href);
         if (url.searchParams.get('page') != null) {
             url.searchParams.delete('page');
+            fetch_order_data(1, "");
         }
         if (url.searchParams.get('status') == state) {
             url.searchParams.delete('status');
+            fetch_order_data(1, "");
         } else {
             url.searchParams.set('status', state);
+            fetch_order_data(1, state);
         }
-        window.location.href = url.toString();
-        window.reload();
+        window.history.replaceState({}, '', url);
+    };
+
+    const fetch_order_data = async (page, state) => {
+        const response = await fetch(`/admin/orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                page,
+                status: state,
+            }),
+        });
+
+        const data = await response.json();
+        render_orders(data);
+        createPagination(data.totalPages, data.currentPage);
+    };
+
+    const render_orders = (data) => {
+        const table = document.getElementById('user-table');
+        table.innerHTML = '';
+        if (data && data.orders && data.orders.length > 0) {
+            data.orders.forEach((order) => {
+                table.innerHTML += `
+                    <tr>
+                        <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                            <img src="/images/${order.image}" style="width: 44px; height: 44px; border-radius: 6px;" alt="${order.name} logo">
+                            <span style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${order.name}</span>
+                        </td>
+                        <td style="max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            ${order.user_id.first_name + " " + order.user_id.last_name}
+                        </td>
+                        <td>${formatDate(new Date(order.createdAt))}</td>
+                        <td>&#8377;${order.price}</td>
+                        <td><span class="state-button ${order.status} label">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span></td>
+                        <td>
+                            <a class="action-btn action-view" href="/admin/order/${order._id}">View</button>
+                        </td>
+                    </tr>`;
+            });
+        } else {
+            table.innerHTML = '<tr><td colspan="6">No orders found.</td></tr>';
+        }
     }
+
+    function createPagination(totalPages, currentPage) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        const prevLi = document.createElement('li');
+        prevLi.textContent = '<';
+        prevLi.className = currentPage === 1 ? 'disabled' : '';
+        prevLi.onclick = () => paginate_orders(currentPage - 1, totalPages, fetch_order_data);
+        pagination.appendChild(prevLi);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const pageLi = document.createElement('li');
+            pageLi.textContent = i;
+            pageLi.className = i === currentPage ? 'active' : '';
+            pageLi.onclick = () => paginate_orders(i, totalPages, fetch_order_data);
+            pagination.appendChild(pageLi);
+        }
+
+        const nextLi = document.createElement('li');
+        nextLi.textContent = '>';
+        nextLi.className = currentPage === totalPages ? 'disabled' : '';
+        nextLi.onclick = () => paginate_orders(currentPage + 1, totalPages, fetch_order_data);
+        pagination.appendChild(nextLi);
+    }
+
+    function paginate_orders(page, total, func) {
+        if (page < 1 || page > total) return;
+        let url = new URL(window.location.href);
+
+        func(page, url.searchParams.get('status'));
+    }
+
+    fetch_order_data(1, "");
 </script>
 <%- include('../partials/admin/footer.ejs') %>

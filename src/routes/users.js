@@ -1,6 +1,6 @@
 const express = require('express');	
 const mongoose = require('mongoose');
-const controllers = require('../controllers/user_controller');
+const controllers = require('../controllers/user/user_controller');
 const auth = require('../middlewares/user_authentication');
 const product_model = require('../models/product_model');
 const category_model = require('../models/category_model');
@@ -66,15 +66,8 @@ routes.get("/error", (req, res) => {
 
 routes.get("/products", async (req, res) => {
     try {
-        const {search = ""} = req.query;
         const categories = await category_model.find({});
-        const products = await product_model.aggregate([
-            {$unwind: '$variants'},
-            {$match: {title: {$regex: new RegExp(`^${search}`, "i")}}},
-            {$project: {_id: 1, title: 1, description: 1, images: 1, variants: 1}},
-            {$limit: 25}
-        ]);
-        return res.render('user/products', {title: "Products", cart_option: "page", session: req.session, products, categories, currency});
+        return res.render('user/products', {title: "Products", cart_option: "page", session: req.session, categories, currency});
     }  catch (err) {
         console.log(err);
         return res.redirect('/error');
@@ -143,6 +136,5 @@ routes.get("/logout", controllers.user_logout);
 routes.get("/login/google", controllers.google_login);
 routes.get("/login/google/auth", controllers.auth_google)
 routes.post("/products", controllers.get_products)
-
 
 module.exports = routes;

@@ -27,46 +27,80 @@
                 </tr>
             </thead>
             <tbody id="user-table">
-                <% brands.forEach((brand) => { %>
-                    <% let status = brand.status != false ? 'active' : 'blocked' %>
-                    <tr>
-                        <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
-                            <img src="/images/<%= brand.image %>" style="width: 44px; height: 44px; border-radius: 6px;" alt="<%= brand.name %> logo">
-                            <span><%= brand.name %></span>
-                        </td>
-                        <td><%= time.formatDate(brand.createdAt) %></td>
-                        <td><span class="status-<%= status %>"><%= status %></span></td>
-                        <td>
-                            <button class="action-btn action-edit" onclick="edit_brand('<%= JSON.stringify(brand) %>')">Edit</button>
-                            <button class="action-btn action-delete" onclick="delete_brand('<%= brand._id %>')">Delete</button>                               
-                        </td>
-                    </tr>
-                <% }) %>
             </tbody>
         </table>
 
-        <ul class="pagination">
-            <!-- Previous Page -->
-            <% if (currentPage > 1) { %>
-                <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
-            <% } else { %>
-                <li><span>&lt;</span></li>
-            <% } %>
-        
-            <!-- Page Numbers -->
-            <% for (let i = 1; i <= totalPages; i++) { %>
-                <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
-                    <%= i %>
-                </li>
-            <% } %>
-        
-            <!-- Next Page -->
-            <% if (currentPage < totalPages) { %>
-                <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
-            <% } else { %>
-                <li><span>&gt;</span></li>
-            <% } %>
+        <ul class="pagination" id="pagination">
         </ul>
     </div>
 </div>
+<script>
+    const fetch_brand_data = async (page) => {
+        const response = await fetch(`/admin/brands`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                page: page
+            }),
+        });
+        const data = await response.json();
+        render_brands(data);
+        createPagination(data.totalPages, data.currentPage);
+    };
+
+    const render_brands = (data) => {
+        const table = document.getElementById("user-table");
+        table.innerHTML = "";
+        if (data && data.brands.length > 0) {
+            data.brands.forEach((brand) => {
+                let status = brand.status != false ? 'active' : 'blocked';
+                let date_data = formatDate(new Date(brand.createdAt));
+                table.innerHTML += `
+                <tr>
+                    <td style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                        <img src="/images/${brand.image}" style="width: 44px; height: 44px; border-radius: 6px;" alt="${brand.name} logo">
+                        <span>${brand.name}</span>
+                    </td>
+                    <td>${date_data}</td>
+                    <td><span class="status-${status}">${status}</span></td>
+                    <td>
+                        <button class="action-btn action-edit" onclick='edit_brand(${JSON.stringify(brand)})'>Edit</button>
+                        <button class="action-btn action-delete" onclick="delete_brand('${brand._id}')">Delete</button>                               
+                    </td>
+                </tr>`; 
+            });
+        } else {
+            table.innerHTML = `<tr><td colspan="4">No Brands Found.</td></tr>`;
+        }
+    };
+
+    function createPagination(totalPages, currentPage) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        const prevLi = document.createElement('li');
+        prevLi.textContent = '<';
+        prevLi.className = currentPage === 1 ? 'disabled' : '';
+        prevLi.onclick = () => paginate(currentPage - 1, totalPages, fetch_brand_data);
+        pagination.appendChild(prevLi);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const pageLi = document.createElement('li');
+            pageLi.textContent = i;
+            pageLi.className = i === currentPage ? 'active' : '';
+            pageLi.onclick = () => paginate(i, totalPages, fetch_brand_data);
+            pagination.appendChild(pageLi);
+        }
+
+        const nextLi = document.createElement('li');
+        nextLi.textContent = '>';
+        nextLi.className = currentPage === totalPages ? 'disabled' : '';
+        nextLi.onclick = () => paginate(currentPage + 1, totalPages, fetch_brand_data);
+        pagination.appendChild(nextLi);
+    }
+
+    fetch_brand_data(1);
+</script>
 <%- include('../partials/admin/footer.ejs') %>

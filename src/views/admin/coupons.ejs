@@ -23,6 +23,7 @@
                     <th>Coupon code</th>
                     <th>Discount</th>
                     <th>Min</th>
+                    <th>Max</th>
                     <th>Expiry</th>
                     <th>Created</th>
                     <th>Status</th>
@@ -30,46 +31,9 @@
                 </tr>
             </thead>
             <tbody id="user-table">
-                <% coupons.forEach((coupon) => { %>
-                    <% let status = coupon.status != false ? 'active' : 'blocked' %>
-                    <tr>
-                        <td><%= coupon.coupon_code %></td>
-                        <td style="color: red;"><%= coupon.discount %>%</td>
-                        <td><%= coupon.min_amount %></td>
-                        <td><%= time.formatDate(coupon.expiry) %></td>
-                        <td><%= time.formatDate(coupon.createdAt) %></td>
-                        <td><span class="status-<%= status %>"><%= status %></span></td>
-                        <td>
-                            <div class="col" style="display: flex; flex-direction: row;">
-                                <a class="action-btn action-edit" href="/admin/edit-coupon/<%= coupon._id %>">Edit</a>
-                                <button class="action-btn action-delete" onclick="delete_coupon('<%= coupon._id %>')">Delete</button>
-                            </div>
-                        </td>
-                    </tr>
-                <% }) %>
             </tbody>
         </table>
-        <ul class="pagination">
-            <!-- Previous Page -->
-            <% if (currentPage > 1) { %>
-                <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
-            <% } else { %>
-                <li><span>&lt;</span></li>
-            <% } %>
-        
-            <!-- Page Numbers -->
-            <% for (let i = 1; i <= totalPages; i++) { %>
-                <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
-                    <%= i %>
-                </li>
-            <% } %>
-        
-            <!-- Next Page -->
-            <% if (currentPage < totalPages) { %>
-                <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
-            <% } else { %>
-                <li><span>&gt;</span></li>
-            <% } %>
+        <ul class="pagination" id="pagination">
         </ul>
     </div>
 </div>
@@ -103,5 +67,75 @@
             }
         });
     };
+
+    const fetch_coupon_data = async (page) => {
+        const response = await fetch(`/admin/coupons`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                page: page
+            }),
+        });
+
+        const data = await response.json();
+        render_coupons(data);
+        createPagination(data.totalPages, data.currentPage);
+    };
+
+    const render_coupons = (data) => {
+        const userTable = document.getElementById('user-table');
+        userTable.innerHTML = '';
+        if (data && data.coupons && data.coupons.length > 0) {
+            data.coupons.forEach((coupon) => {
+                let status = coupon.status!= false? 'active' : 'blocked';
+                userTable.innerHTML += `
+                    <tr>
+                        <td>${coupon.coupon_code}</td>
+                        <td style="color: red;">${coupon.discount}%</td>
+                        <td>${coupon.min_amount}</td>
+                        <td>${coupon.max_amount}</td>
+                        <td>${formatDate(new Date(coupon.expiry))}</td>
+                        <td>${formatDate(new Date(coupon.createdAt))}</td>
+                        <td><span class="status-${status}">${coupon.status == true ? 'Active': 'Inactive'}</span></td>
+                        <td>
+                            <div class="col" style="display: flex; flex-direction: row;">
+                                <a class="action-btn action-edit" href="/admin/edit-coupon/${coupon._id}">Edit</a>
+                                <button class="action-btn action-delete" onclick="delete_coupon('${coupon._id}')">Delete</button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+        }
+    };
+
+    function createPagination(totalPages, currentPage) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        const prevLi = document.createElement('li');
+        prevLi.textContent = '<';
+        prevLi.className = currentPage === 1 ? 'disabled' : '';
+        prevLi.onclick = () => paginate(currentPage - 1, totalPages, fetch_coupon_data);
+        pagination.appendChild(prevLi);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const pageLi = document.createElement('li');
+            pageLi.textContent = i;
+            pageLi.className = i === currentPage ? 'active' : '';
+            pageLi.onclick = () => paginate(i, totalPages, fetch_coupon_data);
+            pagination.appendChild(pageLi);
+        }
+
+        const nextLi = document.createElement('li');
+        nextLi.textContent = '>';
+        nextLi.className = currentPage === totalPages ? 'disabled' : '';
+        nextLi.onclick = () => paginate(currentPage + 1, totalPages, fetch_coupon_data);
+        pagination.appendChild(nextLi);
+    }
+
+
+    fetch_coupon_data(1);
 </script>
 <%- include('../partials/admin/footer.ejs') %>

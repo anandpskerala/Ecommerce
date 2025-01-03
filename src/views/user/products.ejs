@@ -70,14 +70,6 @@
         </div>
 
         <div class="product-grid" id="product-grid">
-            <% products.forEach((product) => { %>
-                <a class="product-card" href="/product/<%= product._id %>">
-                    <img src="/images/<%= product.images[0] %>" alt="<%= product.title %> Image" class="product-image" />
-                    <h3 class="product-name" aria-label="<%= product.title %>" title="<%= product.title %>"><%= product.title %></h3>
-                    <p class="product-price">&#8377;<%= product.variants.price %></p>
-                    <button class="add-to-cart"><%= product.variants.name %></button>
-                </a>
-            <% }) %>
         </div>
     </main>
 </div>
@@ -170,9 +162,16 @@
             h3.innerText = product.title;
             a.appendChild(h3);
 
+            const color = document.createElement("p");
+            color.classList.add("product-color");
+            color.innerText = product.variants.colors.color;
+            color.style.textTransform = 'capitalize';
+            a.appendChild(color);
+
             const p = document.createElement("p");
             p.classList.add("product-price");
-            p.innerHTML = `&#8377;${product.variants.price}`;
+            console.log(product.variants.colors)
+            p.innerHTML = `&#8377;${product.variants.colors.price}`;
             a.appendChild(p);
 
             const button = document.createElement("button");
@@ -279,10 +278,10 @@
                 sorts = { ordered: 1 };
                 break;
             case 'price-low':
-                sorts = { "variants.price": 1 }; 
+                sorts = { "variants.colors.price": 1 }; 
                 break;
             case 'price-high':
-                sorts = { "variants.price": -1 };
+                sorts = { "variants.colors.price": -1 };
                 break;
             case 'new':
                 sorts = { "createdAt": -1 };
@@ -308,5 +307,6 @@
         if (search_term) return search_input.value = search_term;
     };
     search_box();
+    fetch_data_from_server();
 </script>
 <%- include('../partials/user/footer.ejs') %>

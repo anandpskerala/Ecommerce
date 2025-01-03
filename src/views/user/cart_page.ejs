@@ -34,8 +34,12 @@
                             <% let stocks = 0; %>
                             <% cart.product.variants.forEach((variant) => { %>
                                 <% if (variant.name == cart.variant) { %>
-                                    <% console.log(true) %>
-                                    <% stocks = variant.quantity; %>
+                                    <% // Loop through the colors of the variant to find the specific color %>
+                                    <% variant.colors.forEach((color) => { %>
+                                        <% if (color.color.toLowerCase() === cart.color.toLowerCase()) { %>
+                                            <% stocks = color.quantity; %>
+                                        <% } %>
+                                    <% }); %>
                                 <% } %>
                             <% }); %>
                             <div class="quantity-selector" style="margin: 0;">

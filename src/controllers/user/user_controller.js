@@ -1,9 +1,9 @@
 const crypto = require('crypto');
-const user_model = require("../models/user_model");
-const otp_model = require("../models/otp_model");
-const product_model = require("../models/product_model");
-const wallet_model = require("../models/wallet_model");
-const referral_model = require('../models/referral_model');
+const user_model = require("../../models/user_model");
+const otp_model = require("../../models/otp_model");
+const product_model = require("../../models/product_model");
+const wallet_model = require("../../models/wallet_model");
+const referral_model = require('../../models/referral_model');
 
 const generate_otp = () => {
     return crypto.randomInt(1000, 9999);
@@ -200,6 +200,7 @@ const auth_google = async (req, res) => {
                     referrer.referred_users.push(result._id);
                     referrer.amount_earned += 100;
                     await referrer.save();
+                    await wallet_model.updateOne({user_id: referrer.user}, {$inc: {balance: 100}, $push: { transactions: {amount: 100, type: "credit", description: "Referral Bonus"}}});
                 }
             }
             if (req.session.admin) {
@@ -278,40 +279,59 @@ const auth_google = async (req, res) => {
 
 const get_products = async (req, res) => {
     try {
-        const {search = ""} = req.query;
-        const { sort = null } = req.body;
-        let filters = []
-        if (req.body.filters && req.body.filters.length > 0)  {
-            req.body.filters.forEach(filter => {
-                if (filter.type == "variants") {
-                    filters.push({['variants.name']: filter.name});
+        const { search = "" } = req.query;
+        const { sort = null, filters = [] } = req.body;
+
+        const matchConditions = [
+            { title: { $regex: new RegExp(`.*${search}.*`, "i") } }
+        ];
+
+        if (filters.length > 0) {
+            const filterConditions = filters.map(filter => {
+                if (filter.type === "variants") {
+                    return { 'variants.name': filter.name };
+                } else if (filter.type === "colors") {
+                    return { 'variants.colors.color': filter.name };
                 } else {
-                    filters.push({[filter.type]: filter.name});
+                    return { [filter.type]: filter.name };
                 }
             });
+            matchConditions.push({ $or: filterConditions });
         }
-        let products;
+
+        const pipeline = [
+            { $unwind: '$variants' },
+            { $unwind: '$variants.colors' },
+            { $match: { $and: matchConditions } },
+            {
+                $project: {
+                    _id: 1,
+                    title: 1,
+                    description: 1,
+                    images: 1,
+                    stock: 1,
+                    category: 1,
+                    brand: 1,
+                    offer: 1,
+                    'variants.name': 1,
+                    'variants.colors.color': 1,
+                    'variants.colors.price': 1,
+                    'variants.colors.quantity': 1
+                }
+            }
+        ];
         if (sort) {
-            products = await product_model.aggregate([
-                {$unwind: '$variants'},
-                {$match: {title: {$regex: new RegExp(`.*${search}.*`, "i")}, ...(filters.length > 0 ? { $or: filters } : {})}},
-                {$project: {_id: 1, title: 1, description: 1, images: 1, variants: 1}},
-                {$sort: sort},
-                {$limit: 25}
-            ])
-        } else {
-            products = await product_model.aggregate([
-                {$unwind: '$variants'},
-                {$match: {title: {$regex: new RegExp(`.*${search}.*`, "i")}, ...(filters.length > 0 ? { $or: filters } : {})}},
-                {$project: {_id: 1, title: 1, description: 1, images: 1, variants: 1}},
-                {$limit: 25}
-            ])
+            pipeline.push({ $sort: sort });
         }
+        pipeline.push({ $limit: 25 });
+        const products = await product_model.aggregate(pipeline);
+
         res.json(products);
     } catch (err) {
-        console.log(err);
-        res.status(500).json({message: "Server Error"});
+        console.error("Error fetching products:", err);
+        res.status(500).json({ message: "Server Error" });
     }
 };
+
 
 module.exports = { user_signup, user_login, user_logout, google_login, auth_google, get_products };

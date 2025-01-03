@@ -13,7 +13,7 @@
                         <path d="M12.1383 19.219C14.1931 19.219 16.1638 18.4027 17.6168 16.9498C19.0697 15.4968 19.886 13.5261 19.886 11.4713C19.886 9.41651 19.0697 7.44585 17.6168 5.99288C16.1638 4.53991 14.1931 3.72363 12.1383 3.72363C10.0835 3.72363 8.11284 4.53991 6.65987 5.99288C5.2069 7.44585 4.39063 9.41651 4.39062 11.4713C4.39063 13.5261 5.2069 15.4968 6.65987 16.9498C8.11284 18.4027 10.0835 19.219 12.1383 19.219Z" stroke="#878A92" stroke-width="1.44" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M21.4356 21.7546L17.4913 17.8104" stroke="#878A92" stroke-width="1.44" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    <input type="text" id="user-search" placeholder="Search customers" value="<%= email %>" />
+                    <input type="text" id="user-search" placeholder="Search customers" />
                 </div>
             </div>
         </div>
@@ -27,43 +27,84 @@
                 </tr>
             </thead>
             <tbody id="user-table">
-                <% data.forEach((user) => { %>
-                    <% let status = user.is_blocked == false ? 'active' : 'blocked' %>
-                    <tr>
-                        <td><%- user.first_name + " " + user.last_name %></td>
-                        <td><%= user.email %></td>
-                        <td><span class="status-<%= status %>"><%= status %></span></td>
-                        <td>
-                            <button class="action-btn action-edit" onclick="edit_user('<%= JSON.stringify(user) %>')">Edit</button>
-                            <button class="action-btn action-delete" onclick="delete_user('<%= user._id %>')">Delete</button>
-                        </td>
-                    </tr>
-                <% }) %>
             </tbody>
         </table>
 
-        <ul class="pagination">
-            <!-- Previous Page -->
-            <% if (currentPage > 1) { %>
-                <li onclick="paginate('<%= currentPage - 1 %>')">&lt;</li>
-            <% } else { %>
-                <li><span>&lt;</span></li>
-            <% } %>
-        
-            <!-- Page Numbers -->
-            <% for (let i = 1; i <= totalPages; i++) { %>
-                <li class="<%= i === currentPage ? 'active' : '' %>" onclick="paginate('<%= i %>')">
-                    <%= i %>
-                </li>
-            <% } %>
-        
-            <!-- Next Page -->
-            <% if (currentPage < totalPages) { %>
-                <li onclick="paginate('<%= currentPage + 1 %>')">&gt;</li>
-            <% } else { %>
-                <li><span>&gt;</span></li>
-            <% } %>
+        <ul class="pagination" id="pagination">
         </ul>
     </div>
 </div>
+<script>
+    const fetch_user_data = async (page, email) => {
+        const response = await fetch(`/admin/customers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                page,
+                email
+            }),
+        });
+        const data = await response.json();
+        render_users(data);
+        createPagination(data.totalPages, data.currentPage);
+    };
+
+    const render_users = (data) => {
+        const userTable = document.getElementById('user-table');
+        userTable.innerHTML = '';
+        if (data && data.data && data.data.length > 0) {
+            data.data.forEach((user) => {
+                let status = user.is_blocked == false? 'active' : 'blocked';
+                userTable.innerHTML += `
+                    <tr>
+                        <td>${user.first_name + " " + user.last_name}</td>
+                        <td>${user.email}</td>
+                        <td><span class="status-${status}">${status}</span></td>
+                        <td>
+                            <button class="action-btn action-edit" onclick='edit_user(${JSON.stringify(user)})'>Edit</button>
+                            <button class="action-btn action-delete" onclick="delete_user('${user._id}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            userTable.innerHTML = '<tr><td colspan="4">No customers found.</td></tr>';
+        }
+    };
+
+    function createPagination(totalPages, currentPage) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        const prevLi = document.createElement('li');
+        prevLi.textContent = '<';
+        prevLi.className = currentPage === 1 ? 'disabled' : '';
+        prevLi.onclick = () => paginate_user(currentPage - 1, totalPages, fetch_user_data);
+        pagination.appendChild(prevLi);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const pageLi = document.createElement('li');
+            pageLi.textContent = i;
+            pageLi.className = i === currentPage ? 'active' : '';
+            pageLi.onclick = () => paginate_user(i, totalPages, fetch_user_data);
+            pagination.appendChild(pageLi);
+        }
+
+        const nextLi = document.createElement('li');
+        nextLi.textContent = '>';
+        nextLi.className = currentPage === totalPages ? 'disabled' : '';
+        nextLi.onclick = () => paginate_user(currentPage + 1, totalPages, fetch_user_data);
+        pagination.appendChild(nextLi);
+    }
+
+    function paginate_user(page, total, func) {
+        if (page < 1 || page > total) return;
+        const email = document.getElementById("user-search").value;
+        func(page, email);
+    }
+
+    fetch_user_data(1, "")
+</script>
 <%- include('../partials/admin/footer.ejs') %>
