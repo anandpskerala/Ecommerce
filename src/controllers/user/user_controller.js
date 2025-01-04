@@ -21,38 +21,6 @@ const user_signup = async (req, res) => {
         const otp = new otp_model({email: email.toLowerCase(), otp: generate_otp()});
         let res_otp = await otp.save();
         
-        // const user = new Users({first_name, last_name, email, password});
-        // let result = await user.save();
-
-        // if (req.session.admin) {
-        //     req.session.user = {
-        //         id: result._id,
-        //         first_name: result.first_name,
-        //         last_name: result.last_name,
-        //         email: result.email,
-        //     };
-        //     req.session.otp = {user: {first_name, last_name, email, password}, expiry: res_otp.expiry};
-        //     return res.redirect("/user/verify-signup");
-        // } else {
-        //     req.session.regenerate((err) => {
-        //         if (err) {
-        //             console.error("Error regenerating session: " + err);
-        //             req.session.error = "Session Error. Please try again.";
-        //             return res.redirect("/signup");
-        //         }
-                
-        //         req.session.user = {
-        //             id: result._id,
-        //             first_name: result.first_name,
-        //             last_name: result.last_name,
-        //             email: result.email,
-        //         };
-        //         req.session.otp = {email, expiry: res_otp.expiry};
-        
-        //         delete req.session.error;
-        
-        //         return res.redirect("/user/verify-signup");
-        //     });
         delete req.session.error;
         req.session.otp = {user: {first_name, last_name, email: email.toLowerCase(), password}, expiry: res_otp.expiry};
         return res.redirect("/user/verify-signup");
@@ -143,7 +111,7 @@ const user_logout = (req, res) => {
 
 const google_login = (req, res) => {
     try {
-        const REDIRECT_URI = `${req.protocol}://${req.get('host')}/login/google/auth`;
+        const REDIRECT_URI = `${process.env.DOMAIN}/login/google/auth`;
         console.log(REDIRECT_URI)
         const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile email`;
         return res.redirect(url);
@@ -154,7 +122,7 @@ const google_login = (req, res) => {
 }
 
 const auth_google = async (req, res) => {
-    const REDIRECT_URI = `${req.protocol}://${req.get('host')}/login/google/auth`;
+    const REDIRECT_URI = `${process.env.DOMAIN}/login/google/auth`;
     const { code } = req.query;
     const reqs = await fetch("https://oauth2.googleapis.com/token", {
         method: "POST",
