@@ -29,7 +29,6 @@ const send_otp = async (req, res) => {
             return res.redirect("/forgot-password");
         }
         const otp = new otp_model({email: email.toLowerCase(), otp: generate_otp()});
-        console.log(otp);
         let result = await otp.save();
         req.session.otp = {email: email.toLowerCase(), expiry: result.expiry};
         return res.redirect("/user/verify-otp");
@@ -205,7 +204,6 @@ const change_phone = async (req, res) => {
 };
 
 const add_address = async (req, res) => {
-    console.log(req.body)
     const {house_address, street_address, city, state, country, zip_code} = req.body;
     const exists = await user_model.findOne({_id: req.session.user.id});
     if (!exists) {
@@ -349,7 +347,6 @@ const remove_coupon = async (req, res) => {
     if (!user) {
         return res.json({ success: false, message: "User not found" });
     }
-    console.log(user.coupon, coupon._id);
     if (user.coupon.toString() == coupon._id.toString()) {
         delete user.coupon;
         coupon.users.pull(user._id)

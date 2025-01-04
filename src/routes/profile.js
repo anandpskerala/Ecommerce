@@ -33,7 +33,6 @@ routes.get("/verify-otp", (req, res) => {
 });
 
 routes.get("/verify-signup", (req, res) => {
-    console.log(req.session)
     if (!req.session.otp) {
         return res.redirect('/signup');
     }
@@ -220,7 +219,6 @@ routes.get("/order-summary/:id", auth.authenticateUser, async (req, res) => {
     }
     const user = await user_model.findOne({_id: req.session.user.id});
     const address = user.addresses.find(v => v._id.toString() == orders[0].address.toString());
-    console.log(address)
     return res.render('user/order_summary', {title: "Order Summary", cart_option: "page", payment, orders, time, user, address, currency});
 });
 

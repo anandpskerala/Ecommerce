@@ -14,7 +14,6 @@ const add_order = async (req, res) => {
     session.startTransaction();
     try {
         let { carts, payment_method, address, price, razorpay_order_id, status, coupon_discount } = req.body;
-        console.log("Price:", price);
 
         if (!carts || !payment_method || !address) {
             return res.json({ success: false, message: "All fields are required" });
@@ -84,7 +83,6 @@ const add_order = async (req, res) => {
                 return res.json({ success: false, message: `Insufficient quantity in stock for selected color` });
             }
 
-            console.log(product.offer);
             let finalPrice = product_cart.quantity * colorDetail.price;
             if (product.offer && product.offer !== "none") {
                 const offer = await offer_model.findOne({ name: product.offer }).session(session);

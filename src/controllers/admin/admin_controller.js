@@ -422,7 +422,6 @@ const get_sales_report = async (req, res) => {
                 ? await get_product_report(start, end)
                 : await get_category_report(start, end);
     
-    console.log(sales_report);
     
     const payment_report = await payment_model.find({createdAt: {$gte: start, $lte: end}}, {coupon_discount: 1});
     return res.json({sales: sales_report, coupons: payment_report});

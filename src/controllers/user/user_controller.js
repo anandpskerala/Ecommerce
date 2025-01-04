@@ -112,7 +112,6 @@ const user_logout = (req, res) => {
 const google_login = (req, res) => {
     try {
         const REDIRECT_URI = `${process.env.DOMAIN}/login/google/auth`;
-        console.log(REDIRECT_URI)
         const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile email`;
         return res.redirect(url);
     } catch (err) {

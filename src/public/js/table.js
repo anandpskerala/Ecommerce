@@ -174,7 +174,6 @@ const edit_brand = async (data) => {
         cancelButtonColor: 'Crimson',
         preConfirm: () => {
             let form = document.getElementById('brand-edit-form');
-            console.log(form);
             let res = new FormData(form);
             res.append("id", brand._id)
             let isValid = true;

@@ -8,7 +8,6 @@ if (search_element) {
             const search_term = event.target.value.trim();
             const current_path = window.location.pathname;
             const search_query = `?search=${encodeURIComponent(search_term)}`;
-            console.log(current_path.split("?")[0])
 
             if (current_path.split("?")[0] != `/products`) {
                 window.location.href = `/products${search_query}`;

@@ -271,7 +271,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert_error("Please fill out all required fields")
                 return false;
             } else {
-                console.log(input.type)
                 if (input.id == "activation" || input.id == "expiry") {
                     let date = new Date(input.value).toISOString();
                     formdata.append(input.name, date);
@@ -304,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let formdata = new URLSearchParams();
         let isValid = true;
         Array.from(form.elements).forEach((input) => {
-            console.log(input)
             if (!handleValidation(input)) {
                 isValid = false;
             } else {
@@ -370,63 +368,6 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
     const variant_elements = document.querySelectorAll(".variant-option");
-    // variant_elements.forEach((element) => {
-    //     element.addEventListener("click", async (e) => {
-    //         e.preventDefault();
-    //         let tbody = document.getElementById("variants");
-    //         let data = tbody.value != "" ? JSON.parse(tbody.value): {};
-    //         const { value: formValues } = await Swal.fire({
-    //             title: "Add Variant",
-    //             html: `
-    //             <form id="variant-form" style="display: flex; flex-direction: column; width: 100%; align-items: center; gap: 20px;">
-    //                 <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
-    //                     <label for="name" class="form-label">Variant Name</label>
-    //                     <input id="name" name="name" class="swal2-input" value="${e.target.title}" data-validate="required|min:2" disabled>
-    //                 </div>
-    //                 <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
-    //                     <label for="price" class="form-label">Price</label>
-    //                     <input id="price" type="number" name="price" class="swal2-input" value="${data[e.target.title]? data[e.target.title].price: ''}" data-validate="required|nonegative">
-    //                     <span class="form-error"></span>
-    //                 </div>
-    //                 <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
-    //                     <label for="quantity" class="form-label">Quantity</label>
-    //                     <input id="quantity" type="number" name="quantity" class="swal2-input" value="${data[e.target.title]? data[e.target.title].quantity: ''}" data-validate="required|nonegative">
-    //                     <span class="form-error"></span>
-    //                 </div>
-    //             </form>
-    //             `,
-    //             focusConfirm: false,
-    //             showCancelButton: true,
-    //             confirmButtonText: "Save",
-    //             cancelButtonColor: 'Crimson',
-    //             preConfirm: () => {
-    //                 let form = document.getElementById('variant-form');
-    //                 let res = {...data};
-    //                 let isValid = true;
-
-    //                 if (form) {
-    //                     Array.from(form.elements).forEach((input) => {
-    //                         if (!handleValidation(input)) {
-    //                             isValid = false;
-    //                         } else {
-    //                             res[input.id] = input.value;
-    //                         }
-    //                     })
-    //                 }
-    //                 return isValid? res : false;
-    //             }
-    //         });
-
-    //         if (formValues) {
-    //             data[formValues.name] = {price: formValues.price, quantity: formValues.quantity};
-    //             tbody.value = JSON.stringify(data)
-    //         }
-    //     })
-    // });
-
-
-
-
 
     variant_elements.forEach((element) => {
         element.addEventListener("click", async (e) => {
@@ -434,14 +375,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
             const variantName = e.target.title;
     
-            // Initialize data for variant if not present
             if (!variantColorStock[variantName]) {
                 variantColorStock[variantName] = {};
             }
     
             let variantData = variantColorStock[variantName]; 
     
-            // Step 1: Allow user to select a color
+
             const { value: selectedColor } = await Swal.fire({
                 title: `Select a Color for Variant: ${variantName}`,
                 input: 'select',
@@ -451,14 +391,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     green: "Green",
                     blue: "Blue",
                 },
-                inputValue: Object.keys(variantData)[0] || '', // Preselect first color if available
+                inputValue: Object.keys(variantData)[0] || '',
                 showCancelButton: true,
                 confirmButtonText: "Next",
             });
     
-            if (!selectedColor) return; // Exit if no color selected
+            if (!selectedColor) return;
     
-            // Step 2: Prompt user to add/update price and quantity for the color
             const colorDetails = variantData[selectedColor] || { price: '', quantity: '' };
             const { value: formValues } = await Swal.fire({
                 title: `Add Details for ${selectedColor} (${variantName})`,
@@ -489,11 +428,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     
             if (formValues) {
-                // Step 3: Update central data structure
                 variantData[selectedColor] = formValues;
                 variantColorStock[variantName] = variantData;
     
-                // Optionally update the hidden input to store the full structure
                 document.getElementById("variants").value = JSON.stringify(variantColorStock);
             }
         });

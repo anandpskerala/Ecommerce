@@ -4,6 +4,7 @@ const path = require('path');
 const body_parser = require('body-parser');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const MongoStore = require('connect-mongo');
 const cors = require('cors');
 const logger = require('morgan');
 const no_cache = require('./middlewares/nocache');
@@ -20,6 +21,7 @@ const port = process.env.PORT || 5000;
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.set('trust proxy', true);
 
 app.use(no_cache);
 app.use(cors());
@@ -32,6 +34,11 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    store: new MongoStore({
+        mongoUrl: process.env.MONGODB_URI,
+        mongooseConnection: mongoose.connection,
+        ttl: 14 * 24 * 60 * 60,
+    }),
     cookie: {
         maxAge: 1000 * 60 * 60,
         httpOnly: true,
