@@ -4,6 +4,7 @@ const offer_model = require('../../models/offer_model');
 const cart_model = require('../../models/cart_model');
 const product_model = require('../../models/product_model');
 const coupon_model = require('../../models/coupon_model');
+const category_model = require('../../models/category_model');
 
 
 const add_to_cart = async (req, res) => {
@@ -33,7 +34,16 @@ const add_to_cart = async (req, res) => {
         return res.json({ success: false, message: 'Insufficient quantity in stock' });
     }
 
-    const offer = await offer_model.findOne({ name: product.offer });
+    let offer = await offer_model.findOne({ name: product.offer });
+    if (!offer) {
+        let offers = await offer_model.find({type: 'category', status: true});
+        let category = await category_model.findOne({name: product.category});
+        offers.forEach((cate_offer) => {
+            if (category.offer == cate_offer.name) {
+                offer = cate_offer;
+            }
+        })
+    }
     const price = offer 
         ? (quantity * selected_color.price - Math.ceil(selected_color.price * offer.discount / 100)) 
         : quantity * selected_color.price;
