@@ -17,7 +17,7 @@
       <% if (orders && orders.length > 0)  { %>
         <div class="order-list">
           <% orders.forEach((order, index) => { %>
-              <% if (order.payment && order.payment.status != "failed") { %>
+              <% if (order.status == "cancelled" || (order.payment && order.payment.status != "failed")) { %>
                   <div class="order-item">
                   <img src="/images/<%= order.image %>" alt="Product Image <%= index %>" class="product-image">
                   <a href="/product/<%= order.product_id %>" class="order-details">

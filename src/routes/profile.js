@@ -129,21 +129,10 @@ routes.get("/change-password", auth.authenticateUser, (req, res) => {
 });
 
 routes.get("/carts", auth.authenticateUser, async (req, res) => {
-    const carts = await cart_model.find({user: req.session.user.id}).sort({createdAt: -1}).populate("product");
-    const result = await cart_model.aggregate([
-        {
-            $match: { user: new mongoose.Types.ObjectId(req.session.user.id) }
-        },
-        {
-            $group: {
-                _id: null,
-                totalPrice: { $sum: { $multiply: ["$price", "$quantity"] } }
-            }
-        }
-    ]);
-    const total_price = result.length > 0 ? result[0].totalPrice : 0;
-    return res.render('user/cart_page', {title: "Cart", cart_option: "page", carts, total_price});
+    return res.render('user/cart_page', {title: "Cart", cart_option: "page"});
 });
+
+routes.post("/carts", auth.authenticateUserApi, cart_controller.load_carts);
 
 routes.get("/manage-address", auth.authenticateUser, async (req, res) => {
     const user = await user_model.findOne({_id: req.session.user.id});
@@ -205,6 +194,7 @@ routes.get("/checkout", auth.authenticateUser, async (req, res) => {
         return res.redirect('/user/carts');
     }
 });
+routes.post("/checkout", auth.authenticateUserApi, cart_controller.load_checkout);
 
 routes.get("/order-summary/:id", auth.authenticateUser, async (req, res) => {
     const {id} = req.params;

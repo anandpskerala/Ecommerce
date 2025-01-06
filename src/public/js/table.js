@@ -298,7 +298,7 @@ const delete_brand = (id) => {
            .then(response => response.json())
            .then(data => {
                 if (data.success) {
-                    alert_success_without_reload(res.message);
+                    alert_success_without_reload(data.message);
                     fetch_brand_data(1);
                 } else {
                     alert_error(data.message);
@@ -324,7 +324,7 @@ const delete_category = (id) => {
            .then(response => response.json())
            .then(data => {
                 if (data.success) {
-                    alert_success_without_reload(res.message);
+                    alert_success_without_reload(data.message);
                     fetch_category_data(1);
                 } else {
                     alert_error(data.message);

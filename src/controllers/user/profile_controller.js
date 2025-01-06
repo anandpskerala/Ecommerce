@@ -405,7 +405,7 @@ const get_referrals = async (req, res) => {
 
 const get_all_coupouns = async (req, res) => {
     try {
-        const {user} = req.body;
+        const user = req.session.user.id;
         const coupons = await coupon_model.find({
             status: true, 
             limit: {$gt: 0},

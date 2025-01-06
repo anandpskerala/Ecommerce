@@ -45,7 +45,8 @@ const remove_from_cart = async (product_id) => {
 
     const res = await req.json();
     if (res.success) {
-        alert_success(res.message);
+        alert_success_without_reload(res.message);
+        fetch_cart_data();
     } else {
         alert_error(res.message);
     }
@@ -74,6 +75,17 @@ cart_minus_buttons.forEach((minus_element, index) => {
     });
 });
 
+const minus_cart = (index) => {
+    const cart_quantity = document.getElementById(`cart-quantity-${index}`);
+    let current_quantity = parseInt(cart_quantity.value);
+    const min = parseInt(cart_quantity.min);
+    if (current_quantity > min) {
+        cart_quantity.value = --current_quantity;
+    }
+    update_cart_buttons(index, current_quantity);
+    update_cart_quantity(index, current_quantity);
+}
+
 cart_plus_buttons.forEach((plus_element, index) => {
     plus_element.addEventListener('click', () => {
         const cart_quantity = document.getElementById(`cart-quantity-${index}`);
@@ -86,6 +98,17 @@ cart_plus_buttons.forEach((plus_element, index) => {
         update_cart_quantity(index, current_quantity);
     });
 });
+
+const plus_cart = (index) => {
+    const cart_quantity = document.getElementById(`cart-quantity-${index}`);
+    let current_quantity = parseInt(cart_quantity.value);
+    const max = parseInt(cart_quantity.max);
+    if (current_quantity < max) {
+        cart_quantity.value = ++current_quantity;
+    }
+    update_cart_buttons(index, current_quantity);
+    update_cart_quantity(index, current_quantity);
+}
 
 const update_cart_buttons = (index, value) => {
     const cart_quantity = document.getElementById(`cart-quantity-${index}`);
@@ -127,7 +150,7 @@ const update_cart_quantity = debounce_request(async (index, quantity) => {
         alert_error(res.message);
     } else {
         if (window.location.pathname == '/user/carts') {
-            window.location.reload();
+            fetch_cart_data();
         }
     }
 }, 1000);

@@ -69,7 +69,8 @@ const edit_coupon_form = async (req, res) => {
             activation, 
             expiry, 
             discount, 
-            min_amount, 
+            min_amount,
+            max_amount, 
             type,
             status,
             limit
@@ -78,16 +79,7 @@ const edit_coupon_form = async (req, res) => {
         if (!coupon) {
             return res.json({success: false, message: "Coupon doesn't exists"});
         }
-        coupon.name = name;
-        coupon.description = description;
-        coupon.activation = activation;
-        coupon.expiry = expiry;
-        coupon.discount = discount;
-        coupon.min_amount = min_amount;
-        coupon.type = type;
-        coupon.status = status;
-        coupon.limit = limit;
-        await coupon.save();
+        await coupon_model.updateOne({_id: coupon._id}, {$set: {name, description, activation, discount, expiry, min_amount, max_amount, type, status, limit}});
         return res.status(201).json({success: true, message: "Coupon updated successfully"});
     } catch (error) {
         console.log("Error in add coupon" + error)

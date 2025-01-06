@@ -3,34 +3,9 @@
     <%- include('../partials/user/navbar.ejs') %>
 </header>
 <div class="checkout-container">
-    <!-- Address Section -->
     <div class="address-manager">
         <h2>Select Address</h2>
         <div id="address-list">
-            <% if (user.addresses && user.addresses.length > 0) { %>
-                <% user.addresses.forEach((address, index) => { %>
-                    <div class="address-item" id="address-<%= index %>" style="gap: 15px; justify-content: space-between;">
-                        <div style="display: flex; justify-content: center; gap: 10px;">
-                            <input type="radio" name="address" value="<%- address._id %>" <%- index == 0? 'checked': '' %>>
-                            <div class="address-content" style="max-height: 20px; overflow: hidden;">
-                                <p>
-                                    <%= address.house_address + ' ' + address.street_address %>, 
-                                    <%= address.city %>, 
-                                    <%= address.state %>,
-                                    <%= address.country %>,  
-                                    <code style="font-size: 14px;">( ZIP CODE: <%= address.zip_code %> ) </code>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="address-actions" style="align-self: flex-end;">
-                            <button class="edit-btn" onclick='edit_address(`<%= index %>`)'>Edit</button>
-                        </div>
-                    </div>
-                    <input type="hidden" value="<%= JSON.stringify(address) %>">
-                <% }) %>
-            <% } else { %>
-                <p class="no-address">No addresses found. Add a new address!</p>
-            <% } %>
         </div>
         <div class="add-button-section">
             <button class="add-btn" onclick="add_address()">+ Add Address</button>
@@ -334,21 +309,13 @@
     <div class="order-summary">
         <h3>Your Order</h3>
         <div class="in-cart">
-            <div class="in-cart-products">
-                <% let product_in_cart = [] %>
-                <% carts.forEach((cart, index) => { %>
-                    <% product_in_cart.push(cart._id) %>
-                    <img src="/images/<%= cart.image %>" alt="Product Image <%= index %>">
-                <% }); %>
+            <div class="in-cart-products" id="in-cart">
             </div>
             <a href="/user/carts" class="button">Edit cart</a>
         </div>
     <hr class="divider">
     <div class="radio-group">
         <h3>Payment Methods</h3>
-        <!-- <label><input type="radio" name="payment" value="razorpay" checked> RazorPay</label>
-        <label><input type="radio" name="payment" value="wallet"> Wallet</label>
-        <label><input type="radio" name="payment" value="cod"> Cash On Delivery</label> -->
 
         <div class="radio-group-box">
             <label class="radio-container">
@@ -371,14 +338,10 @@
     <hr class="divider">
     <div class="coupon-section">
         <div style="display: flex; flex-direction: column; width: 60%;">
-            <input id="coupon-code" type="text" placeholder="Coupon Code" style="width: 100%;" data-validate="required" value="<%= coupon && user.coupon? coupon.coupon_code: '' %>" <%- coupon && user.coupon? 'readonly': ''%>>
+            <input id="coupon-code" type="text" placeholder="Coupon Code" style="width: 100%;" data-validate="required">
             <span class="form-error"></span>
         </div>
-        <% if (coupon && user.coupon) { %>
-            <button class="button" onclick="remove_coupon()">Remove Coupon</button>
-        <% } else { %>
-            <button class="button" onclick="apply_coupon()">Apply Coupon</button>
-        <% } %>
+        <button id="coupon-button" class="button"></button>
     </div>
     <div id="couponModal" class="modal">
         <div class="modal-content">
@@ -394,29 +357,18 @@
         <button onclick="openModal()" style="color: rgb(0, 85, 255); border: none; background-color: transparent; cursor: pointer;">Show Available Coupons</button>
     </div>
     <hr class="divider">
-    <ul>
-        <li><span>Subtotal:</span> <span>&#8377;<%= total_price %>.00</span></li>
-        <li><span>Shipping:</span><%- total_price > 1000 ? '<span>+ &#8377;500</span>':'<span>Free</span>' %></li>
-        <li><span>Tax:</span> <span>+ &#8377;3.00</span></li>
-        <% let order_amount; %>
-        <% if (coupon && user.coupon) { %>
-            <% order_amount = Math.ceil(total_price * (coupon.discount / 100)) %>
-            <li><span class="red" id="coupon-discount" value="<%= Math.ceil(total_price * (coupon.discount / 100)) %>">Coupon discount : </span><span class="red">- &#8377;<%= Math.ceil(total_price * (coupon.discount / 100)) %>.00</span></li>
-            <hr class="divider">
-        <li id="price" value="<%= Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) + (total_price > 1000? 500: 0) %>"><strong>Total:</strong> <strong>&#8377;<%= Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) + + (total_price > 1000? 500: 0) %>.00</strong></li>
-        <% } else { %>
-            <% order_amount = Math.ceil(total_price + 3) %>
-            <hr class="divider">
-            <li id="price" value="<%= total_price + 3 + (total_price > 1000? 500: 0) %>"><strong>Total:</strong> <strong>&#8377;<%=total_price + 3 + (total_price > 1000? 500: 0) %>.00</strong></li>
-        <% } %>
+    <ul id="cost">
     </ul>
-    <button class="add-to-cart" type="button" onclick='place_order(`<%- JSON.stringify(product_in_cart) %>`, "", "pending")'>Place Order</button>
+    <button class="add-to-cart" type="button" onclick='place_order("", "pending")'>Place Order</button>
     </div>
 </div>
 <script>
     let editId = null;
+    let product_in_cart = [];
     const address_form = document.getElementById('address-form');
-    const phone = '<%- user.phone_number %>';
+    let phone;
+    let user_id;
+    let total_price = 0;
 
     const add_address = () => {
         document.getElementById('form-title').innerText = 'Add Address';
@@ -457,7 +409,6 @@
                 data[input.name] = input.value;
             }
         });
-        console.log(data)
         if (!isValid) return false;
 
         if (editId !== null) {
@@ -473,7 +424,8 @@
             }
             const res = await req.json();
             if (res.success) {
-                alert_success(res.message);
+                alert_success_without_reload(res.message);
+                fetch_checkout_data();
             } else {
                 alert_error(res.message);
             }
@@ -523,7 +475,7 @@
         
         const req = await fetch(`/user/apply-coupon`, {
             method: 'POST',
-            body: new URLSearchParams({ coupon_code: coupon_code.value,  min_amount: '<%= total_price %>'})
+            body: new URLSearchParams({ coupon_code: coupon_code.value,  min_amount: total_price})
         });
         if (!req.ok) {
             alert_error("An error occured. Try again");
@@ -531,7 +483,8 @@
         }
         const res = await req.json();
         if (res.success) {
-            alert_success(res.message);
+            alert_success_without_reload(res.message);
+            fetch_checkout_data();
         } else {
             alert_error(res.message);
         }
@@ -551,7 +504,8 @@
         }
         const res = await req.json();
         if (res.success) {
-            alert_success(res.message);
+            alert_success_without_reload(res.message);
+            fetch_checkout_data();
         } else {
             alert_error(res.message);
         }
@@ -585,30 +539,24 @@
                 },
                 handler: async function (response) {
                     console.log('Payment successful', response);
-                    await place_order(`<%- JSON.stringify(product_in_cart) %>`, orderData.order.id, "success");
+                    await place_order(orderData.order.id, "success");
                 },
                 theme: {
                     color: '#3399cc',
                 },
-                // modal: {
-                //     ondismiss: async function () {
-                //         console.log(orderData.order.id)
-                //         await place_order(`<%- JSON.stringify(product_in_cart) %>`, orderData.order.id, "failed");
-                //     }
-                // }
             };
 
             const rzp = new Razorpay(options);
             rzp.open();
             rzp.on('payment.failed', async function (response){
-                await place_order(`<%- JSON.stringify(product_in_cart) %>`, orderData.order.id, "failed");
+                await place_order(orderData.order.id, "failed");
             })
         } catch (error) {
             console.error('Error initializing Razorpay:', error);
         }
     };
 
-    const place_order = async (carts, razorpay_order_id, status) => {
+    const place_order = async (razorpay_order_id, status) => {
         if (!phone) {
             Swal.fire({
                 icon: 'error',
@@ -621,7 +569,7 @@
 
             return;
         }
-        carts = JSON.parse(carts);
+        let carts = product_in_cart;
         if (carts.length <= 0) {
             alert_error("No products in cart");
             return;
@@ -686,45 +634,157 @@
     }
 
     async function loadCoupons() {
-        const container = document.getElementById("couponsContainer");
-        container.innerHTML = "";
-        const req = await fetch("/user/get-all-coupons", {
-            method: "POST",
-            body: new URLSearchParams({
-              user: '<%- session.user.id %>'
-            })
-        });
-        if (!req.ok) return alert_error("An error occurred");
-        const res = await req.json();
-        const coupons = res.coupons;
-        coupons.forEach(coupon => {
-            const couponElement = document.createElement("div");
-            couponElement.className = "coupon";
-            couponElement.innerHTML = `
-                <div>
-                    <div class="coupon-code">${coupon.name}</div>
-                    <div class="coupon-description">${coupon.description}</div>
-                    <div class="coupon-description" style="font-weight: 600;">${coupon.discount}% off</div>
-                </div>
-                <div>
-                    <button class="copy-btn" onclick="copyCoupon('${coupon.coupon_code}')">Copy</button>
-                </div>
-            `;
-            container.appendChild(couponElement);
-        });
+        try {
+            const container = document.getElementById("couponsContainer");
+            container.innerHTML = "";
+
+            const req = await fetch("/user/get-all-coupons", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+            });
+
+            if (!req.ok) {
+                return alert_error("An error occurred while fetching coupons");
+            }
+
+            const res = await req.json();
+            const coupons = Array.isArray(res.coupons) ? res.coupons : [];
+
+            if (coupons.length === 0) {
+                container.innerHTML = "<p>No coupons available.</p>";
+                return;
+            }
+
+            coupons.forEach(coupon => {
+                const couponElement = document.createElement("div");
+                couponElement.className = "coupon";
+                couponElement.innerHTML = `
+                    <div>
+                        <div class="coupon-code">${coupon.name}</div>
+                        <div class="coupon-description">${coupon.description}</div>
+                        <div class="coupon-discount" style="font-weight: 600;">${coupon.discount}% off</div>
+                    </div>
+                    <div>
+                        <button class="copy-btn" onclick="copyCoupon('${coupon.coupon_code}')">Copy</button>
+                    </div>
+                `;
+                container.appendChild(couponElement);
+            });
+
+        } catch (error) {
+            console.error("Error loading coupons:", error);
+            alert_error("An error occurred while loading coupons");
+        }
     }
 
     function copyCoupon(code) {
         navigator.clipboard.writeText(code).then(() => {
-            alert_success(`Coupon code copied to clipboard!`);
+            alert_success_without_reload(`Coupon code copied to clipboard!`);
+            closeModal();
         }).catch(err => {
             alert_error("Failed to copy coupon code. Please try again.");
             console.error(err);
         });
     }
 
+    const fetch_checkout_data = async () => {
+        const req = await fetch("/user/checkout", {
+            method: "POST"
+        });
+
+        const res = await req.json();
+        if (res.success) {
+            render_checkout(res);
+            phone  = res.user.phone_number;
+            total_price = res.total_price;
+            user_id = res.user._id;
+        }
+    };
+
+    const render_address = (user) => {
+        let address_element = document.getElementById("address-list");
+        address_element.innerHTML = "";
+        if (user.addresses && user.addresses.length > 0) {
+            user.addresses.forEach((address, index) => {
+                address_element.innerHTML += `
+                <div class="address-item" id="address-${index}" style="gap: 15px; justify-content: space-between;">
+                    <div style="display: flex; justify-content: center; gap: 10px;">
+                        <input type="radio" name="address" value="${address._id}" ${index == 0? 'checked': ''}>
+                        <div class="address-content" style="max-height: 20px; overflow: hidden;">
+                            <p>
+                                ${address.house_address + ' ' + address.street_address}, 
+                                ${address.city}, 
+                                ${address.state},
+                                ${address.country},  
+                                <code style="font-size: 14px;">( ZIP CODE: ${address.zip_code} ) </code>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="address-actions" style="align-self: flex-end;">
+                        <button class="edit-btn" onclick='edit_address(${index})'>Edit</button>
+                    </div>
+                </div>
+                <input type="hidden" value='${JSON.stringify(address)}'>
+                `;
+            });
+        } else {
+            address_element.innerHTML = "<p class='no-address'>No addresses found. Add a new address!</p>";
+        }
+    };
+
+    const render_summary = (data) => {
+        const element = document.getElementById("cost");
+        let total_price = data.total_price;
+        element.innerHTML = `
+        <li><span>Subtotal:</span> <span>&#8377;${total_price}.00</span></li>
+        <li><span>Shipping:</span>${total_price > 1000 ? '<span>+ &#8377;500</span>':'<span>Free</span>'}</li>
+        <li><span>Tax:</span> <span>+ &#8377;3.00</span></li>
+        `;
+        if (data.coupon && data.user.coupon) {
+            let coupon = data.coupon;
+            element.innerHTML += `
+            <li><span class="red" id="coupon-discount" value="${Math.ceil(total_price * (coupon.discount / 100))}">Coupon discount : </span><span class="red">- &#8377;${Math.ceil(total_price * (coupon.discount / 100))}.00</span></li>
+            <hr class="divider">
+            <li id="price" value="${Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) + (total_price > 1000? 500: 0)}"><strong>Total:</strong> <strong>&#8377;${Math.ceil((total_price + 3) - (total_price * (coupon.discount / 100))) +  (total_price > 1000? 500: 0)}.00</strong></li>
+            `;
+        } else {
+            element.innerHTML += `
+            <hr class="divider">
+            <li id="price" value="${total_price + 3 + (total_price > 1000? 500: 0)}"><strong>Total:</strong> <strong>&#8377;${total_price + 3 + (total_price > 1000? 500: 0)}.00</strong></li>
+            `;
+        }
+    };
+
+    const render_checkout = (data) => {
+        render_address(data.user);
+        render_summary(data);
+        let cart_element = document.getElementById("in-cart");
+        cart_element.innerHTML = "";
+        data.carts.forEach((cart, index) => {
+            product_in_cart.push(cart._id)
+            cart_element.innerHTML += `<img src="/images/${cart.image}" alt="Product Image ${index}">`
+        });
+
+        let coupon_code = document.getElementById("coupon-code");
+        let coupon_button = document.getElementById("coupon-button");
+        if (data.coupon && data.user.coupon) {
+            coupon_code.value = data.coupon.coupon_code;
+            coupon_code.readOnly = true;
+            coupon_button.onclick = () => remove_coupon();
+            coupon_button.innerText = "Remove Coupon"
+        } else {
+            coupon_code.value = "";
+            coupon_code.readOnly = false;
+            coupon_button.onclick = () => apply_coupon();
+            coupon_button.innerText = "Apply Coupon"
+        }
+    };
+
     document.addEventListener("DOMContentLoaded", () => {
         loadCoupons();
+        fetch_checkout_data();
     });
 </script>
 <%- include('../partials/user/footer.ejs') %>
