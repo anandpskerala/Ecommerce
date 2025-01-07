@@ -36,8 +36,7 @@ const set_order_status = async (req, res) => {
             }
 
             if (payment.status == "pending") {
-                payment.status = "success";
-                await payment.save();
+                await payment_model.updateOne({_id: payment._id}, {$set: {status: "success"}});
             }
         }
         await order_model.updateOne({_id: id}, {$set: {status, reason}});
@@ -94,7 +93,7 @@ const update_return = async (req, res) => {
             }
         })
     }
-    await return_data.save();
+    await return_model.updateOne({_id: return_data._id}, {$set: {status: return_data.status, rejection_reason: rejection_reason}})
     return res.status(200).json({success: true, message: "Return status updated successfully"});
 };
 

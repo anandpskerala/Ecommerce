@@ -9,8 +9,7 @@ const create_offer = async (req, res) => {
             return res.status(400).json({success: false, message: "Offer already exists"});
         }
         
-        const offers = new offer(req.body);
-        await offers.save();
+        const offers = await offer.create(req.body);
         return res.status(201).json({success: true, message: "Offer added successfully"});
     } catch (err) {
         console.error("Error in create offer:", err);

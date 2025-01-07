@@ -152,10 +152,10 @@ const edit_product_form = async (req, res) => {
         });
 
         let data = {...req.body, variants: variant_list};
-        await product_model.updateOne({_id: id}, {$set: data})
+        await product_model.updateOne({_id: id}, {$set: data});
         return res.status(200).json({success: true, message: `Product Updated`})
     } catch (err) {
-        console.log("Error in edit product form" + err)
+        console.log("Error in edit product form" + err);
         return res.status(500).json({success: false, message: `An error occurred ${err}`});
     }
 };
