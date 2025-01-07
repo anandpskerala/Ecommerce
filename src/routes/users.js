@@ -130,6 +130,14 @@ routes.get("/product/:id", async (req, res) => {
     }
 });
 
+routes.get("/contact-us", (req, res) => {
+    return res.render('user/contact_page', {title: "Contact Us", cart_option: "page"});
+})
+
+routes.get("/about", (req, res) => {
+    return res.render('user/about_page', {title: "About Page", cart_option: "page"});
+})
+
 routes.post("/signup", controllers.user_signup);
 routes.post("/login", controllers.user_login);
 routes.get("/logout", controllers.user_logout);

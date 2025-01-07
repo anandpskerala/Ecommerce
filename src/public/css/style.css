@@ -3109,6 +3109,155 @@ main {
     background-color: #218838;
 }
 
+.about-main {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.about-section h2, .team-section h2 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.about-section p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.team-section {
+    margin-top: 40px;
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.team-member {
+    background-color: #f5f5f5;
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.team-member:hover {
+    transform: translateY(-5px);
+}
+
+.team-member img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+.team-member h3 {
+    margin: 10px 0;
+    font-size: 1.2rem;
+    color: #34495e;
+}
+
+.team-member p {
+    font-size: 1rem;
+    color: #7f8c8d;
+}
+
+.contact-main {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.contact-main h2, 
+.contact-main h3 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.contact-main p {
+    color: #555;
+    line-height: 1.6;
+}
+
+.contact-main ul {
+    list-style: none;
+    padding: 0;
+}
+
+.contact-main ul li {
+    margin-bottom: 10px;
+}
+
+.contact-main ul li a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.contact-main ul li a:hover {
+    text-decoration: underline;
+}
+
+.contact-section {
+    margin-top: 40px;
+}
+
+.contact-section form {
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-section form label {
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.contact-section form input, 
+.contact-section form textarea {
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.contact-section form input:focus, 
+.contact-section form textarea:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.25);
+}
+
+.contact-section form button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.contact-section form button:hover {
+    background-color: #0056b3;
+}
+
+
+
 
 @keyframes spin {
     0% {

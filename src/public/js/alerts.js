@@ -50,6 +50,14 @@ const alert_warning = (message) => {
     });
 }
 
+const alert_warning_without_reload = (message) => {
+    Swal.fire({
+        icon: "warning",
+        title: "Attention",
+        text: message,
+    })
+}
+
 const show_loading = (res) => {
     Swal.fire({
         title: 'Congratulations 🎉',

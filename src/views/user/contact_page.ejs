@@ -1,0 +1,56 @@
+<%- include('../partials/user/header.ejs') %>
+<header>
+    <%- include('../partials/user/navbar.ejs') %>
+</header>
+<main class="contact-main">
+    <section>
+        <h2>Contact Us</h2>
+        <p>If you have any questions, concerns, or feedback, we'd love to hear from you. Reach out to us through the following channels:</p>
+        <ul>
+            <li>Email: <a href="mailto:appx102@gmail.com">appx102@gmail.com</a></li>
+            <li>Phone: +1 (123) 456-7890</li>
+            <li>Address: 123 Main Street, Cityville, ST 12345</li>
+        </ul>
+    </section>
+    <section class="contact-section">
+        <h3>Send Us a Message</h3>
+        <form id="contact-form" method="post">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="message">Message:</label>
+            <textarea id="message" name="message" rows="4" required></textarea>
+
+            <button type="submit">Submit</button>
+        </form>
+    </section>
+</main>
+<script>
+    document.getElementById("contact-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = e.target.querySelector('[name="name"]').value.trim();
+        const email = e.target.querySelector('[name="email"]').value.trim();
+        const message = e.target.querySelector('[name="message"]').value.trim();
+
+        if (name === "" || email === "" || message === "") {
+            alert_warning_without_reload("Please fill out all fields.");
+            return;
+        }
+        const formData = new FormData(e.target);
+
+        const req = await fetch("https://formbold.com/s/9gXn4", {
+            method: "POST",
+            body: formData,
+        })
+
+        if (!req.ok) {
+            alert_error("An error occurred. Please try again.");
+            return;
+        }
+        alert_success("Message sent successfully.");
+    });
+</script>
+<%- include('../partials/user/footer.ejs') %>
